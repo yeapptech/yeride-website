@@ -1,0 +1,12 @@
+---
+import { navData } from "../data/navData"
+---
+
+<nav>
+    <ul>
+        {navData.map((i) => (
+            <li>
+                <a href={i.href}>{i.name}</a>
+            </li>))}
+    </ul>
+</nav>
