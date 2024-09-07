@@ -7,5 +7,5 @@ export default defineConfig({
   integrations: [tailwind()],
   // site: 'http://yeapptech.github.io',
   site: "http://yeride.com",
-  // base: 'yeride-website',
+  base: 'yeride-website',
 });
