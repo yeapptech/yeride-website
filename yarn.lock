@@ -1040,9 +1040,9 @@ camelcase@^7.0.1:
   integrity sha512-xlx1yCK2Oc1APsPXDL2LdlNP6+uu8OCDdhOBSVT279M/S+y75O30C2VuD8T2ogdePBBl7PfPF4504tnLgX3zfw==
 
 caniuse-lite@^1.0.30001578, caniuse-lite@^1.0.30001580:
-  version "1.0.30001580"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001580.tgz#e3c76bc6fe020d9007647044278954ff8cd17d1e"
-  integrity sha512-mtj5ur2FFPZcCEpXFy8ADXbDACuNFXg6mxVDqp7tqooX6l3zwm+d8EPoeOSIFRDvHs8qu7/SLFOGniULkcH2iA==
+  version "1.0.30001658"
+  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001658.tgz"
+  integrity sha512-N2YVqWbJELVdrnsW5p+apoQyYt51aBMSsBZki1XZEfeBCexcM/sf4xiAHcXQBkuOwJBXtWF7aW1sYX6tKebPHw==
 
 ccount@^2.0.0:
   version "2.0.1"
