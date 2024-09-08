@@ -6,6 +6,6 @@ import tailwind from "@astrojs/tailwind";
 export default defineConfig({
   integrations: [tailwind()],
   // site: 'http://yeapptech.github.io',
-  site: "http://yeride.com",
+  site: "https://yeride.com",
   // base: 'yeride-website',
 });
