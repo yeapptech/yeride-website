@@ -9,7 +9,7 @@
 if (Astro.request.method === "POST") {
 	try {
 		const data = await Astro.request.formData();
-		console.log('[data]',data);
+		// console.log('[data]',data);
 		const register = {
 			email: data.get('email'),
 			name: data.get('name'),
@@ -18,7 +18,7 @@ if (Astro.request.method === "POST") {
 			role: data.get('role')
 		};
 		
-		console.log('req', register);
+		// console.log('req', register);
 		// handleSubmit(req);
 		const response = await fetch('https://script.google.com/macros/s/AKfycbzAECP6v9Gl6CgHuhosqDtrj8gzi0QpWaz9kZqH1O6br6BXGLdU9Vt0HhGP7TEnFb76/exec', {
 			method: 'POST',
@@ -27,6 +27,11 @@ if (Astro.request.method === "POST") {
 			},
 			body: JSON.stringify(register),
 		});
+		// if (response.ok) {
+		// 	window.alert('Form submitted successfully');
+		// } else {
+		// 	window.alert('There was an issue submitting the form');
+		// }		
 
 		// console.log('response', response);
 		
