@@ -3,6 +3,39 @@
 
 // import { Image } from 'astro:assets';
 // import googlePlayImage from "/src/assets/GetItOnGooglePlay_Badge_Web_color_English.png";
+
+// import formHandler from '../utils/formHandler';
+
+if (Astro.request.method === "POST") {
+	try {
+		const data = await Astro.request.formData();
+		console.log('[data]',data);
+		const register = {
+			email: data.get('email'),
+			name: data.get('name'),
+			region: data.get('region'),
+			device: data.get('device'),
+			role: data.get('role')
+		};
+		
+		console.log('req', register);
+		// handleSubmit(req);
+		const response = await fetch('https://script.google.com/macros/s/AKfycbzAECP6v9Gl6CgHuhosqDtrj8gzi0QpWaz9kZqH1O6br6BXGLdU9Vt0HhGP7TEnFb76/exec', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(register),
+		});
+
+		// console.log('response', response);
+		
+	} catch (error) {
+		if (error instanceof Error) {
+      		console.error(error.message);
+    	}		
+	}
+}
 ---
 
 <html lang="en">
@@ -123,7 +156,7 @@
 				<div class="container mx-auto px-4">
 					<h3 class="text-3xl font-bold text-center mb-12">Join Our Beta Testing Program</h3>
 					<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
-						<form class="space-y-4">
+						<form method="POST" class="space-y-4">
 							<div>
 								<label for="email" class="block mb-2 font-semibold text-gray-700">Email Address</label>
 								<input type="email" id="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -133,8 +166,8 @@
 								<input type="text" id="name" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
 							</div>
 							<div>
-								<label for="city" class="block mb-2 font-semibold text-gray-700">City or Region</label>
-								<input type="text" id="city" name="city" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+								<label for="region" class="block mb-2 font-semibold text-gray-700">City or Region</label>
+								<input type="text" id="region" name="region" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
 							</div>
 							<div>
 								<label for="device" class="block mb-2 font-semibold text-gray-700">Device Type</label>
@@ -144,6 +177,14 @@
 									<option value="ios">iOS</option>
 								</select>
 							</div>
+							<div>
+								<label for="role" class="block mb-2 font-semibold text-gray-700">rounded-full</label>
+								<select id="role" name="role" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+									<option value="">Select your role</option>
+									<option value="rider">Rider</option>
+									<option value="driver">Driver</option>
+								</select>
+							</div>							
 							<button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition duration-300 shadow-md">Submit</button>
 						</form>
 					</div>
