@@ -6,41 +6,41 @@
 
 // import formHandler from '../utils/formHandler';
 
-if (Astro.request.method === "POST") {
-	try {
-		const data = await Astro.request.formData();
-		// console.log('[data]',data);
-		const register = {
-			email: data.get('email'),
-			name: data.get('name'),
-			region: data.get('region'),
-			device: data.get('device'),
-			role: data.get('role')
-		};
+// if (Astro.request.method === "POST") {
+// 	try {
+// 		const data = await Astro.request.formData();
+// 		// console.log('[data]',data);
+// 		const register = {
+// 			email: data.get('email'),
+// 			name: data.get('name'),
+// 			region: data.get('region'),
+// 			device: data.get('device'),
+// 			role: data.get('role')
+// 		};
 		
-		// console.log('req', register);
-		// handleSubmit(req);
-		const response = await fetch('https://script.google.com/macros/s/AKfycbzAECP6v9Gl6CgHuhosqDtrj8gzi0QpWaz9kZqH1O6br6BXGLdU9Vt0HhGP7TEnFb76/exec', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(register),
-		});
-		// if (response.ok) {
-		// 	window.alert('Form submitted successfully');
-		// } else {
-		// 	window.alert('There was an issue submitting the form');
-		// }		
+// 		// console.log('req', register);
+// 		// handleSubmit(req);
+// 		const response = await fetch('https://script.google.com/macros/s/AKfycbzAECP6v9Gl6CgHuhosqDtrj8gzi0QpWaz9kZqH1O6br6BXGLdU9Vt0HhGP7TEnFb76/exec', {
+// 			method: 'POST',
+// 			headers: {
+// 				'Content-Type': 'application/json',
+// 			},
+// 			body: JSON.stringify(register),
+// 		});
+// 		// if (response.ok) {
+// 		// 	window.alert('Form submitted successfully');
+// 		// } else {
+// 		// 	window.alert('There was an issue submitting the form');
+// 		// }		
 
-		// console.log('response', response);
+// 		// console.log('response', response);
 		
-	} catch (error) {
-		if (error instanceof Error) {
-      		console.error(error.message);
-    	}		
-	}
-}
+// 	} catch (error) {
+// 		if (error instanceof Error) {
+//       		console.error(error.message);
+//     	}		
+// 	}
+// }
 ---
 
 <html lang="en">
