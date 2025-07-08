@@ -620,8 +620,8 @@
 
       const preRegistrationForm = document.getElementById(
         "pre-registration-form"
-      );
-      const submitButton = document.getElementById("submit-button");
+      ) as HTMLFormElement;
+      const submitButton = document.getElementById("submit-button") as HTMLButtonElement;
       const loadingIndicator = document.getElementById("loading-indicator");
       const formMessage = document.getElementById("form-message");
 
@@ -638,11 +638,11 @@
           formMessage.classList.add("hidden");
           formMessage.classList.remove("text-green-600", "text-red-600");
 
-          (submitButton as HTMLButtonElement).disabled = true;
+          submitButton.disabled = true;
           submitButton.classList.add("opacity-50", "cursor-not-allowed");
           loadingIndicator.classList.remove("hidden");
 
-          const formData = new FormData(preRegistrationForm as HTMLFormElement);
+          const formData = new FormData(preRegistrationForm);
 
           const data: Record<string, string> = {};
           formData.forEach((value, key) => {
@@ -657,12 +657,25 @@
             formMessage.textContent = "Error: Passwords do not match.";
             formMessage.classList.remove("hidden");
             formMessage.classList.add("text-red-600");
-            (submitButton as HTMLButtonElement).disabled = false;
+            submitButton.disabled = false;
             submitButton.classList.remove("opacity-50", "cursor-not-allowed");
             loadingIndicator.classList.add("hidden");
             return;
           }
+
+          // Verificar si la variable de entorno está definida
           const API_URL = import.meta.env.PUBLIC_API_URL;
+          if (!API_URL) {
+            console.error("PUBLIC_API_URL no está definida");
+            formMessage.textContent = "Error: Configuración del servidor no disponible.";
+            formMessage.classList.remove("hidden");
+            formMessage.classList.add("text-red-600");
+            submitButton.disabled = false;
+            submitButton.classList.remove("opacity-50", "cursor-not-allowed");
+            loadingIndicator.classList.add("hidden");
+            return;
+          }
+
           try {
             const response = await fetch(`${API_URL}v1/auth/register`, {
               method: "POST",
@@ -679,7 +692,7 @@
                 "Pre-registration successful! Thank you.";
               formMessage.classList.remove("hidden");
               formMessage.classList.add("text-green-600");
-              (preRegistrationForm as HTMLFormElement).reset();
+              preRegistrationForm.reset();
             } else {
               const errorMessage =
                 result.message || "An error occurred during pre-registration.";
@@ -694,7 +707,7 @@
             formMessage.classList.remove("hidden");
             formMessage.classList.add("text-red-600");
           } finally {
-            (submitButton as HTMLButtonElement).disabled = false;
+            submitButton.disabled = false;
             submitButton.classList.remove("opacity-50", "cursor-not-allowed");
             loadingIndicator.classList.add("hidden");
           }
