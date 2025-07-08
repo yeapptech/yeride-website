@@ -1,26 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Redirecting...</title>
     <script>
-        // Extract query parameters from the URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const status = urlParams.get('status');
+      // Extract query parameters from the URL
 
-        // Define the deep link for your app
-        const deepLink = `yeride://register`;
+      // Define the deep link for your app
+      const deepLink = `yeride://register`;
 
-        // Attempt to redirect to the deep link
-        window.location.href = deepLink;
+      // Attempt to redirect to the deep link
+      window.location.href = deepLink;
 
-        // Fallback: Show a button if deep linking fails
-        setTimeout(() => {
-            document.getElementById('manualLink').style.display = 'block';
-        }, 2000);
+      // Fallback: Show a button if deep linking fails
+      setTimeout(() => {
+        document.getElementById("manualLink").style.display = "block";
+      }, 2000);
     </script>
-</head>
-<body>
+  </head>
+  <body>
     <p>Redirecting to the app...</p>
-    <a id="manualLink" href="yeride://register" style="display: none;">Click here if you are not redirected</a>
-</body>
+    <a id="manualLink" href="yeride://register" style="display: none;"
+      >Click here if you are not redirected</a
+    >
+  </body>
 </html>
