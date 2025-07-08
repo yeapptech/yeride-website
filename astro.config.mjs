@@ -7,7 +7,7 @@ export default defineConfig({
   integrations: [tailwind()],
   // site: 'http://yeapptech.github.io',
   site: "https://yeride.com",
-  // output: "server",
+  output: "server",
   // adapter: node({
   //   mode: 'standalone',
   // }),
