@@ -93,7 +93,7 @@ jobs:
       
       - name: Set Firebase Functions cleanup policy
         run: firebase functions:artifacts:setpolicy --project ${{ secrets.FIREBASE_PROJECT }} --token ${{ secrets.FIREBASE_TOKEN }} --force
-        working-directory: firebase-functions-stage
+        working-directory: firebase-functions
           
       - name: Deploy Firebase Functions
         run: firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT }} --token ${{ secrets.FIREBASE_TOKEN }}
