@@ -59,6 +59,10 @@ jobs:
       - name: Install functions-stage dependencies
         run: npm ci
         working-directory: firebase-functions-stage/functions
+      
+      - name: Set Firebase Functions cleanup policy
+        run: firebase functions:artifacts:setpolicy --project ${{ secrets.FIREBASE_PROJECT_STAGE }} --token ${{ secrets.FIREBASE_TOKEN_STAGE }} --force
+        working-directory: firebase-functions-stage
           
       - name: Deploy Firebase Functions-Stage
         run: firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT_STAGE }} --token ${{ secrets.FIREBASE_TOKEN_STAGE }}
@@ -86,6 +90,10 @@ jobs:
       - name: Install functions dependencies
         run: npm ci
         working-directory: firebase-functions/functions
+      
+      - name: Set Firebase Functions cleanup policy
+        run: firebase functions:artifacts:setpolicy --project ${{ secrets.FIREBASE_PROJECT }} --token ${{ secrets.FIREBASE_TOKEN }} --force
+        working-directory: firebase-functions-stage
           
       - name: Deploy Firebase Functions
         run: firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT }} --token ${{ secrets.FIREBASE_TOKEN }}
