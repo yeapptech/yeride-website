@@ -29,11 +29,20 @@ jobs:
       - name: Build Astro site
         run: npm run build
         
+      - name: Clean previous artifacts
+        run: |
+          # Limpiar artifacts anteriores si existen
+          if [ -d "./dist" ]; then
+            rm -rf ./dist/.git
+          fi
+        
       - name: Upload to GitHub Pages
         id: deployment
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
+          retention-days: 1
+          name: pages-${{ github.run_id }}-${{ github.sha }}
 
   deploy:
     if: github.ref == 'refs/heads/main'
