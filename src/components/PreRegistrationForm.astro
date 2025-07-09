@@ -75,10 +75,37 @@
       </div>
 
       <div>
-        <label
-          for="phoneNumber"
-          class="text-gray-700 font-medium block mb-1"
-        >
+        <label class="text-gray-700 font-medium block mb-1">
+          I want to join as
+        </label>
+        <div class="relative">
+          <select
+            id="rol"
+            name="rol"
+            required
+            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm appearance-none pr-8"
+          >
+            <option value="" disabled selected>Select your role</option>
+            <option value="rider">Rider</option>
+            <option value="driver">Driver</option>
+          </select>
+          <div
+            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
+          >
+            <svg
+              class="fill-current h-4 w-4"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              ><path
+                d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9z"
+              ></path></svg
+            >
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label for="phoneNumber" class="text-gray-700 font-medium block mb-1">
           Phone Number
         </label>
         <input
@@ -86,15 +113,20 @@
           name="phoneNumber"
           type="tel"
           class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          placeholder="Enter your phone number"
+          placeholder="+12345678900"
+          value="+1"
+          pattern="^\+1\d{10}$"
           required
+          data-prefix="+1"
         />
       </div>
 
       <button
         type="submit"
         id="submit-button"
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-semibold rounded-md shadow-md transition duration-300"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-semibold rounded-md shadow-md transition duration-300
+                disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
+        disabled
       >
         Submit Pre-registration
       </button>
@@ -131,8 +163,146 @@
   const submitButton = document.getElementById("submit-button");
   const loadingIndicator = document.getElementById("loading-indicator");
   const formMessage = document.getElementById("form-message");
+  const phoneNumberInput = document.getElementById("phoneNumber");
+
+  function validateForm() {
+    if (!preRegistrationForm) return false; 
+
+    let allFieldsValid = true;
+    const requiredInputs = preRegistrationForm.querySelectorAll("[required]");
+    console.debug("Validating form fields:", requiredInputs);
+
+    requiredInputs.forEach((input) => {
+      console.debug("Validating input:", input.id, "Value:", input.value);
+      if (input.id === "phoneNumber") {
+        const prefix = input.dataset.prefix || "";
+        const expectedLength = prefix.length + 10; 
+
+        if (
+          !input.value.startsWith(prefix) ||
+          input.value.length !== expectedLength ||
+          !/^\+\d{11}$/.test(input.value)
+        ) {
+          allFieldsValid = false;
+        }
+      } else if (!input.checkValidity()) {
+        allFieldsValid = false;
+      }
+    });
+
+    const passwordInput = document.getElementById("password");
+    const confirmPasswordInput = document.getElementById("confirmPassword");
+    if (
+      passwordInput &&
+      confirmPasswordInput &&
+      passwordInput.value !== confirmPasswordInput.value
+    ) {
+      allFieldsValid = false;
+      const errorMessage = "Error: Passwords do not match.";
+      formMessage.textContent = `Error: ${errorMessage}`;
+      formMessage.classList.remove("hidden");
+      formMessage.classList.add("text-red-600");
+    } else {
+      formMessage.textContent = "";
+      formMessage.classList.add("hidden");
+      formMessage.classList.remove("text-green-600", "text-red-600");
+    }
+
+    const roleSelect = document.getElementById("rol");
+    if (roleSelect && roleSelect.value === "") {
+      allFieldsValid = false;
+    }
+
+    if (submitButton) {
+      submitButton.disabled = !allFieldsValid;
+    }
+    console.debug("Form validation result:", allFieldsValid);
+    return allFieldsValid;
+  }
+
+  if (phoneNumberInput) {
+    const prefix = phoneNumberInput.dataset.prefix || ""; // Obtener el prefijo del atributo data-prefix
+    const maxDigits = 10; // Número máximo de dígitos después del prefijo
+
+    if (!phoneNumberInput.value.startsWith(prefix)) {
+      phoneNumberInput.value = prefix;
+    }
+
+    phoneNumberInput.addEventListener("keydown", (e) => {
+      const currentValue = phoneNumberInput.value;
+      const digitsPart = currentValue.substring(prefix.length);
+
+      // Prevenir borrar el prefijo
+      if (
+        e.key === "Backspace" &&
+        phoneNumberInput.selectionStart <= prefix.length
+      ) {
+        e.preventDefault();
+        return; 
+      }
+
+      // Prevenir escribir más de 10 dígitos 
+      if (
+        digitsPart.length >= maxDigits &&
+        /\d/.test(e.key) &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.metaKey &&
+        e.key !== "Backspace" &&
+        e.key !== "Delete" &&
+        e.key !== "ArrowLeft" &&
+        e.key !== "ArrowRight" &&
+        e.key !== "Tab"
+      ) {
+        e.preventDefault();
+      }
+    });
+
+    phoneNumberInput.addEventListener("input", () => {
+      let value = phoneNumberInput.value;
+
+      if (!value.startsWith(prefix)) {
+        value = prefix;
+      }
+
+      // Eliminar caracteres no numéricos después del prefijo
+      const digitsOnly = value.substring(prefix.length).replace(/\D/g, "");
+      value = prefix + digitsOnly;
+
+      // Limitar a 10 dígitos después del prefijo
+      if (digitsOnly.length > maxDigits) {
+        value = prefix + digitsOnly.substring(0, maxDigits);
+      }
+
+      phoneNumberInput.value = value;
+      validateForm(); 
+    });
+
+    phoneNumberInput.addEventListener("focus", () => {
+      if (!phoneNumberInput.value.startsWith(prefix)) {
+        phoneNumberInput.value = prefix;
+      }
+      // Mover el cursor al final del prefijo si está al principio
+      if (phoneNumberInput.selectionStart < prefix.length) {
+        phoneNumberInput.setSelectionRange(prefix.length, prefix.length);
+      }
+    });
+
+    // Ajustar el cursor si el usuario hace clic antes del prefijo
+    phoneNumberInput.addEventListener("click", () => {
+      if (phoneNumberInput.selectionStart < prefix.length) {
+        phoneNumberInput.setSelectionRange(prefix.length, prefix.length);
+      }
+    });
+  }
 
   if (preRegistrationForm && submitButton && loadingIndicator && formMessage) {
+    preRegistrationForm.addEventListener("input", validateForm);
+    const roleSelect = document.getElementById("rol");
+    if (roleSelect) {
+      roleSelect.addEventListener("change", validateForm);
+    }
+
     preRegistrationForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -192,8 +362,9 @@
           formMessage.classList.add("text-green-600");
           preRegistrationForm.reset();
         } else {
+          console.debug("Error response:", result);
           const errorMessage =
-            result.message || "An error occurred during pre-registration.";
+            result.error || "An error occurred during pre-registration.";
           formMessage.textContent = `Error: ${errorMessage}`;
           formMessage.classList.remove("hidden");
           formMessage.classList.add("text-red-600");
