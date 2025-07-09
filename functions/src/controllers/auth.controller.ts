@@ -12,6 +12,7 @@ interface RegisterUserData {
   phoneNumber: string;
   phoneVerificationId?: string;
   phoneVerificationCode?: string;
+  rol: string;
 }
 
 interface ErrorResponse {
@@ -42,13 +43,12 @@ export const auth = async (req: Request, res: Response) => {
     return;
   }
 
-  const {fullName, email, password, phoneNumber} = data;
+  const { fullName, email, password, phoneNumber, rol } = data;
 
-  if (!fullName || !email || !password || !phoneNumber) {
+  if (!fullName || !email || !password || !phoneNumber || !rol) {
     console.warn(
-      `Missing required registration data 
-      (fullName, email, password, phoneNumber).`,
-      {receivedData: data}
+      "Missing required registration data (fullName, email, password, phoneNumber, rol).",
+      { receivedData: data }
     );
     res.status(400).json({
       error: "Missing required registration data.",
@@ -61,9 +61,8 @@ export const auth = async (req: Request, res: Response) => {
   let registeredUser: UserRecord | null = null;
 
   try {
-    console.log(`LOG: Attempting to get 
-      existing users by email...`); // <--- NUEVO LOG 1
-    const existingUsers = await authAdmin.getUsers([{email: email}]);
+    console.log("LOG: Attempting to get existing users by email..."); // <--- NUEVO LOG 1
+    const existingUsers = await authAdmin.getUsers([{ email: email }]);
     console.log(
       "LOG: Finished getting existing users. Count:",
       existingUsers.users.length
@@ -80,8 +79,7 @@ export const auth = async (req: Request, res: Response) => {
       return;
     }
 
-    console.log(`LOG: Attempting to 
-      create new user in Auth...`); // <--- NUEVO LOG 3
+    console.log("LOG: Attempting to create new user in Auth..."); // <--- NUEVO LOG 3
     const userRecord = await authAdmin.createUser({
       email: email,
       password: password,
@@ -89,8 +87,7 @@ export const auth = async (req: Request, res: Response) => {
       phoneNumber: phoneNumber,
     });
     registeredUser = userRecord;
-    console.info(`LOG: User created 
-      with UID: ${userRecord.uid}`); // <--- NUEVO LOG 4
+    console.info(`LOG: User created with UID: ${userRecord.uid}`); // <--- NUEVO LOG 4
 
     const defaultDriverOnboardingProgress = {
       acceptedTerms: false,
@@ -116,10 +113,10 @@ export const auth = async (req: Request, res: Response) => {
       age: 0,
       profileCompleted: false,
       driverOnboardingProgress: defaultDriverOnboardingProgress,
+      rol: rol,
     };
 
-    console.log(`LOG: Attempting to create 
-      Firestore document for user...`); // <--- NUEVO LOG 5
+    console.log("LOG: Attempting to create Firestore document for user..."); // <--- NUEVO LOG 5
     await dbAdmin
       .collection("people")
       .doc(registeredUser.uid)
@@ -130,14 +127,12 @@ export const auth = async (req: Request, res: Response) => {
 
     res.status(200).json({
       success: true,
-      message: `User registered 
-      successfully!`,
+      message: "User registered successfully!",
       uid: registeredUser.uid,
     });
     return;
   } catch (error: unknown) {
-    console.error(`LOG: Error caught during 
-      registration process:`, error); // <--- LOG REFORZADO
+    console.error("LOG: Error caught during registration process:", error); // <--- LOG REFORZADO
 
     if (
       registeredUser &&
@@ -172,50 +167,48 @@ export const auth = async (req: Request, res: Response) => {
       (error as { code: string }).code.startsWith("auth/")
     ) {
       switch (((error as unknown) as { code: string; message?: string }).code) {
-      case "auth/email-already-in-use":
-      case "auth/phone-number-already-exists":
-      case "auth/credential-already-in-use":
-        statusCode = 409;
-        errorMessage =
-          (error as { code: string }).code === "auth/email-already-in-use" ?
-            "The email address is already in use." :
-            "The provided phone number is already in use by another account.";
-        errorCode = "already-exists";
-        break;
-      case "auth/weak-password":
-      case "auth/invalid-email":
-      case "auth/invalid-phone-number":
-        statusCode = 400;
+        case "auth/email-already-in-use":
+        case "auth/phone-number-already-exists":
+        case "auth/credential-already-in-use":
+          statusCode = 409;
+          errorMessage =
+          (error as { code: string }).code === "auth/email-already-in-use"
+              ? "The email address is already in use."
+              : "The provided phone number is already in use by another account.";
+          errorCode = "already-exists";
+          break;
+        case "auth/weak-password":
+        case "auth/invalid-email":
+        case "auth/invalid-phone-number":
+          statusCode = 400;
         errorMessage = error instanceof Error?error.message:"";
-        errorCode = "invalid-argument";
-        break;
-      case "auth/id-token-expired":
-      case "auth/argument-error":
-      case "auth/invalid-credential":
-        statusCode = 401;
-        errorMessage =
+          errorCode = "invalid-argument";
+          break;
+        case "auth/id-token-expired":
+        case "auth/argument-error":
+        case "auth/invalid-credential":
+          statusCode = 401;
+          errorMessage =
             "Authentication failed. Please re-verify or try again.";
-        errorCode = "unauthenticated";
-        break;
-      case "auth/user-not-found":
-        statusCode = 404;
-        errorMessage = "User not found.";
-        errorCode = "not-found";
-        break;
-      case "auth/operation-not-allowed":
-        statusCode = 403;
-        errorMessage =
-            `The requested operation is not allowed for 
-            this user or project configuration.`;
-        errorCode = "operation-not-allowed";
-        break;
-      default: {
-        statusCode = 500;
-        const firebaseErrorMessage =error instanceof Error?error.message:"";
-        errorMessage = `Firebase Auth Error: ${firebaseErrorMessage}`;
-        errorCode = "internal";
-        break;
-      }
+          errorCode = "unauthenticated";
+          break;
+        case "auth/user-not-found":
+          statusCode = 404;
+          errorMessage = "User not found.";
+          errorCode = "not-found";
+          break;
+        case "auth/operation-not-allowed":
+          statusCode = 403;
+          errorMessage =
+            "The requested operation is not allowed for this user or project configuration.";
+          errorCode = "operation-not-allowed";
+          break;
+        default:
+          statusCode = 500;
+          const firebaseErrorMessage =error instanceof Error?error.message:"";
+          errorMessage = `Firebase Auth Error: ${firebaseErrorMessage}`; 
+          errorCode = "internal";
+          break;
       }
     } else if (
       typeof error === "object" &&
