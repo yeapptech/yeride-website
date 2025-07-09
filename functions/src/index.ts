@@ -12,7 +12,7 @@ app.use(corsMiddleware);
 app.use("/v1", router);
 app.get("/", (req, res) => {
   res.json({
-    message: "Hello from Firebase Functions!",
+    message: "Hello from Firebase Functions working with GitHub Actions!",
   });
 });
 
