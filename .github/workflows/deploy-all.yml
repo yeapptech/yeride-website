@@ -3,6 +3,7 @@ name: Deploy All
 on:
   push:
     branches: [main, functions-stage]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,36 +14,16 @@ jobs:
   build:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    outputs:
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout code
+      - name: Checkout your repository using git
         uses: actions/checkout@v4
-
       - name: Create env file
         run: |
           echo "PUBLIC_API_URL=${{ secrets.PUBLIC_API_URL }}" > .env
-        
-      - name: Setup Node
+      - name: Install, build, and upload your site
         uses: withastro/action@v3
-        
-      - name: Build Astro site
-        run: npm run build
-        
-      - name: Clean previous artifacts
-        run: |
-          # Limpiar artifacts anteriores si existen
-          if [ -d "./dist" ]; then
-            rm -rf ./dist/.git
-          fi
-        
-      - name: Upload to GitHub Pages
-        id: deployment
-        uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
           retention-days: 1
-          name: pages-${{ github.run_id }}-${{ github.sha }}
 
   deploy:
     if: github.ref == 'refs/heads/main'
@@ -50,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ needs.build.outputs.url }}
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
