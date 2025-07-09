@@ -1,0 +1,214 @@
+---
+// PreRegistrationForm.astro
+---
+
+<div class="bg-white/95 backdrop-blur rounded-lg shadow-lg">
+  <div class="p-8">
+    <form id="pre-registration-form" class="space-y-6">
+      <div>
+        <label
+          for="fullName"
+          class="text-gray-700 font-medium block mb-1"
+        >
+          Full Name
+        </label>
+        <input
+          id="fullName"
+          name="fullName"
+          type="text"
+          class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          placeholder="Enter your full name"
+          required
+        />
+      </div>
+
+      <div>
+        <label
+          for="email"
+          class="text-gray-700 font-medium block mb-1"
+        >
+          Email Address
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          placeholder="Enter your email address"
+          required
+        />
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label
+            for="password"
+            class="text-gray-700 font-medium block mb-1"
+          >
+            Password
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Create a password"
+            required
+          />
+        </div>
+        <div>
+          <label
+            for="confirmPassword"
+            class="text-gray-700 font-medium block mb-1"
+          >
+            Confirm Password
+          </label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Confirm your password"
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <label
+          for="phoneNumber"
+          class="text-gray-700 font-medium block mb-1"
+        >
+          Phone Number
+        </label>
+        <input
+          id="phoneNumber"
+          name="phoneNumber"
+          type="tel"
+          class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          placeholder="Enter your phone number"
+          required
+        />
+      </div>
+
+      <button
+        type="submit"
+        id="submit-button"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-semibold rounded-md shadow-md transition duration-300"
+      >
+        Submit Pre-registration
+      </button>
+      <div
+        id="loading-indicator"
+        class="hidden text-center text-blue-700 mt-4"
+      >
+        <svg
+          class="animate-spin h-5 w-5 mr-3 inline-block"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        Sending...
+      </div>
+      <div id="form-message" class="hidden text-center mt-4"></div>
+    </form>
+  </div>
+</div>
+
+<script is:inline define:vars={{ API_URL: import.meta.env.PUBLIC_API_URL }}>
+  const preRegistrationForm = document.getElementById("pre-registration-form");
+  const submitButton = document.getElementById("submit-button");
+  const loadingIndicator = document.getElementById("loading-indicator");
+  const formMessage = document.getElementById("form-message");
+
+  if (preRegistrationForm && submitButton && loadingIndicator && formMessage) {
+    preRegistrationForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      formMessage.textContent = "";
+      formMessage.classList.add("hidden");
+      formMessage.classList.remove("text-green-600", "text-red-600");
+
+      submitButton.disabled = true;
+      submitButton.classList.add("opacity-50", "cursor-not-allowed");
+      loadingIndicator.classList.remove("hidden");
+
+      const formData = new FormData(preRegistrationForm);
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value.toString();
+      });
+
+      if (
+        data["password"] !== undefined &&
+        data["confirmPassword"] !== undefined &&
+        data["password"] !== data["confirmPassword"]
+      ) {
+        formMessage.textContent = "Error: Passwords do not match.";
+        formMessage.classList.remove("hidden");
+        formMessage.classList.add("text-red-600");
+        submitButton.disabled = false;
+        submitButton.classList.remove("opacity-50", "cursor-not-allowed");
+        loadingIndicator.classList.add("hidden");
+        return;
+      }
+
+      if (!API_URL) {
+        console.error("PUBLIC_API_URL no está definida");
+        formMessage.textContent = "Error: Configuración del servidor no disponible.";
+        formMessage.classList.remove("hidden");
+        formMessage.classList.add("text-red-600");
+        submitButton.disabled = false;
+        submitButton.classList.remove("opacity-50", "cursor-not-allowed");
+        loadingIndicator.classList.add("hidden");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}v1/auth/register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ data: data }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          formMessage.textContent = "Pre-registration successful! Thank you.";
+          formMessage.classList.remove("hidden");
+          formMessage.classList.add("text-green-600");
+          preRegistrationForm.reset();
+        } else {
+          const errorMessage =
+            result.message || "An error occurred during pre-registration.";
+          formMessage.textContent = `Error: ${errorMessage}`;
+          formMessage.classList.remove("hidden");
+          formMessage.classList.add("text-red-600");
+        }
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        formMessage.textContent =
+          "Error: Could not connect to the server. Please try again later.";
+        formMessage.classList.remove("hidden");
+        formMessage.classList.add("text-red-600");
+      } finally {
+        submitButton.disabled = false;
+        submitButton.classList.remove("opacity-50", "cursor-not-allowed");
+        loadingIndicator.classList.add("hidden");
+      }
+    });
+  }
+</script> 

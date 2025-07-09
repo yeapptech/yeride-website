@@ -3,15 +3,10 @@
   <head>
     <title>Redirecting...</title>
     <script>
-      // Extract query parameters from the URL
-
-      // Define the deep link for your app
       const deepLink = `yeride://register`;
 
-      // Attempt to redirect to the deep link
       window.location.href = deepLink;
 
-      // Fallback: Show a button if deep linking fails
       setTimeout(() => {
         document.getElementById("manualLink").style.display = "block";
       }, 2000);
