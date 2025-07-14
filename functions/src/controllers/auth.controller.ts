@@ -45,16 +45,15 @@ export const auth = async (req: Request, res: Response) => {
   }
 
   // const { firstName, lastName, email, password, phoneNumber, rol } = data;
-  const {firstName, lastName, email, phoneNumber, rol } = data;
+  const { firstName, lastName, email, phoneNumber, rol } = data;
 
-  // if (!firstName || !lastName || !email || !password || !phoneNumber || !rol) {
-  if (!firstName || !lastName || !email || phoneNumber || !rol) {
+  if (!firstName || !lastName || !email || !phoneNumber || !rol) {
     console.warn(
-      "Missing required registration data (fullName, email, password, phoneNumber, rol).",
+      "Missing required registration data: (firstName, lastName, email, password, phoneNumber, rol).",
       { receivedData: data }
     );
     res.status(400).json({
-      error: "Missing required registration data.",
+      error: "Missing required registration data...",
     } as ErrorResponse);
     return;
   }
