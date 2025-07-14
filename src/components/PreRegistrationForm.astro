@@ -5,21 +5,33 @@
 <div class="bg-white/95 backdrop-blur rounded-lg shadow-lg">
   <div class="p-8">
     <form id="pre-registration-form" class="space-y-6">
-      <div>
-        <label
-          for="fullName"
-          class="text-gray-700 font-medium block mb-1"
-        >
-          Full Name
-        </label>
-        <input
-          id="fullName"
-          name="fullName"
-          type="text"
-          class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          placeholder="Enter your full name"
-          required
-        />
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label for="firstName" class="text-gray-700 font-medium block mb-1">
+            First Name
+          </label>
+          <input
+            id="firstName"
+            name="firstName"
+            type="text"
+            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Enter your first name"
+            required
+          />
+        </div>
+        <div>
+          <label for="lastName" class="text-gray-700 font-medium block mb-1">
+            Last Name
+          </label>
+          <input
+            id="lastName"
+            name="lastName"
+            type="text"
+            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Enter your last name"
+            required
+          />
+        </div>
       </div>
 
       <div>
@@ -39,7 +51,7 @@
         />
       </div>
 
-      <div class="grid md:grid-cols-2 gap-4">
+      <!-- <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label
             for="password"
@@ -72,53 +84,53 @@
             required
           />
         </div>
-      </div>
-
-      <div>
-        <label class="text-gray-700 font-medium block mb-1">
-          I want to join as
-        </label>
-        <div class="relative">
-          <select
-            id="rol"
-            name="rol"
+      </div> -->
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label for="phoneNumber" class="text-gray-700 font-medium block mb-1">
+            Phone Number
+          </label>
+          <input
+            id="phoneNumber"
+            name="phoneNumber"
+            type="tel"
+            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="+12345678900"
+            value="+1"
+            pattern="^\+1\d{10}$"
             required
-            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm appearance-none pr-8"
-          >
-            <option value="" disabled selected>Select your role</option>
-            <option value="rider">Rider</option>
-            <option value="driver">Driver</option>
-          </select>
-          <div
-            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
-          >
-            <svg
-              class="fill-current h-4 w-4"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              ><path
-                d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9z"
-              ></path></svg
+            data-prefix="+1"
+          />
+        </div>
+        <div>
+          <label class="text-gray-700 font-medium block mb-1">
+            I want to join as
+          </label>
+          <div class="relative">
+            <select
+              id="rol"
+              name="rol"
+              required
+              class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm appearance-none pr-8"
             >
+              <option value="" disabled selected>Select your role</option>
+              <option value="rider">Rider</option>
+              <option value="driver">Driver</option>
+            </select>
+            <div
+              class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
+            >
+              <svg
+                class="fill-current h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                ><path
+                  d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9z"
+                ></path></svg
+              >
+            </div>
           </div>
         </div>
-      </div>
-
-      <div>
-        <label for="phoneNumber" class="text-gray-700 font-medium block mb-1">
-          Phone Number
-        </label>
-        <input
-          id="phoneNumber"
-          name="phoneNumber"
-          type="tel"
-          class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          placeholder="+12345678900"
-          value="+1"
-          pattern="^\+1\d{10}$"
-          required
-          data-prefix="+1"
-        />
       </div>
 
       <button
@@ -128,7 +140,7 @@
                 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
         disabled
       >
-        Submit Pre-registration
+        Submit
       </button>
       <div
         id="loading-indicator"
@@ -166,7 +178,7 @@
   const phoneNumberInput = document.getElementById("phoneNumber");
 
   function validateForm() {
-    if (!preRegistrationForm) return false; 
+    if (!preRegistrationForm) return false;
 
     let allFieldsValid = true;
     const requiredInputs = preRegistrationForm.querySelectorAll("[required]");
@@ -176,7 +188,7 @@
       console.debug("Validating input:", input.id, "Value:", input.value);
       if (input.id === "phoneNumber") {
         const prefix = input.dataset.prefix || "";
-        const expectedLength = prefix.length + 10; 
+        const expectedLength = prefix.length + 10;
 
         if (
           !input.value.startsWith(prefix) ||
@@ -190,23 +202,23 @@
       }
     });
 
-    const passwordInput = document.getElementById("password");
-    const confirmPasswordInput = document.getElementById("confirmPassword");
-    if (
-      passwordInput &&
-      confirmPasswordInput &&
-      passwordInput.value !== confirmPasswordInput.value
-    ) {
-      allFieldsValid = false;
-      const errorMessage = "Error: Passwords do not match.";
-      formMessage.textContent = `Error: ${errorMessage}`;
-      formMessage.classList.remove("hidden");
-      formMessage.classList.add("text-red-600");
-    } else {
-      formMessage.textContent = "";
-      formMessage.classList.add("hidden");
-      formMessage.classList.remove("text-green-600", "text-red-600");
-    }
+    // const passwordInput = document.getElementById("password");
+    // const confirmPasswordInput = document.getElementById("confirmPassword");
+    // if (
+    //   passwordInput &&
+    //   confirmPasswordInput &&
+    //   passwordInput.value !== confirmPasswordInput.value
+    // ) {
+    //   allFieldsValid = false;
+    //   const errorMessage = "Error: Passwords do not match.";
+    //   formMessage.textContent = `Error: ${errorMessage}`;
+    //   formMessage.classList.remove("hidden");
+    //   formMessage.classList.add("text-red-600");
+    // } else {
+    //   formMessage.textContent = "";
+    //   formMessage.classList.add("hidden");
+    //   formMessage.classList.remove("text-green-600", "text-red-600");
+    // }
 
     const roleSelect = document.getElementById("rol");
     if (roleSelect && roleSelect.value === "") {
@@ -238,10 +250,10 @@
         phoneNumberInput.selectionStart <= prefix.length
       ) {
         e.preventDefault();
-        return; 
+        return;
       }
 
-      // Prevenir escribir más de 10 dígitos 
+      // Prevenir escribir más de 10 dígitos
       if (
         digitsPart.length >= maxDigits &&
         /\d/.test(e.key) &&
@@ -275,7 +287,7 @@
       }
 
       phoneNumberInput.value = value;
-      validateForm(); 
+      validateForm();
     });
 
     phoneNumberInput.addEventListener("focus", () => {
@@ -320,23 +332,24 @@
         data[key] = value.toString();
       });
 
-      if (
-        data["password"] !== undefined &&
-        data["confirmPassword"] !== undefined &&
-        data["password"] !== data["confirmPassword"]
-      ) {
-        formMessage.textContent = "Error: Passwords do not match.";
-        formMessage.classList.remove("hidden");
-        formMessage.classList.add("text-red-600");
-        submitButton.disabled = false;
-        submitButton.classList.remove("opacity-50", "cursor-not-allowed");
-        loadingIndicator.classList.add("hidden");
-        return;
-      }
+      // if (
+      //   data["password"] !== undefined &&
+      //   data["confirmPassword"] !== undefined &&
+      //   data["password"] !== data["confirmPassword"]
+      // ) {
+      //   formMessage.textContent = "Error: Passwords do not match.";
+      //   formMessage.classList.remove("hidden");
+      //   formMessage.classList.add("text-red-600");
+      //   submitButton.disabled = false;
+      //   submitButton.classList.remove("opacity-50", "cursor-not-allowed");
+      //   loadingIndicator.classList.add("hidden");
+      //   return;
+      // }
 
       if (!API_URL) {
         console.error("PUBLIC_API_URL no está definida");
-        formMessage.textContent = "Error: Configuración del servidor no disponible.";
+        formMessage.textContent =
+          "Error: Configuración del servidor no disponible.";
         formMessage.classList.remove("hidden");
         formMessage.classList.add("text-red-600");
         submitButton.disabled = false;
@@ -382,4 +395,4 @@
       }
     });
   }
-</script> 
+</script>
