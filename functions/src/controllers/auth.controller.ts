@@ -1,4 +1,4 @@
-import {Request, Response} from "express";
+import { Request, Response } from "express";
 import {
   auth as authAdmin,
   db as dbAdmin,
@@ -32,7 +32,7 @@ export const auth = async (req: Request, res: Response) => {
     return;
   }
 
-  const {data} = req.body as { data: RegisterUserData };
+  const { data } = req.body as { data: RegisterUserData };
 
   if (!data) {
     console.warn(
@@ -45,7 +45,7 @@ export const auth = async (req: Request, res: Response) => {
   }
 
   // const { firstName, lastName, email, password, phoneNumber, rol } = data;
-  const { firstName, lastName, email, phoneNumber, rol } = data;
+  const {firstName, lastName, email, phoneNumber, rol } = data;
 
   // if (!firstName || !lastName || !email || !password || !phoneNumber || !rol) {
   if (!firstName || !lastName || !email || phoneNumber || !rol) {
@@ -120,11 +120,9 @@ export const auth = async (req: Request, res: Response) => {
     };
 
     console.log("LOG: Attempting to create Firestore document for user..."); // <--- NUEVO LOG 5
-    await dbAdmin
-      .collection("whitelist")
-      .add(personDataToCreate);
-      // .set(personDataToCreate);
-      // .doc(registeredUser.uid)
+    await dbAdmin.collection("whitelist").add(personDataToCreate);
+    // .set(personDataToCreate);
+    // .doc(registeredUser.uid)
     // console.debug(
     //   `LOG: Firestore document created for user ${registeredUser.uid}`
     // );
@@ -158,10 +156,9 @@ export const auth = async (req: Request, res: Response) => {
     //   }
     // }
 
-    let statusCode = 500;
-    let errorMessage =
-      "An unexpected error occurred during registration.";
-    let errorCode = "internal";
+    const statusCode = 500;
+    const errorMessage = "An unexpected error occurred during registration.";
+    const errorCode = "internal";
 
     // if (
     //   typeof error === "object" &&
@@ -210,7 +207,7 @@ export const auth = async (req: Request, res: Response) => {
     //     default:
     //       statusCode = 500;
     //       const firebaseErrorMessage =error instanceof Error?error.message:"";
-    //       errorMessage = `Firebase Auth Error: ${firebaseErrorMessage}`; 
+    //       errorMessage = `Firebase Auth Error: ${firebaseErrorMessage}`;
     //       errorCode = "internal";
     //       break;
     //   }
