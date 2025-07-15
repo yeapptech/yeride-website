@@ -13,7 +13,7 @@ interface RegisterUserData {
   phoneNumber: string;
   // phoneVerificationId?: string;
   // phoneVerificationCode?: string;
-  rol: string;
+  role: string;
 }
 
 interface ErrorResponse {
@@ -44,12 +44,12 @@ export const auth = async (req: Request, res: Response) => {
     return;
   }
 
-  // const { firstName, lastName, email, password, phoneNumber, rol } = data;
-  const { firstName, lastName, email, phoneNumber, rol } = data;
+  // const { firstName, lastName, email, password, phoneNumber, role } = data;
+  const { firstName, lastName, email, phoneNumber, role } = data;
 
-  if (!firstName || !lastName || !email || !phoneNumber || !rol) {
+  if (!firstName || !lastName || !email || !phoneNumber || !role) {
     console.warn(
-      "Missing required registration data: (firstName, lastName, email, password, phoneNumber, rol).",
+      "Missing required registration data: (firstName, lastName, email, password, phoneNumber, role).",
       { receivedData: data }
     );
     res.status(400).json({
@@ -115,7 +115,9 @@ export const auth = async (req: Request, res: Response) => {
       // licenseVerified: false,
       // age: 0,
       // profileCompleted: false,
-      rol: rol,
+      role: role,
+      createdAt: new Date().toISOString(),
+      registrationCompletedAt: ""
     };
 
     console.log("LOG: Attempting to create Firestore document for user..."); // <--- NUEVO LOG 5
