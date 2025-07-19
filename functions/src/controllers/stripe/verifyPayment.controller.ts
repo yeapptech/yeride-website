@@ -9,7 +9,7 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-const STRIPE_API_VERSION = "2025-05-28.basil";
+const STRIPE_API_VERSION = "2025-06-30.basil";
 
 export const verifyApiCostsPaymentStatus = async (req: any, res: Response) => {
   const stripe = new Stripe(STRIPE_SECRET_KEY.value(), {
@@ -124,7 +124,7 @@ export const verifyApiCostsPaymentStatus = async (req: any, res: Response) => {
             `PaymentMethod ${paymentMethodId} is not a card or has no card details.`
           );
         }
-      } catch (pmError: unknown) {
+      } catch (pmError: any) {
         functionsLogger.error(
           `Error retrieving PaymentMethod ${paymentMethodId}:`,
           pmError
@@ -156,7 +156,7 @@ export const verifyApiCostsPaymentStatus = async (req: any, res: Response) => {
 
     res.json({ status: paymentIntent.status });
     return;
-  } catch (error: unknown) {
+  } catch (error: any) {
     functionsLogger.error(
       "Error verifying API Costs PaymentIntent status:",
       error

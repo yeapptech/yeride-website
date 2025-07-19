@@ -8,7 +8,7 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-const STRIPE_API_VERSION = "2025-05-28.basil";
+const STRIPE_API_VERSION = "2025-06-30.basil";
 
 interface CreatePaymentIntentRequestBody {
   currency: string;
@@ -168,7 +168,7 @@ export const createApiCostsPaymentIntent = async (req: AuthenticatedRequest, res
       totalAmount: totalCostUSD,
     });
     return;
-  } catch (error: unknown) {
+  } catch (error: any) {
     functionsLogger.error(
       "Error al crear la intención de pago de costos de API:",
       error

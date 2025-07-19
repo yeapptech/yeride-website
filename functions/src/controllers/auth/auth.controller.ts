@@ -113,7 +113,7 @@ export const auth = async (req: Request, res: Response) => {
       // uid: registeredUser.uid,
     });
     return;
-  } catch (error: unknown) {
+  } catch (error: any) {
     // if (
     //   registeredUser &&
     //   typeof error === "object" && error !== null &&
@@ -126,7 +126,7 @@ export const auth = async (req: Request, res: Response) => {
     //     console.info(
     //       `Cleaned up partially created user: ${registeredUser.uid}`
     //     );
-    //   } catch (deleteError: unknown) {
+    //   } catch (deleteError: any) {
     //     console.error(
     //       "Failed to clean up partially created user:",
     //       deleteError
@@ -145,7 +145,7 @@ export const auth = async (req: Request, res: Response) => {
     //   typeof (error as { code?: string }).code === "string" &&
     //   (error as { code: string }).code.startsWith("auth/")
     // ) {
-    //   switch (((error as unknown) as { code: string; message?: string }).code) {
+    //   switch (((error as any) as { code: string; message?: string }).code) {
     //     case "auth/email-already-in-use":
     //     case "auth/phone-number-already-exists":
     //     case "auth/credential-already-in-use":
@@ -206,7 +206,7 @@ export const auth = async (req: Request, res: Response) => {
     //   errorMessage =
     //       (typeof error === "object" && error !== null && "message" in error &&
     //         typeof (error as { message?: string }).message === "string") ?
-    //         ((error as unknown) as { message: string }).message :
+    //         ((error as any) as { message: string }).message :
     //         "An unexpected error occurred during registration.";
     //   errorCode = "internal";
     // }

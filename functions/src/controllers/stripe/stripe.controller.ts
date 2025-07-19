@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import { STRIPE_SECRET_KEY } from "../../conf/env.js"; 
 import { Request, Response } from "express";
 
-const STRIPE_API_VERSION = "2025-05-28.basil";
+const STRIPE_API_VERSION = "2025-06-30.basil";
 
 export const createVerificationSession = async (req: Request, res: Response): Promise<void> => {
   const stripe = new Stripe(STRIPE_SECRET_KEY.value(), {
@@ -38,7 +38,7 @@ export const createVerificationSession = async (req: Request, res: Response): Pr
 
     res.json({ url: session.url });
     return;
-  } catch (error: unknown) {
+  } catch (error: any) {
     const errorMessage =
       typeof error === "object" && error !== null && "message" in error
         ? (error as { message?: string }).message

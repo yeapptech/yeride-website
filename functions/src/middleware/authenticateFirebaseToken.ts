@@ -30,7 +30,7 @@ const authenticateFirebaseToken = async (
 
     functionsLogger.log(`Firebase ID token authenticated successfully for UID: ${decodedToken.uid}`);
     return next();
-  } catch (error: unknown) {
+  } catch (error: any) {
     functionsLogger.error("Error verifying Firebase ID token:", error);
     const errorMessage = (error as Error)?.message || "Invalid token.";
     return res.status(401).json({ error: `Unauthorized: ${errorMessage}` });

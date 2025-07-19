@@ -10,7 +10,7 @@ if (!admin.apps.length) {
 }
 
 const db = getFirestore();
-const STRIPE_API_VERSION = "2025-05-28.basil";
+const STRIPE_API_VERSION = "2025-06-30.basil";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -96,7 +96,7 @@ export const createAccountLink = async (req: AuthenticatedRequest, res: Response
         stripeAccountId = account.id;
         await driverRef.update({ stripeAccountId: stripeAccountId });
         functionsLogger.info(`createAccountLink: New Stripe Connect account created and saved for user ${uid}: ${stripeAccountId}`);
-      } catch (createError: unknown) {
+      } catch (createError: any) {
         functionsLogger.error("createAccountLink: Error creating Stripe Connect account:", createError);
 
         if (createError instanceof Stripe.errors.StripeError && createError.code === "account_already_exists" && createError.param === "email") {
@@ -119,7 +119,7 @@ export const createAccountLink = async (req: AuthenticatedRequest, res: Response
         ) {
           functionsLogger.warn(`createAccountLink: Existing Stripe account ${stripeAccountId} for user ${uid} is not a 'standard' Connect account or does not have active capabilities. User may need re-onboarding.`);
         }
-      } catch (retrieveError: unknown) {
+      } catch (retrieveError: any) {
         if (retrieveError instanceof Stripe.errors.StripeError && retrieveError.code === "resource_missing") {
           functionsLogger.warn(`createAccountLink: Stripe account ${stripeAccountId} for user ${uid} not found on Stripe. Resetting ID in Firestore.`);
           await driverRef.update({ stripeAccountId: FieldValue.delete() });
@@ -151,7 +151,7 @@ export const createAccountLink = async (req: AuthenticatedRequest, res: Response
     res.status(200).json({ accountLink: accountLink.url });
     return;
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     functionsLogger.error("createAccountLink: Error in top-level catch:", error);
     if (error instanceof Stripe.errors.StripeError) {
       res.status(error.statusCode || 500).json({ error: error.message, code: error.code });
@@ -213,7 +213,7 @@ export const accountStatus = async (req: AuthenticatedRequest, res: Response) =>
     res.status(200).json(accountStatus);
     return;
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     functionsLogger.error("accountStatus: Error in top-level catch:", error);
     if (error instanceof Stripe.errors.StripeError) {
       if (error.code === "account_invalid" || error.code === "resource_missing") {

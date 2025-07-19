@@ -10,7 +10,7 @@ if (!admin.apps.length) {
 }
 
 const db = getFirestore();
-const STRIPE_API_VERSION = "2025-05-28.basil";
+const STRIPE_API_VERSION = "2025-06-30.basil";
 
 interface VerificationSessionMetadata {
   userId?: string;
@@ -96,7 +96,7 @@ export const handleStripeWebhook = async (req: any, res: Response) => {
       sig,
       stripeWebhookSecret
     );
-  } catch (err: unknown) {
+  } catch (err: any) {
     functionsLogger.error(
       `⚠️ Error al verificar la firma del webhook de Stripe: ${(err as Error).message}`
     );
@@ -126,7 +126,7 @@ export const handleStripeWebhook = async (req: any, res: Response) => {
           report = await stripe.identity.verificationReports.retrieve(
             verifiedSession.last_verification_report
           ) as VerificationReport;
-        } catch (reportError: unknown) {
+        } catch (reportError: any) {
           functionsLogger.error(
             `Error al recuperar el Informe de Verificación ${verifiedSession.last_verification_report}:`,
             reportError
@@ -241,7 +241,7 @@ export const handleStripeWebhook = async (req: any, res: Response) => {
         functionsLogger.log(
           `Estado de verificación de usuario ${userId} actualizado en Firestore. License Verified: ${isDriverLicenseVerified}.`
         );
-      } catch (dbError: unknown) {
+      } catch (dbError: any) {
         functionsLogger.error(
           "Error al actualizar el estado de verificación del usuario en Firestore:",
           dbError
@@ -282,7 +282,7 @@ export const handleStripeWebhook = async (req: any, res: Response) => {
         functionsLogger.log(
           `Estado de verificación de usuario ${userId} actualizado a 'requires_input'.`
         );
-      } catch (dbError: unknown) {
+      } catch (dbError: any) {
         res.status(400).send({ error: dbError, message: "som"});
       }
       break;
@@ -320,7 +320,7 @@ export const handleStripeWebhook = async (req: any, res: Response) => {
         functionsLogger.log(
           `Estado de verificación de usuario ${userId} actualizado a 'canceled'.`
         );
-      } catch (dbError: unknown) {
+      } catch (dbError: any) {
         functionsLogger.error(
           "Error al actualizar el estado de usuario a \"canceled\":",
           dbError
