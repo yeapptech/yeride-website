@@ -13,7 +13,7 @@ interface RegisterUserData {
   phoneNumber: string;
   // phoneVerificationId?: string;
   // phoneVerificationCode?: string;
-  rol: string;
+  role: string;
 }
 
 interface ErrorResponse {
@@ -22,10 +22,7 @@ interface ErrorResponse {
 }
 
 export const auth = async (req: Request, res: Response) => {
-  console.debug("Register user HTTP function called.");
-
   if (req.method !== "POST") {
-    console.warn(`Method Not Allowed: ${req.method}`);
     res.status(405).json({
       error: "Method Not Allowed. Only POST requests are accepted.",
     } as ErrorResponse);
@@ -35,45 +32,28 @@ export const auth = async (req: Request, res: Response) => {
   const { data } = req.body as { data: RegisterUserData };
 
   if (!data) {
-    console.warn(
-      "Missing 'data' field in request body. Assuming direct payload."
-    );
     res.status(400).json({
       error: "Missing data payload in request body.",
     } as ErrorResponse);
     return;
   }
 
-  // const { firstName, lastName, email, password, phoneNumber, rol } = data;
-  const { firstName, lastName, email, phoneNumber, rol } = data;
+  // const { firstName, lastName, email, password, phoneNumber, role } = data;
+  const { firstName, lastName, email, phoneNumber, role } = data;
 
-  if (!firstName || !lastName || !email || !phoneNumber || !rol) {
-    console.warn(
-      "Missing required registration data: (firstName, lastName, email, password, phoneNumber, rol).",
-      { receivedData: data }
-    );
+  if (!firstName || !lastName || !email || !phoneNumber || !role) {
     res.status(400).json({
       error: "Missing required registration data...",
     } as ErrorResponse);
     return;
   }
 
-  console.debug("Received registration data:", data);
-
   // let registeredUser: UserRecord | null = null;
 
   try {
-    console.log("LOG: Attempting to get existing users by email..."); // <--- NUEVO LOG 1
     const existingUsers = await authAdmin.getUsers([{ email: email }]);
-    console.log(
-      "LOG: Finished getting existing users. Count:",
-      existingUsers.users.length
-    ); // <--- NUEVO LOG 2
-
+ 
     if (existingUsers.users.length > 0) {
-      console.warn("Attempted registration with already used email.", {
-        email,
-      });
       res.status(409).json({
         code: "auth/email-already-in-use",
         error: "The email address is already in use by another account.",
@@ -115,10 +95,11 @@ export const auth = async (req: Request, res: Response) => {
       // licenseVerified: false,
       // age: 0,
       // profileCompleted: false,
-      rol: rol,
+      role: role,
+      createdAt: new Date().toISOString(),
+      registrationCompletedAt: ""
     };
 
-    console.log("LOG: Attempting to create Firestore document for user..."); // <--- NUEVO LOG 5
     await dbAdmin.collection("whitelist").add(personDataToCreate);
     // .set(personDataToCreate);
     // .doc(registeredUser.uid)
@@ -133,8 +114,6 @@ export const auth = async (req: Request, res: Response) => {
     });
     return;
   } catch (error: unknown) {
-    console.error("LOG: Error caught during registration process:", error); // <--- LOG REFORZADO
-
     // if (
     //   registeredUser &&
     //   typeof error === "object" && error !== null &&
