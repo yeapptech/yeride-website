@@ -1,59 +1,50 @@
-import * as functionsLogger from "firebase-functions/logger";
-import * as crypto from "crypto";
-import { getFirestore } from "firebase-admin/firestore";
+import * as functions from 'firebase-functions';
+import * as crypto from 'crypto';
+import { getFirestore } from 'firebase-admin/firestore';
 import { CHECKR_WEBHOOK_SECRET } from "../../conf/env.js";
 
 const db = getFirestore();
 
-export const checkrWebhook = async (req: any, res: any) => {
-  functionsLogger.info("Webhook recibido de Checkr.");
+// @ts-ignore
+export const checkrWebhook = functions.https.onRequest(async (req, res) => {
+  functions.logger.info("Webhook recibido de Checkr.");
 
-  if (req.method !== "POST") {
-    functionsLogger.warn(`Método ${req.method} no permitido para el webhook de Checkr.`);
-    return res.status(405).send("Method Not Allowed");
+  if (req.method !== 'POST') {
+    functions.logger.warn(`Método ${req.method} no permitido para el webhook de Checkr.`);
+    return res.status(405).send('Method Not Allowed');
   }
 
-  const signatureHeader = req.headers["x-checkr-signature"];
-  const signature = typeof signatureHeader === "string" ? signatureHeader : "";
+  const signatureHeader = req.headers['x-checkr-signature'];
+  const signature = typeof signatureHeader === 'string' ? signatureHeader : '';
   if (!signature) {
-    functionsLogger.error("Missing X-Checkr-Signature header in webhook.");
-    return res.status(401).send("Unauthorized: Missing signature");
+    functions.logger.error("Missing X-Checkr-Signature header in webhook.");
+    return res.status(401).send('Unauthorized: Missing signature');
   }
 
-  if (!req.rawBody) {
-    functionsLogger.error("req.rawBody is missing. Cannot verify signature. Ensure bodyParser.raw is used.");
-    return res.status(500).send("Internal Server Error: Raw body not available.");
-  }
-  const rawBody = req.rawBody.toString("utf8");
-
-  const checkrWebhookSecret = CHECKR_WEBHOOK_SECRET.value();
-  if (!checkrWebhookSecret) {
-    functionsLogger.error("CHECKR_WEBHOOK_SECRET is not configured. Cannot verify signature.");
-    return res.status(500).send("Server configuration error.");
-  }
-
+  const rawBody = req.rawBody ? req.rawBody.toString('utf8') : JSON.stringify(req.body);
+  
   const expectedSignature = crypto
-    .createHmac("sha256", checkrWebhookSecret)
+    .createHmac('sha256', CHECKR_WEBHOOK_SECRET)
     .update(rawBody)
-    .digest("hex");
+    .digest('hex');
 
   if (signature !== expectedSignature) {
-    functionsLogger.error(`Webhook signature mismatch. Expected: ${expectedSignature}, Received: ${signature}`);
-    return res.status(403).send("Invalid signature.");
+    functions.logger.error(`Webhook signature mismatch. Expected: ${expectedSignature}, Received: ${signature}`);
+    return res.status(403).send('Invalid signature.');
   }
 
-  functionsLogger.info("Checkr webhook signature verified successfully.");
+  functions.logger.info("Checkr webhook signature verified successfully.");
 
   let event;
   try {
-    event = JSON.parse(rawBody);
+    event = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   } catch (parseError) {
-    functionsLogger.error("Error parsing JSON body from rawBody:", parseError);
+    functions.logger.error("Error parsing JSON body:", parseError);
     return res.status(400).send("Malformed JSON in request body.");
   }
 
-  if (!event?.data?.object?.id) {
-    functionsLogger.error("Invalid event structure received:", event);
+  if (!event || !event.data || !event.data.object || !event.data.object.id) {
+    functions.logger.error("Invalid event structure received (missing data.object.id):", event);
     return res.status(400).send("Invalid event structure.");
   }
 
@@ -61,53 +52,59 @@ export const checkrWebhook = async (req: any, res: any) => {
   const reportId = report.id;
   const reportStatus = report.status;
   const reportResult = report.result;
+  const middleName = report.middle_name || null;
+  const ssn = report.ssn_last_4 || null;
+  const driverLicenseNumber = report.license_number || null;
+  const driverLicenseState = report.license_state || null;
+  const driverLicenseCountry = report.license_country || null;
 
-  functionsLogger.info(`Received Checkr event: ${event.type} for report ${reportId}`);
-  functionsLogger.info("Payload recibido de Checkr:", JSON.stringify(report, null, 2));
+  functions.logger.info(`Received Checkr event: ${event.type} for report ${reportId}`);
+  functions.logger.info("Payload recibido de Checkr:", JSON.stringify(report, null, 2));
 
-  if (["report.completed", "report.adjudicated"].includes(event.type)) {
+  if (['report.completed', 'report.adjudicated'].includes(event.type)) {
     try {
-      const peopleSnapshot = await db
-        .collection("people")
-        .where("checkrReportId", "==", reportId)
+      const usersSnapshot = await db
+        .collection('users')
+        .where('checkrReportId', '==', reportId)
         .limit(1)
         .get();
 
-      if (peopleSnapshot.empty) {
-        functionsLogger.warn(`No driver found for report ID: ${reportId}`);
-        return res.status(200).send("Driver not found, but webhook processed.");
+      if (usersSnapshot.empty) {
+        functions.logger.warn(`No user found for Checkr report ID: ${reportId}`);
+        return res.status(200).send('User not found for this report, but webhook processed.');
       }
 
-      const driverDoc = peopleSnapshot.docs[0];
-      const driverUid = driverDoc.id;
+      const userDoc = usersSnapshot.docs[0];
+      const userId = userDoc.id;
 
       let backgroundCheckPassed = false;
-      if (reportResult === "clear") {
+      if (reportResult === 'clear') {
         const mvr = report.motor_vehicle_record;
         backgroundCheckPassed = !mvr?.summary?.adverse_action_required;
-      } else if (reportResult === "consider") {
+      } else if (reportResult === 'consider') {
         backgroundCheckPassed = false;
       }
 
-      await driverDoc.ref.update({
-        backgroundCheckStatus: reportStatus,
-        backgroundCheckResult: reportResult,
-        backgroundCheckPassed,
-        backgroundCheckDetails: {
+      await userDoc.ref.update({
+        checkrData: {
           status: reportStatus,
           result: reportResult,
-          timestamp: new Date(),
-          eventType: event.type,
+          passed: backgroundCheckPassed,
+          middleName: middleName,
+          ssn: ssn,
+          driverLicenseNumber: driverLicenseNumber,
+          driverLicenseState: driverLicenseState,
+          driverLicenseCountry: driverLicenseCountry,
+          updatedAt: new Date(), 
         },
       });
 
-      functionsLogger.info(`Firestore updated for driver ${driverUid}. Status: ${reportStatus}, Result: ${reportResult}, Passed: ${backgroundCheckPassed}`);
-      return res.status(200).send("Webhook processed and Firestore updated.");
+      functions.logger.info(`Firestore updated for user ${userId}. checkrData: Status=${reportStatus}, Result=${reportResult}, Passed=${backgroundCheckPassed}`);
+      return res.status(200).send('Checkr webhook processed and Firestore updated.');
     } catch (error) {
-      functionsLogger.error(`Error processing Checkr report ${reportId}:`, error);
-      return res.status(500).send("Internal Server Error during processing.");
+      functions.logger.error(`Error processing Checkr report ${reportId} for user:`, error);
+      return res.status(500).send('Internal Server Error during processing Checkr webhook.');
     }
   }
-
-  return res.status(200).send("Event received, but not processed.");
-};
+  return res.status(200).send('Event received, but not processed (unhandled event type).');
+});

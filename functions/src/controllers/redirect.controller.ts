@@ -1,17 +1,22 @@
-import * as functions from "firebase-functions";
+/* eslint-disable no-useless-escape */
+import * as functions from 'firebase-functions';
 
 export const handleStripeRedirect = functions.https.onRequest(async (req, res) => {
-  let redirectUrl = "<span class=\"math-inline\">{DEEPLINK_BASE_URL}</span>{path}";
+    const DEEPLINK_BASE_URL = "yeappdriver://";
+    const successPath = "stripe-connect-return";
+    const refreshPath = "stripe-connect-refresh";
 
-  const queryParams = new URLSearchParams(
-    Object.fromEntries(
-      Object.entries(req.query).map(([key, value]) => [key, Array.isArray(value) ? value.join(",") : String(value)])
-    )
-  ).toString();
-  if (queryParams) {
-    redirectUrl += `?${queryParams}`;
-  }
+    const { account_id, state } = req.query;
+    const path = req.path.substring(1);
 
-  functions.logger.info(`Redirecting Stripe from ${req.url} to deep link: ${redirectUrl}`);
-  return res.redirect(303, redirectUrl);
+    let redirectUrl = `<span class="math-inline">\{DEEPLINK\_BASE\_URL\}</span>{path}`;
+
+    // @ts-ignore
+    const queryParams = new URLSearchParams(req.query).toString();
+    if (queryParams) {
+        redirectUrl += `?${queryParams}`;
+    }
+
+    functions.logger.info(`Redirecting Stripe from ${req.url} to deep link: ${redirectUrl}`);
+    return res.redirect(303, redirectUrl);
 });

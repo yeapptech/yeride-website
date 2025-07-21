@@ -1,143 +1,136 @@
-import { Request, Response } from "express"; // Importa Request y Response de 'express'
-import * as functionsLogger from "firebase-functions/logger";
+import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore } from "firebase-admin/firestore";
 import Stripe from "stripe";
 import { STRIPE_SECRET_KEY } from "../../conf/env.js";
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-
 const db = getFirestore();
+
 const STRIPE_API_VERSION = "2025-06-30.basil";
 
-interface AuthenticatedRequest extends Request {
-  user?: {
-    uid: string;
-    email?: string;
-  };
-}
-
-interface CreateAccountLinkRequestBody {
-  return_url: string;
-  refresh_url: string;
-}
-
-interface DriverData {
-  stripeAccountId?: string | null;
-  email?: string;
-}
-
-interface AccountStatusResponse {
-  details_submitted: boolean;
-  charges_enabled: boolean;
-  payouts_enabled: boolean;
-  requirements: {
-    currently_due: string[];
-    past_due: string[];
-    eventually_due: string[];
-    disabled_reason: string | null;
-  };
-  type: string;
-}
-
-export const createAccountLink = async (req: AuthenticatedRequest, res: Response) => {
-  const stripeClient = new Stripe(STRIPE_SECRET_KEY.value(), {
+export const createAccountLink = async (req, res) => {
+  const stripeClient = new Stripe(STRIPE_SECRET_KEY, {
     apiVersion: STRIPE_API_VERSION,
   });
-
   try {
-    const uid = req.user?.uid;
-    if (!uid) {
-      functionsLogger.warn("createAccountLink: Usuario no autenticado.");
-      res.status(401).json({ error: "No autenticado. Token de ID de Firebase válido requerido." });
-      return;
+    const uid = req.user.uid;
+    const { return_url, refresh_url } = req.body;
+
+    if (!return_url || !refresh_url) {
+      return res
+        .status(400)
+        .json({ error: "Missing return_url or refresh_url." });
     }
 
-    const { return_url, refresh_url } = req.body as CreateAccountLinkRequestBody;
-
-    if (!return_url || typeof return_url !== "string" || !refresh_url || typeof refresh_url !== "string") {
-      functionsLogger.warn(`createAccountLink: Missing or invalid return_url/refresh_url for UID: ${uid}`);
-      res.status(400).json({ error: "Missing or invalid return_url or refresh_url." });
-      return;
-    }
-
-    const driverRef = db.collection("people").doc(uid);
+    const driverRef = db.collection("users").doc(uid);
     const driverDoc = await driverRef.get();
 
     if (!driverDoc.exists) {
-      functionsLogger.error(`createAccountLink: Driver not found for UID: ${uid}`);
-      res.status(404).json({ error: "Driver not found." });
-      return;
+      functions.logger.error(`Driver not found for UID: ${uid}`);
+      return res.status(404).json({ error: "Driver not found." });
     }
 
-    const driverData = driverDoc.data() as DriverData;
-    let stripeAccountId: string | null | undefined = driverData.stripeAccountId;
+    const driverData = driverDoc.data();
+    let stripeAccountId = driverData.stripeAccountId;
 
     if (!stripeAccountId) {
-      functionsLogger.info(`createAccountLink: No Stripe account ID found for user ${uid}. Creating a new Connect account.`);
+      functions.logger.info(
+        `No Stripe account ID found for user ${uid}. Creating a new Connect account.`
+      );
       try {
+        // @ts-ignore
         const account = await stripeClient.accounts.create({
           type: "standard",
           country: "US",
           email: driverData.email,
           capabilities: {
-            card_payments: { requested: true as const },
-            transfers: { requested: true as const },
+            card_payments: { requested: true },
+            transfers: { requested: true },
           },
           business_type: "individual",
           metadata: {
             firebaseUid: uid,
             platform: "YeAppDriver",
-            connectOnboardingInitiated: "true"
+            connectOnboardingInitiated: true,
           },
         });
         stripeAccountId = account.id;
         await driverRef.update({ stripeAccountId: stripeAccountId });
-        functionsLogger.info(`createAccountLink: New Stripe Connect account created and saved for user ${uid}: ${stripeAccountId}`);
-      } catch (createError: any) {
-        functionsLogger.error("createAccountLink: Error creating Stripe Connect account:", createError);
+        functions.logger.info(
+          `New Stripe Connect account created and saved for user ${uid}: ${stripeAccountId}`
+        );
+      } catch (createError) {
+        functions.logger.error(
+          "Error creating Stripe Connect account:",
+          createError
+        );
 
-        if (createError instanceof Stripe.errors.StripeError && createError.code === "account_already_exists" && createError.param === "email") {
-          res.status(400).json({ error: "A Stripe account already exists for this email. Please use a different email or contact support." });
-          return;
+        if (
+          createError.code === "account_already_exists" &&
+          createError.param === "email"
+        ) {
+          return res
+            .status(400)
+            .json({
+              error:
+                "A Stripe account already exists for this email. Please use a different email or contact support.",
+            });
         }
-        const errorMessage = (createError as Error)?.message || "Failed to create Stripe Connect account.";
-        res.status(500).json({ error: errorMessage });
-        return;
+        return res
+          .status(500)
+          .json({ error: "Failed to create Stripe Connect account." });
       }
     } else {
-      functionsLogger.info(`createAccountLink: Using existing Stripe account ID for user ${uid}: ${stripeAccountId}`);
+      functions.logger.info(
+        `Using existing Stripe account ID for user ${uid}: ${stripeAccountId}`
+      );
 
       try {
-        const existingAccount = await stripeClient.accounts.retrieve(stripeAccountId);
+        const existingAccount = await stripeClient.accounts.retrieve(
+          stripeAccountId
+        );
+        // @ts-ignore
         if (
           existingAccount.type !== "standard" ||
-          existingAccount.capabilities?.card_payments !== "active" ||
-          existingAccount.capabilities?.transfers !== "active"
+          // @ts-ignore
+          !existingAccount.capabilities.card_payments?.requested ||
+          // @ts-ignore
+          !existingAccount.capabilities.transfers?.requested
         ) {
-          functionsLogger.warn(`createAccountLink: Existing Stripe account ${stripeAccountId} for user ${uid} is not a 'standard' Connect account or does not have active capabilities. User may need re-onboarding.`);
+          functions.logger.warn(
+            `Existing Stripe account ${stripeAccountId} for user ${uid} is not a 'standard' Connect account or is missing capabilities. User may need re-onboarding.`
+          );
         }
-      } catch (retrieveError: any) {
-        if (retrieveError instanceof Stripe.errors.StripeError && retrieveError.code === "resource_missing") {
-          functionsLogger.warn(`createAccountLink: Stripe account ${stripeAccountId} for user ${uid} not found on Stripe. Resetting ID in Firestore.`);
-          await driverRef.update({ stripeAccountId: FieldValue.delete() });
+      } catch (retrieveError) {
+        if (retrieveError.raw.code === "resource_missing") {
+          functions.logger.warn(
+            `Stripe account ${stripeAccountId} for user ${uid} not found on Stripe. Resetting ID.`
+          );
+          await driverRef.update({
+            stripeAccountId: admin.firestore.FieldValue.delete(),
+          });
           stripeAccountId = null;
-          res.status(500).json({ error: "Stripe account not found, please try again." });
-          return;
+          return res
+            .status(500)
+            .json({ error: "Stripe account not found, please try again." });
         }
-        functionsLogger.error(`createAccountLink: Error retrieving existing Stripe account ${stripeAccountId}:`, retrieveError);
-        const errorMessage = (retrieveError as Error)?.message || "Failed to verify existing Stripe account.";
-        res.status(500).json({ error: errorMessage });
-        return;
+        functions.logger.error(
+          `Error retrieving existing Stripe account ${stripeAccountId}:`,
+          retrieveError
+        );
+        return res
+          .status(500)
+          .json({ error: "Failed to verify existing Stripe account." });
       }
     }
 
     if (!stripeAccountId) {
-      functionsLogger.error(`createAccountLink: No Stripe account ID available to create account link for user ${uid}.`);
-      res.status(500).json({ error: "Stripe account not available to create link." });
-      return;
+      functions.logger.error(
+        `No Stripe account ID available to create account link for user ${uid}.`
+      );
+      return res
+        .status(500)
+        .json({ error: "Stripe account not available to create link." });
     }
 
     const accountLink = await stripeClient.accountLinks.create({
@@ -147,56 +140,58 @@ export const createAccountLink = async (req: AuthenticatedRequest, res: Response
       type: "account_onboarding",
     });
 
-    functionsLogger.info(`createAccountLink: Account link generated for ${stripeAccountId}: ${accountLink.url}`);
-    res.status(200).json({ accountLink: accountLink.url });
-    return;
-
-  } catch (error: any) {
-    functionsLogger.error("createAccountLink: Error in top-level catch:", error);
-    if (error instanceof Stripe.errors.StripeError) {
-      res.status(error.statusCode || 500).json({ error: error.message, code: error.code });
-      return;
+    functions.logger.info(
+      `Account link generated for ${stripeAccountId}: ${accountLink.url}`
+    );
+    return res.status(200).json({ accountLink: accountLink.url });
+  } catch (error) {
+    functions.logger.error(
+      "Error in createAccountLink (top-level catch):",
+      error
+    );
+    if (
+      error.type === "StripeCardError" ||
+      error.type === "StripeInvalidRequestError"
+    ) {
+      return res.status(400).json({ error: error.message });
     }
-    const errorMessage = (error as Error)?.message || "Failed to generate Stripe account link due to unexpected error.";
-    res.status(500).json({ error: errorMessage });
-    return;
+    return res
+      .status(500)
+      .json({
+        error:
+          "Failed to generate Stripe account link due to unexpected error.",
+      });
   }
 };
 
-export const accountStatus = async (req: AuthenticatedRequest, res: Response) => {
-  const stripeClient = new Stripe(STRIPE_SECRET_KEY.value(), {
-    apiVersion: STRIPE_API_VERSION,
-  });
-
+export const accountStatus = async (req, res) => {
   try {
-    const uid = req.user?.uid;
-    if (!uid) {
-      functionsLogger.warn("accountStatus: Usuario no autenticado.");
-      res.status(401).json({ error: "No autenticado. Token de ID de Firebase válido requerido." });
-      return;
-    }
+    const stripeClient = new Stripe(STRIPE_SECRET_KEY, {
+      apiVersion: STRIPE_API_VERSION,
+    });
+    const uid = req.user.uid;
 
-    const driverRef = db.collection("people").doc(uid);
+    const driverRef = db.collection("users").doc(uid);
     const driverDoc = await driverRef.get();
 
     if (!driverDoc.exists) {
-      functionsLogger.error(`accountStatus: Driver not found for UID: ${uid}`);
-      res.status(404).json({ error: "Driver not found." });
-      return;
+      functions.logger.error(`Driver not found for UID: ${uid}`);
+      return res.status(404).json({ error: "Driver not found." });
     }
 
-    const driverData = driverDoc.data() as DriverData;
+    const driverData = driverDoc.data();
     const stripeAccountId = driverData.stripeAccountId;
 
     if (!stripeAccountId) {
-      functionsLogger.info(`accountStatus: Stripe account not yet created for driver UID: ${uid}`);
-      res.status(400).json({ error: "Stripe account not yet created for this driver." });
-      return;
+      return res
+        .status(400)
+        .json({ error: "Stripe account not yet created for this driver." });
     }
 
+    // @ts-ignore
     const account = await stripeClient.accounts.retrieve(stripeAccountId);
 
-    const accountStatus: AccountStatusResponse = {
+    const accountStatus = {
       details_submitted: account.details_submitted,
       charges_enabled: account.charges_enabled,
       payouts_enabled: account.payouts_enabled,
@@ -209,22 +204,27 @@ export const accountStatus = async (req: AuthenticatedRequest, res: Response) =>
       type: account.type,
     };
 
-    functionsLogger.info(`Stripe account status for ${stripeAccountId}:`, accountStatus);
-    res.status(200).json(accountStatus);
-    return;
-
-  } catch (error: any) {
-    functionsLogger.error("accountStatus: Error in top-level catch:", error);
-    if (error instanceof Stripe.errors.StripeError) {
-      if (error.code === "account_invalid" || error.code === "resource_missing") {
-        res.status(400).json({ error: "Invalid Stripe account ID or account not found. Please try re-initiating setup." });
-        return;
-      }
-      res.status(error.statusCode || 500).json({ error: error.message, code: error.code });
-      return;
+    functions.logger.info(
+      `Stripe account status for ${stripeAccountId}:`,
+      accountStatus
+    );
+    return res.status(200).json(accountStatus);
+  } catch (error) {
+    functions.logger.error("Error in accountStatus (top-level catch):", error);
+    if (
+      error.type === "StripeInvalidRequestError" &&
+      error.code === "account_invalid"
+    ) {
+      return res
+        .status(400)
+        .json({
+          error: "Invalid Stripe account ID. Please try re-initiating setup.",
+        });
     }
-    const errorMessage = (error as Error)?.message || "Failed to retrieve Stripe account status.";
-    res.status(500).json({ error: errorMessage });
-    return;
+    return res
+      .status(500)
+      .json({
+        error: error.message || "Failed to retrieve Stripe account status.",
+      });
   }
 };
