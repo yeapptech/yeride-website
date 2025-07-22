@@ -4,7 +4,6 @@ import { STRIPE_SECRET_KEY } from "../../conf/env.js";
 
 const STRIPE_API_VERSION = '2025-06-30.basil';
 
-
 export const verifyApiCostsPaymentStatus = async (req, res) => {
     const stripe = new Stripe(STRIPE_SECRET_KEY, {
       apiVersion: STRIPE_API_VERSION,
@@ -30,6 +29,7 @@ export const verifyApiCostsPaymentStatus = async (req, res) => {
 
         let cardDetailsToSave = null;
         let paymentMethodId = paymentIntent.payment_method; 
+        let customerId = paymentIntent.customer; 
 
         if (paymentMethodId) {
             try {
@@ -45,28 +45,11 @@ export const verifyApiCostsPaymentStatus = async (req, res) => {
                         country: paymentMethod.card.country,
                         fingerprint: paymentMethod.card.fingerprint,
                         funding: paymentMethod.card.funding,
+                        paymentMethodId: paymentMethodId,
+                        customerId: customerId,
                     };
                     console.log(`Card details retrieved for PaymentMethod ${paymentMethodId}:`, cardDetailsToSave);
-
-                    const userPaymentMethodsRef = admin.firestore()
-                        .collection('users')
-                        .doc(authenticatedUserId)
-                        .collection('paymentMethods');
-
-                        // @ts-ignore
-                    await userPaymentMethodsRef.doc(paymentMethodId).set({
-                        paymentMethodId: paymentMethodId,
-                        card: cardDetailsToSave,
-                        customerId: paymentIntent.customer,
-                        isDefault: false,
-                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                    }, { merge: true });
-                    
-                    console.log(`PaymentMethod ${paymentMethodId} saved to user's subcollection.`);
-
-                    await admin.firestore().collection('users').doc(authenticatedUserId).update({
-                        lastUsedPaymentMethodId: paymentMethodId,
-                    });
+                    console.log(`PaymentMethod ${paymentMethodId} will be saved only in apiPayments.`);
 
                 } else {
                     console.warn(`PaymentMethod ${paymentMethodId} is not a card or has no card details.`);
@@ -87,7 +70,8 @@ export const verifyApiCostsPaymentStatus = async (req, res) => {
             status: paymentIntent.status,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             cardDetails: cardDetailsToSave, 
-            paymentMethodId: paymentMethodId, 
+            paymentMethodId: paymentMethodId,
+            customerId: customerId,
         }, { merge: true });
 
         res.json({ status: paymentIntent.status });
