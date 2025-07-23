@@ -411,3 +411,262 @@ Issues? Report them at https://github.com/firebase/firebase-tools/issues and att
 [debug] [2025-07-23T20:14:29.024Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
 [debug] [2025-07-23T20:14:29.024Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
 [debug] [2025-07-23T20:14:29.024Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-23T20:16:11.793Z] File C:\yeapptech\yeride-website\functions\src\controllers\auth\auth.controller.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File C:\\yeapptech\\yeride-website\\functions\\src\\controllers\\auth\\auth.controller.ts changed, reloading triggers"}}
+[debug] [2025-07-23T20:16:12.805Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2025-07-23T20:16:13.838Z] > [functions] package.json contents: {
+  "name": "functions",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions:api",
+    "logs": "firebase functions:log",
+    "stage": "firebase deploy --only functions:api"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1",
+    "stripe": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/stripe": "^8.0.417",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.7.3"
+  },
+  "private": true
+}
+[debug] [2025-07-23T20:16:13.839Z] Building nodejs source
+[debug] [2025-07-23T20:16:13.839Z] Failed to find version of module node: reached end of search path C:\yeapptech\yeride-website\functions\node_modules
+[info] +  functions: Using node@22 from host. 
+[info] i  functions: Loaded environment variables from .env. 
+[debug] [2025-07-23T20:16:13.840Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-07-23T20:16:13.845Z] Found firebase-functions binary at 'C:\yeapptech\yeride-website\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8840
+
+[debug] [2025-07-23T20:16:14.438Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"api"},"stripeRedirect":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"stripeRedirect"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] +  functions: Loaded functions definitions from source: api, stripeRedirect. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: api, stripeRedirect."}}
+[debug] [2025-07-23T20:16:18.468Z] [worker-pool] Shutting down IDLE worker (us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] Shutting down IDLE worker (us-central1-api)"}}
+[debug] [2025-07-23T20:16:18.468Z] [worker-us-central1-api-092fc755-34c8-4af3-9938-9cac6ee40671]: FINISHING {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-092fc755-34c8-4af3-9938-9cac6ee40671]: FINISHING"}}
+[debug] [2025-07-23T20:16:18.482Z] [worker-us-central1-api-092fc755-34c8-4af3-9938-9cac6ee40671]: exited {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-092fc755-34c8-4af3-9938-9cac6ee40671]: exited"}}
+[debug] [2025-07-23T20:16:18.482Z] [worker-us-central1-api-092fc755-34c8-4af3-9938-9cac6ee40671]: FINISHED {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-092fc755-34c8-4af3-9938-9cac6ee40671]: FINISHED"}}
+[debug] [2025-07-23T20:16:18.998Z] File C:\yeapptech\yeride-website\functions\src\controllers\auth\auth.controller.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File C:\\yeapptech\\yeride-website\\functions\\src\\controllers\\auth\\auth.controller.ts changed, reloading triggers"}}
+[debug] [2025-07-23T20:16:20.012Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2025-07-23T20:16:21.022Z] > [functions] package.json contents: {
+  "name": "functions",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions:api",
+    "logs": "firebase functions:log",
+    "stage": "firebase deploy --only functions:api"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1",
+    "stripe": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/stripe": "^8.0.417",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.7.3"
+  },
+  "private": true
+}
+[debug] [2025-07-23T20:16:21.022Z] Building nodejs source
+[debug] [2025-07-23T20:16:21.022Z] Failed to find version of module node: reached end of search path C:\yeapptech\yeride-website\functions\node_modules
+[info] +  functions: Using node@22 from host. 
+[info] i  functions: Loaded environment variables from .env. 
+[debug] [2025-07-23T20:16:21.024Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-07-23T20:16:21.028Z] Found firebase-functions binary at 'C:\yeapptech\yeride-website\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8280
+
+[debug] [2025-07-23T20:16:21.830Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"api"},"stripeRedirect":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"stripeRedirect"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] +  functions: Loaded functions definitions from source: api, stripeRedirect. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: api, stripeRedirect."}}
+[debug] [2025-07-23T20:16:31.944Z] File C:\yeapptech\yeride-website\functions\src\controllers\auth\auth.controller.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File C:\\yeapptech\\yeride-website\\functions\\src\\controllers\\auth\\auth.controller.ts changed, reloading triggers"}}
+[debug] [2025-07-23T20:16:32.950Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2025-07-23T20:16:33.904Z] > [functions] package.json contents: {
+  "name": "functions",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions:api",
+    "logs": "firebase functions:log",
+    "stage": "firebase deploy --only functions:api"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1",
+    "stripe": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/stripe": "^8.0.417",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.7.3"
+  },
+  "private": true
+}
+[debug] [2025-07-23T20:16:33.904Z] Building nodejs source
+[debug] [2025-07-23T20:16:33.904Z] Failed to find version of module node: reached end of search path C:\yeapptech\yeride-website\functions\node_modules
+[info] +  functions: Using node@22 from host. 
+[info] i  functions: Loaded environment variables from .env. 
+[debug] [2025-07-23T20:16:33.906Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-07-23T20:16:33.910Z] Found firebase-functions binary at 'C:\yeapptech\yeride-website\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8051
+
+[debug] [2025-07-23T20:16:34.518Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"api"},"stripeRedirect":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"stripeRedirect"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] +  functions: Loaded functions definitions from source: api, stripeRedirect. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: api, stripeRedirect."}}
+[debug] [2025-07-23T20:16:55.843Z] File C:\yeapptech\yeride-website\functions\src\controllers\auth\auth.controller.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File C:\\yeapptech\\yeride-website\\functions\\src\\controllers\\auth\\auth.controller.ts changed, reloading triggers"}}
+[debug] [2025-07-23T20:16:56.853Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2025-07-23T20:16:57.808Z] > [functions] package.json contents: {
+  "name": "functions",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions:api",
+    "logs": "firebase functions:log",
+    "stage": "firebase deploy --only functions:api"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1",
+    "stripe": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/stripe": "^8.0.417",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.7.3"
+  },
+  "private": true
+}
+[debug] [2025-07-23T20:16:57.808Z] Building nodejs source
+[debug] [2025-07-23T20:16:57.809Z] Failed to find version of module node: reached end of search path C:\yeapptech\yeride-website\functions\node_modules
+[info] +  functions: Using node@22 from host. 
+[info] i  functions: Loaded environment variables from .env. 
+[debug] [2025-07-23T20:16:57.811Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-07-23T20:16:57.816Z] Found firebase-functions binary at 'C:\yeapptech\yeride-website\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8646
+
+[debug] [2025-07-23T20:16:58.622Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"api"},"stripeRedirect":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"stripeRedirect"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] +  functions: Loaded functions definitions from source: api, stripeRedirect. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: api, stripeRedirect."}}
+[debug] [2025-07-23T20:17:08.306Z] File C:\yeapptech\yeride-website\functions\src\controllers\auth\auth.controller.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File C:\\yeapptech\\yeride-website\\functions\\src\\controllers\\auth\\auth.controller.ts changed, reloading triggers"}}
+[debug] [2025-07-23T20:17:09.320Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2025-07-23T20:17:10.273Z] > [functions] package.json contents: {
+  "name": "functions",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions:api",
+    "logs": "firebase functions:log",
+    "stage": "firebase deploy --only functions:api"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1",
+    "stripe": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/stripe": "^8.0.417",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.7.3"
+  },
+  "private": true
+}
+[debug] [2025-07-23T20:17:10.273Z] Building nodejs source
+[debug] [2025-07-23T20:17:10.273Z] Failed to find version of module node: reached end of search path C:\yeapptech\yeride-website\functions\node_modules
+[info] +  functions: Using node@22 from host. 
+[info] i  functions: Loaded environment variables from .env. 
+[debug] [2025-07-23T20:17:10.275Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-07-23T20:17:10.279Z] Found firebase-functions binary at 'C:\yeapptech\yeride-website\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8136
+
+[debug] [2025-07-23T20:17:10.917Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"api"},"stripeRedirect":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"stripeRedirect"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] +  functions: Loaded functions definitions from source: api, stripeRedirect. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: api, stripeRedirect."}}
