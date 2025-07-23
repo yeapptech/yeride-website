@@ -10,7 +10,6 @@ export const checkrWebhook = functions.https.onRequest(async (req, res) => {
   functions.logger.info("Webhook recibido de Checkr.");
 
   if (req.method !== 'POST') {
-    functions.logger.warn(`Método ${req.method} no permitido para el webhook de Checkr.`);
     return res.status(405).send('Method Not Allowed');
   }
 
@@ -22,7 +21,6 @@ export const checkrWebhook = functions.https.onRequest(async (req, res) => {
   }
 
   const rawBody = req.rawBody ? req.rawBody.toString('utf8') : JSON.stringify(req.body);
-  
   const expectedSignature = crypto
     .createHmac('sha256', CHECKR_WEBHOOK_SECRET)
     .update(rawBody)
@@ -43,8 +41,8 @@ export const checkrWebhook = functions.https.onRequest(async (req, res) => {
     return res.status(400).send("Malformed JSON in request body.");
   }
 
-  if (!event || !event.data || !event.data.object || !event.data.object.id) {
-    functions.logger.error("Invalid event structure received (missing data.object.id):", event);
+  if (!event?.data?.object?.id) {
+    functions.logger.error("Invalid event structure received:", event);
     return res.status(400).send("Invalid event structure.");
   }
 
@@ -52,11 +50,6 @@ export const checkrWebhook = functions.https.onRequest(async (req, res) => {
   const reportId = report.id;
   const reportStatus = report.status;
   const reportResult = report.result;
-  const middleName = report.middle_name || null;
-  const ssn = report.ssn_last_4 || null;
-  const driverLicenseNumber = report.license_number || null;
-  const driverLicenseState = report.license_state || null;
-  const driverLicenseCountry = report.license_country || null;
 
   functions.logger.info(`Received Checkr event: ${event.type} for report ${reportId}`);
   functions.logger.info("Payload recibido de Checkr:", JSON.stringify(report, null, 2));
@@ -70,41 +63,43 @@ export const checkrWebhook = functions.https.onRequest(async (req, res) => {
         .get();
 
       if (usersSnapshot.empty) {
-        functions.logger.warn(`No user found for Checkr report ID: ${reportId}`);
-        return res.status(200).send('User not found for this report, but webhook processed.');
+        functions.logger.warn(`No user found for report ID: ${reportId}`);
+        return res.status(200).send('User not found, but webhook processed.');
       }
 
       const userDoc = usersSnapshot.docs[0];
       const userId = userDoc.id;
+      const userData = userDoc.data();
 
       let backgroundCheckPassed = false;
       if (reportResult === 'clear') {
         const mvr = report.motor_vehicle_record;
-        backgroundCheckPassed = !mvr?.summary?.adverse_action_required;
+        // @ts-ignore
+        backgroundCheckPassed = !mvr?.summary?.adverse_action_required ?? true;
       } else if (reportResult === 'consider') {
         backgroundCheckPassed = false;
       }
 
+      const currentCheckrData = userData.checkrData || {};
+
       await userDoc.ref.update({
         checkrData: {
+          ...currentCheckrData,
           status: reportStatus,
           result: reportResult,
           passed: backgroundCheckPassed,
-          middleName: middleName,
-          ssn: ssn,
-          driverLicenseNumber: driverLicenseNumber,
-          driverLicenseState: driverLicenseState,
-          driverLicenseCountry: driverLicenseCountry,
-          updatedAt: new Date(), 
+          timestamp: new Date(),
+          eventType: event.type,
         },
       });
 
-      functions.logger.info(`Firestore updated for user ${userId}. checkrData: Status=${reportStatus}, Result=${reportResult}, Passed=${backgroundCheckPassed}`);
-      return res.status(200).send('Checkr webhook processed and Firestore updated.');
+      functions.logger.info(`Firestore updated for user ${userId}. CheckrData.status: ${reportStatus}, CheckrData.result: ${reportResult}, CheckrData.passed: ${backgroundCheckPassed}`);
+      return res.status(200).send('Webhook processed and Firestore updated.');
     } catch (error) {
-      functions.logger.error(`Error processing Checkr report ${reportId} for user:`, error);
-      return res.status(500).send('Internal Server Error during processing Checkr webhook.');
+      functions.logger.error(`Error processing Checkr report ${reportId}:`, error);
+      return res.status(500).send('Internal Server Error during processing.');
     }
   }
-  return res.status(200).send('Event received, but not processed (unhandled event type).');
+
+  return res.status(200).send('Event received, but not processed.');
 });
