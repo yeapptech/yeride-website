@@ -16,7 +16,7 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
   });
   try {
     if (!CHECKR_SECRET_KEY || !CHECKR_API_URL) {
-        functions.logger.error("Missing Checkr API configuration. Please set checkr.secret_key and checkr.api_url.");
+        console.log("Missing Checkr API configuration. Please set checkr.secret_key and checkr.api_url.");
         return res.status(500).json({ error: "Configuración del servicio de verificación de antecedentes incompleta." });
     }
 
@@ -41,14 +41,14 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
     const userRef = db.collection("users").doc(uid);
     const userDoc = await userRef.get();
     if (!userDoc.exists) {
-      functions.logger.error(`User not found for UID: ${uid}`);
+      console.log(`User not found for UID: ${uid}`);
       return res.status(404).json({ error: "Usuario no encontrado." });
     }
 
     const userData = userDoc.data();
-    functions.logger.info("User data retrieved:", userData);
+    console.log("User data retrieved:", userData);
 
-    functions.logger.info("Attempting to create Checkr candidate...");
+    console.log("Attempting to create Checkr candidate...");
     const candidateRes = await checkrApi.post('/candidates', {
       first_name,
       last_name,
@@ -60,9 +60,9 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       zipcode: userData.address?.zipCode || '90210',
     });
     const candidate = candidateRes.data;
-    functions.logger.info("Checkr candidate created:", candidate.id);
+    console.log("Checkr candidate created:", candidate);
 
-    functions.logger.info("Attempting to create Checkr report...");
+    console.log("Attempting to create Checkr report...");
     const reportRes = await checkrApi.post('/reports', {
       candidate_id: candidate.id,
       package: 'complete_criminal',
@@ -71,7 +71,7 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       driver_license_country,
     });
     const report = reportRes.data;
-    functions.logger.info("Checkr report initiated:", report.id, "Status:", report.status);
+    console.log("Checkr report initiated:", report.id, "Status:", report.status);
 
     const currentUserDocData = userDoc.data();
     const currentCheckrData = currentUserDocData?.checkrData || {};
@@ -82,6 +82,7 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       checkrCandidateId: candidate.id,
       checkrReportId: report.id,
       middleName: middle_name || currentMiddleName,
+      dateOfBirth: dob,
       
       checkrData: {
         ...currentCheckrData,
@@ -96,7 +97,7 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       },
     });
 
-    functions.logger.info("Firestore updated with initial Checkr details for UID:", uid);
+    console.log("Firestore updated with initial Checkr details for UID:", uid);
 
     return res.status(200).json({
       message: "Verificación de antecedentes iniciada correctamente.",
@@ -111,7 +112,7 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
     if (axios.isAxiosError(error)) {
       if (error.response) {
         statusCode = error.response.status;
-        functions.logger.error("Checkr API error response:", error.response.data);
+        console.log("Checkr API error response:", error.response.data);
 
         if (error.response.data && typeof error.response.data === 'object') {
             if (error.response.data.error) {
@@ -129,13 +130,13 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       } else if (error.request) {
         statusCode = 503;
         errorMessage = "No se recibió respuesta de la API de Checkr. Verifica tu conexión o intenta más tarde.";
-        functions.logger.error("Checkr API request error:", error.message);
+        console.log("Checkr API request error:", error.message);
       } else {
         errorMessage = `Error al configurar la solicitud a Checkr: ${error.message}`;
-        functions.logger.error("Axios config error:", error.message);
+        console.log("Axios config error:", error.message);
       }
     } else {
-      functions.logger.error("Unhandled error in startBackgroundCheck:", error);
+      console.log("Unhandled error in startBackgroundCheck:", error);
     }
 
     return res.status(statusCode).json({ error: errorMessage });

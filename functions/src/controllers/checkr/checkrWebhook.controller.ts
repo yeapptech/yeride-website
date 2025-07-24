@@ -7,7 +7,7 @@ const db = getFirestore();
 
 // @ts-ignore
 export const checkrWebhook = functions.https.onRequest(async (req, res) => {
-  functions.logger.info("Webhook recibido de Checkr.");
+  console.log("Webhook recibido de Checkr.");
 
   if (req.method !== 'POST') {
     return res.status(405).send('Method Not Allowed');
@@ -16,7 +16,7 @@ export const checkrWebhook = functions.https.onRequest(async (req, res) => {
   const signatureHeader = req.headers['x-checkr-signature'];
   const signature = typeof signatureHeader === 'string' ? signatureHeader : '';
   if (!signature) {
-    functions.logger.error("Missing X-Checkr-Signature header in webhook.");
+    console.log("Missing X-Checkr-Signature header in webhook.");
     return res.status(401).send('Unauthorized: Missing signature');
   }
 
@@ -27,22 +27,22 @@ export const checkrWebhook = functions.https.onRequest(async (req, res) => {
     .digest('hex');
 
   if (signature !== expectedSignature) {
-    functions.logger.error(`Webhook signature mismatch. Expected: ${expectedSignature}, Received: ${signature}`);
+    console.log(`Webhook signature mismatch. Expected: ${expectedSignature}, Received: ${signature}`);
     return res.status(403).send('Invalid signature.');
   }
 
-  functions.logger.info("Checkr webhook signature verified successfully.");
+  console.log("Checkr webhook signature verified successfully.");
 
   let event;
   try {
     event = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   } catch (parseError) {
-    functions.logger.error("Error parsing JSON body:", parseError);
+    console.log("Error parsing JSON body:", parseError);
     return res.status(400).send("Malformed JSON in request body.");
   }
 
   if (!event?.data?.object?.id) {
-    functions.logger.error("Invalid event structure received:", event);
+    console.log("Invalid event structure received:", event);
     return res.status(400).send("Invalid event structure.");
   }
 
@@ -51,8 +51,8 @@ export const checkrWebhook = functions.https.onRequest(async (req, res) => {
   const reportStatus = report.status;
   const reportResult = report.result;
 
-  functions.logger.info(`Received Checkr event: ${event.type} for report ${reportId}`);
-  functions.logger.info("Payload recibido de Checkr:", JSON.stringify(report, null, 2));
+  console.log(`Received Checkr event: ${event.type} for report ${reportId}`);
+  console.log("Payload recibido de Checkr:", JSON.stringify(report, null, 2));
 
   if (['report.completed', 'report.adjudicated'].includes(event.type)) {
     try {
@@ -82,21 +82,25 @@ export const checkrWebhook = functions.https.onRequest(async (req, res) => {
 
       const currentCheckrData = userData.checkrData || {};
 
-      await userDoc.ref.update({
+      const updateData: any = {
         checkrData: {
           ...currentCheckrData,
           status: reportStatus,
           result: reportResult,
-          passed: backgroundCheckPassed,
+          passed: reportStatus === 'complete' ? true : false,
           timestamp: new Date(),
           eventType: event.type,
         },
-      });
+      };
 
-      functions.logger.info(`Firestore updated for user ${userId}. CheckrData.status: ${reportStatus}, CheckrData.result: ${reportResult}, CheckrData.passed: ${backgroundCheckPassed}`);
+      updateData['driverOnboardingProgress.criminalRecords'] = true;
+
+      await userDoc.ref.update(updateData);
+
+      console.log(`Firestore updated for user ${userId}. CheckrData.status: ${reportStatus}, CheckrData.result: ${reportResult}, CheckrData.passed: ${backgroundCheckPassed}`);
       return res.status(200).send('Webhook processed and Firestore updated.');
     } catch (error) {
-      functions.logger.error(`Error processing Checkr report ${reportId}:`, error);
+      console.log(`Error processing Checkr report ${reportId}:`, error);
       return res.status(500).send('Internal Server Error during processing.');
     }
   }
