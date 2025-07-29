@@ -90,7 +90,7 @@ export const createApiCostsPaymentIntent = onRequest(
         res.json({ clientSecret: paymentIntent.client_secret, totalAmount: totalCostUSD });
 
     } catch (error) {
-        functionsLogger.error("Error al crear la intención de pago de costos de API:", error);
+        console.log("Error al crear la intención de pago de costos de API:", error);
         // @ts-ignore
         if (error instanceof Stripe.StripeError) {
             return res.status(error.statusCode || 500).json({ error: error.message, code: error.code });

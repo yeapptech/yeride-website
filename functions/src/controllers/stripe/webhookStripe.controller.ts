@@ -25,7 +25,7 @@ export const handleStripeWebhook = async (req, res) => {
   } else {
       console.log('req.body is not an object or a Buffer. Type:', typeof req.body, 'Value:', req.body);
   }
-
+  
   try {
     if (!stripeWebhookSecret) {
       console.error(
@@ -191,35 +191,34 @@ export const handleStripeWebhook = async (req, res) => {
 
       try {
         await db
-          .collection("users")
+          .collection("stripeIdentity")
           .doc(userId)
           .set(
             {
-              stripeIdentity: {
-                status: verifiedSession.status,
-                sessionId: verifiedSession.id,
-                fullName: fullName,
-                dateOfBirth: dateOfBirth,
-                licenseNumber: licenseNumber,
-                isAgeVerified: isAgeVerified,
-                isLicenseExpired: isLicenseExpired,
-                documentStatus: documentStatus,
-                documentType: documentType,
-                lastVerifiedAt: firestoreFieldValue.serverTimestamp(),
-                verificationAttempts: firestoreFieldValue.increment(1),
-                identityVerified: identityVerifiedOverall,
-                licenseVerified: true,  // cambiar en produccion a  isDriverLicenseVerified
-              },
+              status: verifiedSession.status,
+              sessionId: verifiedSession.id,
+              fullName: fullName,
+              dateOfBirth: dateOfBirth,
+              licenseNumber: licenseNumber,
+              isAgeVerified: isAgeVerified,
+              isLicenseExpired: isLicenseExpired,
+              documentStatus: documentStatus,
+              documentType: documentType,
+              lastVerifiedAt: firestoreFieldValue.serverTimestamp(),
+              verificationAttempts: firestoreFieldValue.increment(1),
+              identityVerified: identityVerifiedOverall,
+              licenseVerified: true,
+              userId: userId
             },
             { merge: true }
           );
 
         console.log(
-          `Estado de verificación de usuario ${userId} actualizado en Firestore. License Verified: ${isDriverLicenseVerified}.`
+          `Estado de verificación de usuario ${userId} actualizado en colección 'stripeIdentity'. License Verified: ${isDriverLicenseVerified}.`
         );
       } catch (dbError) {
         console.error(
-          "Error al actualizar el estado de verificación del usuario en Firestore:",
+          "Error al actualizar el estado de verificación del usuario en colección 'stripeIdentity':",
           dbError
         );
       }
@@ -232,33 +231,32 @@ export const handleStripeWebhook = async (req, res) => {
         requiresInputSession.id
       );
       try {
-        const userId = requiresInputSession.metadata.userId;
-        if (!userId) {
+        const userIdRequiresInput = requiresInputSession.metadata.userId;
+        if (!userIdRequiresInput) {
           console.error("Error: userId no encontrado en metadata para la sesión requiring input.");
           return res.status(400).send("Missing userId in metadata.");
         }
         await db
-          .collection("users")
-          .doc(userId)
+          .collection("stripeIdentity")
+          .doc(userIdRequiresInput)
           .set(
             {
-              stripeIdentity: {
-                status: "requires_input",
-                sessionId: requiresInputSession.id,
-                lastVerifiedAt: firestoreFieldValue.serverTimestamp(),
-                verificationAttempts: firestoreFieldValue.increment(1),
-                identityVerified: false,
-                licenseVerified: false
-              },
+              status: "requires_input",
+              sessionId: requiresInputSession.id,
+              lastVerifiedAt: firestoreFieldValue.serverTimestamp(),
+              verificationAttempts: firestoreFieldValue.increment(1),
+              identityVerified: false,
+              licenseVerified: false,
+              userId: userIdRequiresInput
             },
             { merge: true }
           );
         console.log(
-          `Estado de verificación de usuario ${userId} actualizado a 'requires_input'.`
+          `Estado de verificación de usuario ${userIdRequiresInput} actualizado a 'requires_input' en colección 'stripeIdentity'.`
         );
       } catch (dbError) {
         console.error(
-          'Error al actualizar el estado de usuario a "requires_input":',
+          `Error al actualizar el estado de usuario a "requires_input" en colección stripeIdentity':`,
           dbError
         );
       }
@@ -271,33 +269,32 @@ export const handleStripeWebhook = async (req, res) => {
         canceledSession.id
       );
       try {
-        const userId = canceledSession.metadata.userId;
-        if (!userId) {
+        const userIdCanceled = canceledSession.metadata.userId;
+        if (!userIdCanceled) {
           console.error("Error: userId no encontrado en metadata para la sesión cancelada.");
           return res.status(400).send("Missing userId in metadata.");
         }
         await db
-          .collection("users")
-          .doc(userId)
+          .collection("stripeIdentity")
+          .doc(userIdCanceled)
           .set(
             {
-              stripeIdentity: {
-                status: "canceled",
-                sessionId: canceledSession.id,
-                lastVerifiedAt: firestoreFieldValue.serverTimestamp(),
-                verificationAttempts: firestoreFieldValue.increment(1),
-                identityVerified: false,
-                licenseVerified: false
-              },
+              status: "canceled",
+              sessionId: canceledSession.id,
+              lastVerifiedAt: firestoreFieldValue.serverTimestamp(),
+              verificationAttempts: firestoreFieldValue.increment(1),
+              identityVerified: false,
+              licenseVerified: false,
+              userId: userIdCanceled
             },
             { merge: true }
           );
         console.log(
-          `Estado de verificación de usuario ${userId} actualizado a 'canceled'.`
+          `Estado de verificación de usuario ${userIdCanceled} actualizado a 'canceled' en colección 'stripeIdentity'.`
         );
       } catch (dbError) {
         console.error(
-          'Error al actualizar el estado de usuario a "canceled":',
+          `Error al actualizar el estado de usuario a "canceled" en colección 'stripeIdentity':`,
           dbError
         );
       }
@@ -309,6 +306,33 @@ export const handleStripeWebhook = async (req, res) => {
             "🔵 Sesión de Verificación de Stripe Identity creada (sin verificar):",
             createdSession.id
         );
+        const userIdCreated = createdSession.metadata.userId;
+        if (userIdCreated) {
+            try {
+                await db.collection("stripeIdentity").doc(userIdCreated).set(
+                    {
+                        status: "created",
+                        sessionId: createdSession.id,
+                        lastVerifiedAt: firestoreFieldValue.serverTimestamp(),
+                        verificationAttempts: firestoreFieldValue.increment(1),
+                        identityVerified: false,
+                        licenseVerified: false,
+                        userId: userIdCreated,
+                        dateOfBirth: null,
+                        documentStatus: "pending",
+                        documentType: "unknown",
+                        fullName: "N/A",
+                        isAgeVerified: false,
+                        isLicenseExpired: null,
+                        licenseNumber: null,
+                    },
+                    { merge: true }
+                );
+                console.log(`Documento de identidad de Stripe inicializado para user ${userIdCreated}.`);
+            } catch (initError) {
+                console.error(`Error al inicializar documento de identidad de Stripe para user ${userIdCreated}:`, initError);
+            }
+        }
         break;
 
     default:
