@@ -20,8 +20,7 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
         return res.status(500).json({ error: "Configuración del servicio de verificación de antecedentes incompleta." });
     }
 
-    // @ts-ignore
-    const uid = req.user.uid;
+    const uid = (req as any).user.uid;
     const {
       first_name,
       last_name,
@@ -44,7 +43,6 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       console.log(`User not found for UID: ${uid}`);
       return res.status(404).json({ error: "Usuario no encontrado." });
     }
-
     const userData = userDoc.data();
     console.log("User data retrieved:", userData);
 
@@ -55,9 +53,9 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       middle_name,
       dob,
       ssn,
-      email: userData.email,
-      phone: userData.phoneNumber,
-      zipcode: userData.address?.zipCode || '90210',
+      email: userData!.email,
+      phone: userData!.phoneNumber,
+      zipcode: userData!.address?.zipCode || '90210',
     });
     const candidate = candidateRes.data;
     console.log("Checkr candidate created:", candidate);
@@ -73,31 +71,41 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
     const report = reportRes.data;
     console.log("Checkr report initiated:", report.id, "Status:", report.status);
 
-    const currentUserDocData = userDoc.data();
-    const currentCheckrData = currentUserDocData?.checkrData || {};
-    
-    const currentMiddleName = currentUserDocData?.middleName || null;
+    const checkrDataRef = db.collection("checkrData").doc(uid);
+    const checkrDataDoc = await checkrDataRef.get();
 
-    await userRef.update({
+    const updateDataForCheckr: Record<string, any> = {
       checkrCandidateId: candidate.id,
       checkrReportId: report.id,
-      middleName: middle_name || currentMiddleName,
-      dateOfBirth: dob,
-      
-      checkrData: {
-        ...currentCheckrData,
-        status: report.status,
-        result: null,
-        passed: null,
-        ssn: ssn,
-        driverLicenseNumber: driver_license_number,
-        driverLicenseState: driver_license_state,
-        driverLicenseCountry: driver_license_country,
-        updatedAt: new Date(),
-      },
-    });
+      middleName: middle_name || null,
+      ssn: ssn,
+      driverLicenseNumber: driver_license_number,
+      driverLicenseState: driver_license_state,
+      driverLicenseCountry: driver_license_country,
+      status: report.status,
+      result: null,
+      passed: null,
+      updatedAt: new Date(),
+    };
 
-    console.log("Firestore updated with initial Checkr details for UID:", uid);
+    if (checkrDataDoc.exists) {
+        await checkrDataRef.update(updateDataForCheckr);
+        console.log("CheckrData document updated for UID:", uid);
+    } else {
+        await checkrDataRef.set({
+            userId: uid,
+            ...updateDataForCheckr,
+            createdDateTime: new Date(),
+            timestamp: new Date(),
+        });
+        console.log("CheckrData document created for UID:", uid);
+    }
+
+    await userRef.update({
+      dateOfBirth: dob,
+      middleName: middle_name || null,
+    });
+    console.log("User document updated (non-Checkr fields) for UID:", uid);
 
     return res.status(200).json({
       message: "Verificación de antecedentes iniciada correctamente.",

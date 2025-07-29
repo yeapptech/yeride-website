@@ -40,18 +40,28 @@ export const createAccountLink = async (req, res) => {
       try {
         // @ts-ignore
         const account = await stripeClient.accounts.create({
-          type: "standard",
           country: "US",
           email: driverData.email,
-          capabilities: {
-            card_payments: { requested: true },
-            transfers: { requested: true },
-          },
-          business_type: "individual",
           metadata: {
             firebaseUid: uid,
             platform: "YeAppDriver",
             connectOnboardingInitiated: true,
+          },
+          controller: {
+            losses: {
+              payments: "stripe",
+            },
+            fees: {
+              payer: "account",
+            },
+            requirement_collection: "stripe",
+            stripe_dashboard: {
+              type: "full",
+            },
+          },
+          capabilities: {
+            card_payments: { requested: true },
+            transfers: { requested: true },
           },
         });
         stripeAccountId = account.id;
@@ -89,7 +99,6 @@ export const createAccountLink = async (req, res) => {
         const existingAccount = await stripeClient.accounts.retrieve(
           stripeAccountId
         );
-        // @ts-ignore
         if (
           existingAccount.type !== "standard" ||
           // @ts-ignore
@@ -98,7 +107,7 @@ export const createAccountLink = async (req, res) => {
           !existingAccount.capabilities.transfers?.requested
         ) {
           functions.logger.warn(
-            `Existing Stripe account ${stripeAccountId} for user ${uid} is not a 'standard' Connect account or is missing capabilities. User may need re-onboarding.`
+            `Existing Stripe account ${stripeAccountId} for user ${uid} is not configured as expected or is missing capabilities. User may need re-onboarding.`
           );
         }
       } catch (retrieveError) {
@@ -188,7 +197,6 @@ export const accountStatus = async (req, res) => {
         .json({ error: "Stripe account not yet created for this driver." });
     }
 
-    // @ts-ignore
     const account = await stripeClient.accounts.retrieve(stripeAccountId);
 
     const accountStatus = {
