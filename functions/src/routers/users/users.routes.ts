@@ -1,16 +1,18 @@
 import express from "express";
-import { getUsers, getUsersById, getUsersByRole } from "../../controllers/users/getUsers.controller";
-import { updateDriverInsuranceStatus } from "../../controllers/users/updateUser.controller";
+import { getPendingDrivers, getUsers, getUsersById } from "../../controllers/users/getUsers.controller";
+import { updateDriverInsuranceStatus } from "../../controllers/users/updateDriverInsurance.controller";
+import { updateDriverRegisterStatus } from "../../controllers/users/updateDriverRegister.controller";
 
 const router = express.Router();
 
 router.get("/", getUsers);
 
-router.get("/:id", getUsersByRole);
+router.get("/pending-drivers", getPendingDrivers);
 
 router.get("/id/:id", getUsersById);
 
-router.patch("/:id/insurance-status", updateDriverInsuranceStatus);
+router.put("/:id/insurance-status", updateDriverInsuranceStatus);
+router.put("/:id/register-status", updateDriverRegisterStatus);
 
 
 export default router;
