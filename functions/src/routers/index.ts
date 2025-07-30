@@ -4,6 +4,7 @@ import trips from "./trips/trips.routes.js"
 import stripe from "./stripe/stripe.routes.js"
 import checkr from "./checkr/checkr.routes.js"
 import users from "./users/users.routes.js";
+import serviceAreas from "./service-areas/service-areas.routes.js";
 
 const router = express.Router();
 
@@ -12,6 +13,7 @@ router.use("/trips", trips );
 router.use("/stripe", stripe);
 router.use("/checkr", checkr);
 router.use("/users", users);
+router.use("/service-areas", serviceAreas);
 
 export default router;
 

@@ -1,0 +1,436 @@
+[debug] [2025-07-29T20:24:05.407Z] ----------------------------------------------------------------------
+[debug] [2025-07-29T20:24:05.409Z] Command:       C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\firebase-tools\lib\bin\firebase.js emulators:start --only functions
+[debug] [2025-07-29T20:24:05.409Z] CLI Version:   14.9.0
+[debug] [2025-07-29T20:24:05.410Z] Platform:      win32
+[debug] [2025-07-29T20:24:05.410Z] Node Version:  v22.11.0
+[debug] [2025-07-29T20:24:05.410Z] Time:          Tue Jul 29 2025 16:24:05 GMT-0400 (hora de Venezuela)
+[debug] [2025-07-29T20:24:05.410Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-07-29T20:24:05.554Z] Field "/functions" in "firebase.json" is possibly invalid: must be object
+[debug] [2025-07-29T20:24:05.555Z] Object "/functions/0" in "firebase.json" has unknown property: {"additionalProperty":"api"}
+[debug] [2025-07-29T20:24:05.555Z] Field "/functions" in "firebase.json" is possibly invalid: must match a schema in anyOf
+[debug] [2025-07-29T20:24:05.559Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-29T20:24:05.559Z] > authorizing via signed-in user (yose.castillo06@gmail.com)
+[info] i  emulators: Starting emulators: functions {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: functions"}}
+[debug] [2025-07-29T20:24:05.571Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-07-29T20:24:05.571Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2025-07-29T20:24:05.574Z] [hub] writing locator at C:\Users\yosec\AppData\Local\Temp\hub-yeapp-stage.json
+[debug] [2025-07-29T20:24:05.587Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-07-29T20:24:05.588Z] [eventarc] Eventarc Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-07-29T20:24:05.588Z] [tasks] Cloud Tasks Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-07-29T20:24:05.588Z] late-assigned ports for functions and eventarc emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"functions":[{"address":"127.0.0.1","family":"IPv4","port":5001}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
+[warn] !  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, auth, firestore, database, hosting, pubsub, storage, dataconnect {"metadata":{"emulator":{"name":"functions"},"message":"The following emulators are not running, calls to these services from the Functions emulator will affect production: \u001b[1mapphosting, auth, firestore, database, hosting, pubsub, storage, dataconnect\u001b[22m"}}
+[debug] [2025-07-29T20:24:05.630Z] defaultcredentials: writing to file C:\Users\yosec\AppData\Roaming\firebase\yose_castillo06_gmail.com_application_default_credentials.json
+[debug] [2025-07-29T20:24:05.631Z] Setting GAC to C:\Users\yosec\AppData\Roaming\firebase\yose_castillo06_gmail.com_application_default_credentials.json {"metadata":{"emulator":{"name":"functions"},"message":"Setting GAC to C:\\Users\\yosec\\AppData\\Roaming\\firebase\\yose_castillo06_gmail.com_application_default_credentials.json"}}
+[debug] [2025-07-29T20:24:05.634Z] Checked if tokens are valid: true, expires at: 1753824136950
+[debug] [2025-07-29T20:24:05.635Z] Checked if tokens are valid: true, expires at: 1753824136950
+[debug] [2025-07-29T20:24:05.638Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/yeapp-stage/adminSdkConfig [none]
+[debug] [2025-07-29T20:24:06.307Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/yeapp-stage/adminSdkConfig 200
+[debug] [2025-07-29T20:24:06.307Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/yeapp-stage/adminSdkConfig {"projectId":"yeapp-stage","storageBucket":"yeapp-stage.appspot.com","locationId":"us-central"}
+[info] i  functions: Watching "C:\yeapptech\yeride-website\functions" for Cloud Functions... {"metadata":{"emulator":{"name":"functions"},"message":"Watching \"C:\\yeapptech\\yeride-website\\functions\" for Cloud Functions..."}}
+[debug] [2025-07-29T20:24:06.328Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2025-07-29T20:24:07.324Z] > [functions] package.json contents: {
+  "name": "functions",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions:api",
+    "logs": "firebase functions:log",
+    "stage": "firebase deploy --only functions:api"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1",
+    "stripe": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/stripe": "^8.0.417",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.7.3"
+  },
+  "private": true
+}
+[debug] [2025-07-29T20:24:07.324Z] Building nodejs source
+[debug] [2025-07-29T20:24:07.325Z] Failed to find version of module node: reached end of search path C:\yeapptech\yeride-website\functions\node_modules
+[info] +  functions: Using node@22 from host. 
+[info] i  functions: Loaded environment variables from .env. 
+[debug] [2025-07-29T20:24:07.329Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-07-29T20:24:07.333Z] Found firebase-functions binary at 'C:\yeapptech\yeride-website\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8972
+
+[debug] [2025-07-29T20:24:07.952Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"api"},"stripeRedirect":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"stripeRedirect"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] +  functions: Loaded functions definitions from source: api, stripeRedirect. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: api, stripeRedirect."}}
+[info] +  functions[us-central1-api]: http function initialized (http://127.0.0.1:5001/yeapp-stage/us-central1/api). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/yeapp-stage/us-central1/api)."}}
+[info] +  functions[us-central1-stripeRedirect]: http function initialized (http://127.0.0.1:5001/yeapp-stage/us-central1/stripeRedirect). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/yeapp-stage/us-central1/stripeRedirect)."}}
+[debug] [2025-07-29T20:24:11.992Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌───────────┬────────────────┬─────────────────────────────────┐
+│ Emulator  │ Host:Port      │ View in Emulator UI             │
+├───────────┼────────────────┼─────────────────────────────────┤
+│ Functions │ 127.0.0.1:5001 │ http://127.0.0.1:4000/functions │
+└───────────┴────────────────┴─────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[debug] [2025-07-29T20:24:12.487Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:24:12.487Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:24:12.488Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:24:12.487Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:24:12.488Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida --> us-central1-api
+[debug] [2025-07-29T20:24:12.488Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:24:12.488Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida"}}
+[info] i  functions: Loaded environment variables from .env. 
+[debug] [2025-07-29T20:24:12.500Z] [worker-pool] addWorker(us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] addWorker(us-central1-api)"}}
+[debug] [2025-07-29T20:24:12.501Z] [worker-pool] Adding worker with key us-central1-api, total=1 {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] Adding worker with key us-central1-api, total=1"}}
+[info] >  (node:40588) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead. {"user":"(node:40588) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"\u001b[90m> \u001b[39m (node:40588) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead."}}
+[info] >  (Use `node --trace-deprecation ...` to show where the warning was created) {"user":"(Use `node --trace-deprecation ...` to show where the warning was created)","metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"\u001b[90m> \u001b[39m (Use `node --trace-deprecation ...` to show where the warning was created)"}}
+[debug] [2025-07-29T20:24:13.366Z] [runtime-status] [40588] Resolved module firebase-admin {"declared":true,"installed":true,"version":"12.7.0","resolution":"C:\\yeapptech\\yeride-website\\functions\\node_modules\\firebase-admin\\lib\\index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] Resolved module firebase-admin {\"declared\":true,\"installed\":true,\"version\":\"12.7.0\",\"resolution\":\"C:\\\\yeapptech\\\\yeride-website\\\\functions\\\\node_modules\\\\firebase-admin\\\\lib\\\\index.js\"}"}}
+[debug] [2025-07-29T20:24:13.367Z] [runtime-status] [40588] Resolved module firebase-functions {"declared":true,"installed":true,"version":"6.3.2","resolution":"C:\\yeapptech\\yeride-website\\functions\\node_modules\\firebase-functions\\lib\\v2\\index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] Resolved module firebase-functions {\"declared\":true,\"installed\":true,\"version\":\"6.3.2\",\"resolution\":\"C:\\\\yeapptech\\\\yeride-website\\\\functions\\\\node_modules\\\\firebase-functions\\\\lib\\\\v2\\\\index.js\"}"}}
+[debug] [2025-07-29T20:24:13.368Z] [runtime-status] [40588] Outgoing network have been stubbed. [{"name":"http","status":"mocked"},{"name":"http","status":"mocked"},{"name":"https","status":"mocked"},{"name":"https","status":"mocked"},{"name":"net","status":"mocked"}] {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] Outgoing network have been stubbed. [{\"name\":\"http\",\"status\":\"mocked\"},{\"name\":\"http\",\"status\":\"mocked\"},{\"name\":\"https\",\"status\":\"mocked\"},{\"name\":\"https\",\"status\":\"mocked\"},{\"name\":\"net\",\"status\":\"mocked\"}]"}}
+[debug] [2025-07-29T20:24:13.369Z] [runtime-status] [40588] Resolved module firebase-functions {"declared":true,"installed":true,"version":"6.3.2","resolution":"C:\\yeapptech\\yeride-website\\functions\\node_modules\\firebase-functions\\lib\\v2\\index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] Resolved module firebase-functions {\"declared\":true,\"installed\":true,\"version\":\"6.3.2\",\"resolution\":\"C:\\\\yeapptech\\\\yeride-website\\\\functions\\\\node_modules\\\\firebase-functions\\\\lib\\\\v2\\\\index.js\"}"}}
+[debug] [2025-07-29T20:24:13.618Z] [runtime-status] [40588] Checked functions.config() {"config":{}} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] Checked functions.config() {\"config\":{}}"}}
+[debug] [2025-07-29T20:24:13.619Z] [runtime-status] [40588] firebase-functions has been stubbed. {"functionsResolution":{"declared":true,"installed":true,"version":"6.3.2","resolution":"C:\\yeapptech\\yeride-website\\functions\\node_modules\\firebase-functions\\lib\\v2\\index.js"}} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] firebase-functions has been stubbed. {\"functionsResolution\":{\"declared\":true,\"installed\":true,\"version\":\"6.3.2\",\"resolution\":\"C:\\\\yeapptech\\\\yeride-website\\\\functions\\\\node_modules\\\\firebase-functions\\\\lib\\\\v2\\\\index.js\"}}"}}
+[debug] [2025-07-29T20:24:13.619Z] [runtime-status] [40588] Resolved module firebase-functions {"declared":true,"installed":true,"version":"6.3.2","resolution":"C:\\yeapptech\\yeride-website\\functions\\node_modules\\firebase-functions\\lib\\v2\\index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] Resolved module firebase-functions {\"declared\":true,\"installed\":true,\"version\":\"6.3.2\",\"resolution\":\"C:\\\\yeapptech\\\\yeride-website\\\\functions\\\\node_modules\\\\firebase-functions\\\\lib\\\\v2\\\\index.js\"}"}}
+[debug] [2025-07-29T20:24:13.623Z] [runtime-status] [40588] Resolved module firebase-admin {"declared":true,"installed":true,"version":"12.7.0","resolution":"C:\\yeapptech\\yeride-website\\functions\\node_modules\\firebase-admin\\lib\\index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] Resolved module firebase-admin {\"declared\":true,\"installed\":true,\"version\":\"12.7.0\",\"resolution\":\"C:\\\\yeapptech\\\\yeride-website\\\\functions\\\\node_modules\\\\firebase-admin\\\\lib\\\\index.js\"}"}}
+[debug] [2025-07-29T20:24:13.626Z] [runtime-status] [40588] Resolved module firebase-functions {"declared":true,"installed":true,"version":"6.3.2","resolution":"C:\\yeapptech\\yeride-website\\functions\\node_modules\\firebase-functions\\lib\\v2\\index.js"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] Resolved module firebase-functions {\"declared\":true,\"installed\":true,\"version\":\"6.3.2\",\"resolution\":\"C:\\\\yeapptech\\\\yeride-website\\\\functions\\\\node_modules\\\\firebase-functions\\\\lib\\\\v2\\\\index.js\"}"}}
+[debug] [2025-07-29T20:24:13.626Z] [runtime-status] [40588] firebase-admin has been stubbed. {"adminResolution":{"declared":true,"installed":true,"version":"12.7.0","resolution":"C:\\yeapptech\\yeride-website\\functions\\node_modules\\firebase-admin\\lib\\index.js"}} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] firebase-admin has been stubbed. {\"adminResolution\":{\"declared\":true,\"installed\":true,\"version\":\"12.7.0\",\"resolution\":\"C:\\\\yeapptech\\\\yeride-website\\\\functions\\\\node_modules\\\\firebase-admin\\\\lib\\\\index.js\"}}"}}
+[debug] [2025-07-29T20:24:13.829Z] [runtime-status] [40588] Functions runtime initialized. {"cwd":"C:\\yeapptech\\yeride-website\\functions","node_version":"22.11.0"} {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] Functions runtime initialized. {\"cwd\":\"C:\\\\yeapptech\\\\yeride-website\\\\functions\",\"node_version\":\"22.11.0\"}"}}
+[debug] [2025-07-29T20:24:13.829Z] [runtime-status] [40588] Listening to port: \\?\pipe\fire_emu_df1dd2a2990755bc {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[runtime-status] [40588] Listening to port: \\\\?\\pipe\\fire_emu_df1dd2a2990755bc"}}
+[debug] [2025-07-29T20:24:13.953Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:24:13.955Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:24:13.958Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[warn] !  Google API requested!
+   - URL: "https://oauth2.googleapis.com/token"
+   - Be careful, this may be a production service. {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Google API requested!\n   - URL: \"https://oauth2.googleapis.com/token\"\n   - Be careful, this may be a production service."}}
+[debug] [2025-07-29T20:24:15.234Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 1276.9696ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 1276.9696ms"}}
+[debug] [2025-07-29T20:24:15.236Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:24:15.237Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:24:15.237Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:24:15.238Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:25:51.414Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:25:51.414Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:25:51.414Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:25:51.414Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:25:51.415Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal --> us-central1-api
+[debug] [2025-07-29T20:25:51.415Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:25:51.416Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal"}}
+[debug] [2025-07-29T20:25:51.416Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:25:51.417Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:25:51.905Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 488.7115ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 488.7115ms"}}
+[debug] [2025-07-29T20:25:51.906Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:25:51.906Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:25:51.906Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:25:51.906Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:25:51.907Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:25:51.907Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:25:51.908Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:25:51.907Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:25:51.908Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal --> us-central1-api
+[debug] [2025-07-29T20:25:51.908Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:25:51.908Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal"}}
+[debug] [2025-07-29T20:25:51.909Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:25:51.909Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:25:52.392Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 483.3621ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 483.3621ms"}}
+[debug] [2025-07-29T20:25:52.394Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:25:52.394Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:25:52.394Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:25:52.394Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:28:27.055Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:28:27.055Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:28:27.055Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:28:27.055Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:28:27.055Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal --> us-central1-api
+[debug] [2025-07-29T20:28:27.055Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:28:27.055Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal"}}
+[debug] [2025-07-29T20:28:27.055Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:28:27.056Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:28:27.517Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 461.6228ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 461.6228ms"}}
+[debug] [2025-07-29T20:28:27.518Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:28:27.518Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:28:27.518Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:28:27.519Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:28:48.516Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:28:48.516Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:28:48.516Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:28:48.516Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:28:48.516Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal --> us-central1-api
+[debug] [2025-07-29T20:28:48.516Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:28:48.517Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal"}}
+[debug] [2025-07-29T20:28:48.517Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:28:48.517Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:28:48.973Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 455.8029ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 455.8029ms"}}
+[debug] [2025-07-29T20:28:48.974Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:28:48.974Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:28:48.974Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:28:48.974Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:30:06.476Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:30:06.476Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:30:06.477Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:30:06.476Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:30:06.477Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal --> us-central1-api
+[debug] [2025-07-29T20:30:06.477Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:30:06.478Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal"}}
+[debug] [2025-07-29T20:30:06.478Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:30:06.478Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:30:06.988Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 510.3847ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 510.3847ms"}}
+[debug] [2025-07-29T20:30:06.989Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:30:06.990Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:30:06.990Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:30:06.990Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:30:54.262Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:30:54.262Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:30:54.262Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:30:54.262Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:30:54.262Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal --> us-central1-api
+[debug] [2025-07-29T20:30:54.263Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:30:54.263Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal"}}
+[debug] [2025-07-29T20:30:54.263Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:30:54.263Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:30:54.731Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 468.0677ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 468.0677ms"}}
+[debug] [2025-07-29T20:30:54.732Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:30:54.732Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:30:54.732Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:30:54.732Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:11.201Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:31:11.201Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:11.201Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:31:11.201Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:31:11.201Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal --> us-central1-api
+[debug] [2025-07-29T20:31:11.202Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:31:11.202Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal"}}
+[debug] [2025-07-29T20:31:11.202Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:31:11.203Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:31:11.663Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 459.7128ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 459.7128ms"}}
+[debug] [2025-07-29T20:31:11.663Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:31:11.664Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:31:11.664Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:31:11.664Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:39.935Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:31:39.935Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:39.935Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:31:39.935Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:31:39.936Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal --> us-central1-api
+[debug] [2025-07-29T20:31:39.936Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:31:39.936Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal"}}
+[debug] [2025-07-29T20:31:39.936Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:31:39.937Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:31:40.392Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 455.2756ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 455.2756ms"}}
+[debug] [2025-07-29T20:31:40.392Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:31:40.392Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:31:40.392Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:31:40.392Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:40.393Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:31:40.393Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:40.393Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal-2025-07-29T20:31:40.393Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:31:40.393Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal --> us-central1-api
+[debug] [2025-07-29T20:31:40.394Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:31:40.394Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/ve-ta-san-cristobal, mapping to path=/v1/service-areas/id/ve-ta-san-cristobal"}}
+[debug] [2025-07-29T20:31:40.394Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:31:40.394Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:31:40.882Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 487.9393ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 487.9393ms"}}
+[debug] [2025-07-29T20:31:40.883Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:31:40.883Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:31:40.883Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:31:40.883Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:48.223Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas-2025-07-29T20:31:48.223Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:48.223Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas-2025-07-29T20:31:48.223Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:31:48.224Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas --> us-central1-api
+[debug] [2025-07-29T20:31:48.224Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:31:48.224Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas, mapping to path=/v1/service-areas {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas, mapping to path=/v1/service-areas"}}
+[debug] [2025-07-29T20:31:48.224Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:31:48.225Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:31:48.886Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 660.925ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 660.925ms"}}
+[debug] [2025-07-29T20:31:48.886Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:31:48.887Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:31:48.887Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:31:48.887Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:48.888Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas-2025-07-29T20:31:48.888Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:48.888Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas-2025-07-29T20:31:48.888Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:31:48.888Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas --> us-central1-api
+[debug] [2025-07-29T20:31:48.888Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:31:48.889Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas, mapping to path=/v1/service-areas {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas, mapping to path=/v1/service-areas"}}
+[debug] [2025-07-29T20:31:48.889Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:31:48.890Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:31:49.499Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 609.3076ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 609.3076ms"}}
+[debug] [2025-07-29T20:31:49.499Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:31:49.499Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:31:49.499Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:31:49.500Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:53.763Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:31:53.763Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:53.763Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:31:53.763Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:31:53.763Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida --> us-central1-api
+[debug] [2025-07-29T20:31:53.764Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:31:53.764Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida"}}
+[debug] [2025-07-29T20:31:53.764Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:31:53.765Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:31:54.194Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 429.4647ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 429.4647ms"}}
+[debug] [2025-07-29T20:31:54.195Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:31:54.195Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:31:54.195Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:31:54.195Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:54.196Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:31:54.196Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:31:54.197Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:31:54.196Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:31:54.197Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida --> us-central1-api
+[debug] [2025-07-29T20:31:54.197Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:31:54.197Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida"}}
+[debug] [2025-07-29T20:31:54.197Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:31:54.198Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:31:54.666Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 468.1092ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 468.1092ms"}}
+[debug] [2025-07-29T20:31:54.667Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:31:54.667Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:31:54.667Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:31:54.667Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:33:24.321Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:33:24.320Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:33:24.321Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:33:24.320Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:33:24.321Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida --> us-central1-api
+[debug] [2025-07-29T20:33:24.321Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:33:24.321Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida"}}
+[debug] [2025-07-29T20:33:24.322Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:33:24.322Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:33:24.891Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 568.9781ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 568.9781ms"}}
+[debug] [2025-07-29T20:33:24.892Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:33:24.892Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:33:24.892Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:33:24.892Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:33:25.818Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:33:25.818Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:33:25.819Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:33:25.818Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:33:25.819Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida --> us-central1-api
+[debug] [2025-07-29T20:33:25.819Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:33:25.819Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida"}}
+[debug] [2025-07-29T20:33:25.819Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:33:25.820Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:33:26.262Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 442.7151ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 442.7151ms"}}
+[debug] [2025-07-29T20:33:26.263Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:33:26.264Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:33:26.264Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:33:26.264Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:34:55.205Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:34:55.205Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:34:55.205Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:34:55.205Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:34:55.205Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida --> us-central1-api
+[debug] [2025-07-29T20:34:55.206Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:34:55.206Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida"}}
+[debug] [2025-07-29T20:34:55.206Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:34:55.207Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:34:55.689Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 482.1109ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 482.1109ms"}}
+[debug] [2025-07-29T20:34:55.689Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:34:55.689Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:34:55.689Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:34:55.689Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:35:12.140Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:35:12.140Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-29T20:35:12.140Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-29T20:35:12.140Z"],"workRunningCount":1}
+[debug] [2025-07-29T20:35:12.140Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida --> us-central1-api
+[debug] [2025-07-29T20:35:12.141Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-29T20:35:12.141Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida"}}
+[debug] [2025-07-29T20:35:12.141Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-29T20:35:12.142Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-29T20:35:12.607Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 465.7194ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 465.7194ms"}}
+[debug] [2025-07-29T20:35:12.608Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-29T20:35:12.608Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-29T20:35:12.609Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-29T20:35:12.609Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-30T00:03:30.188Z] [work-queue] {"queuedWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-30T00:03:30.188Z"],"queueLength":1,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-30T00:03:30.188Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":["/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida-2025-07-30T00:03:30.188Z"],"workRunningCount":1}
+[debug] [2025-07-30T00:03:30.188Z] Accepted request GET /yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida --> us-central1-api
+[debug] [2025-07-30T00:03:30.190Z] [functions] Runtime ready! Sending request! {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Runtime ready! Sending request!"}}
+[debug] [2025-07-30T00:03:30.191Z] [functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida {"metadata":{"emulator":{"name":"functions"},"message":"[functions] Got req.url=/yeapp-stage/us-central1/api/v1/service-areas/id/us-fl-south-florida, mapping to path=/v1/service-areas/id/us-fl-south-florida"}}
+[debug] [2025-07-30T00:03:30.191Z] [worker-pool] submitRequest(triggerId=us-central1-api) {"metadata":{"emulator":{"name":"functions"},"message":"[worker-pool] submitRequest(triggerId=us-central1-api)"}}
+[info] i  functions: Beginning execution of "us-central1-api" {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Beginning execution of \"us-central1-api\""}}
+[debug] [2025-07-30T00:03:30.192Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: BUSY"}}
+[debug] [2025-07-30T00:03:31.466Z] Finishing up request with event=pause {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=pause"}}
+[info] i  functions: Finished "us-central1-api" in 1274.834ms {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finished \"us-central1-api\" in 1274.834ms"}}
+[debug] [2025-07-30T00:03:31.467Z] [worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"[worker-us-central1-api-2abfc8ed-3a4a-408c-88e2-65f01a3dfbed]: IDLE"}}
+[debug] [2025-07-30T00:03:31.468Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=finish"}}
+[debug] [2025-07-30T00:03:31.468Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-api"},"extension":{},"message":"Finishing up request with event=close"}}
+[debug] [2025-07-30T00:03:31.468Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-30T00:03:50.584Z] File C:\yeapptech\yeride-website\functions\src\controllers\service-areas\getServiceAreas.controller.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File C:\\yeapptech\\yeride-website\\functions\\src\\controllers\\service-areas\\getServiceAreas.controller.ts changed, reloading triggers"}}
+[debug] [2025-07-30T00:03:51.587Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2025-07-30T00:03:52.879Z] > [functions] package.json contents: {
+  "name": "functions",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions:api",
+    "logs": "firebase functions:log",
+    "stage": "firebase deploy --only functions:api"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1",
+    "stripe": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/stripe": "^8.0.417",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.7.3"
+  },
+  "private": true
+}
+[debug] [2025-07-30T00:03:52.879Z] Building nodejs source
+[debug] [2025-07-30T00:03:52.879Z] Failed to find version of module node: reached end of search path C:\yeapptech\yeride-website\functions\node_modules
+[info] +  functions: Using node@22 from host. 
+[info] i  functions: Loaded environment variables from .env. 
+[debug] [2025-07-30T00:03:52.882Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-07-30T00:03:52.886Z] Found firebase-functions binary at 'C:\yeapptech\yeride-website\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8634
+
+[debug] [2025-07-30T00:03:53.962Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"api"},"stripeRedirect":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"stripeRedirect"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
