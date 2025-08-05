@@ -19,7 +19,7 @@ app.use(express.json());
 app.use("/v1", router);
 
 app.get('/', (req, res) => {
-  res.json({ status: 'YeDrive root online' });
+  res.json({ status: 'YeDrive root online!' });
 });
 
 export const api = onRequest({ region: 'us-central1' }, app);
