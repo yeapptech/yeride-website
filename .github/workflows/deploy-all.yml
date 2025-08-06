@@ -68,7 +68,7 @@ jobs:
             exit 1
           fi
           echo "Primeros 100 caracteres del JSON:"
-          cat service-account-stage.json | head -c 100
+          cat service-account-stage.json
       
       - name: Setup Google Cloud credentials
         uses: google-github-actions/auth@v2
