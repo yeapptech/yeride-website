@@ -63,6 +63,9 @@ jobs:
       - name: Decode service account key
         run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGE }}' | base64 -d > service-account-stage.json
       
+      - name: Setup env file
+        run: echo service-account-stage.json
+
       - name: Setup Google Cloud credentials
         uses: google-github-actions/auth@v2
         with:
