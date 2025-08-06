@@ -67,17 +67,14 @@ jobs:
             echo "Error: El archivo JSON está vacío o no se pudo decodificar correctamente"
             exit 1
           fi
-          echo "Primeros 100 caracteres del JSON:"
-          cat service-account-stage.json
-      
-      - name: Setup Google Cloud credentials
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ github.workspace }}/service-account-stage.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=service-account-stage.json" >> $GITHUB_ENV
+        working-directory: firebase-functions-stage
       
       - name: Deploy Firebase Functions-Stage
         run: firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT_STAGE }}
         working-directory: firebase-functions-stage
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: firebase-service-account.json
 
   deploy-functions:
     if: github.ref == 'refs/heads/functions'
