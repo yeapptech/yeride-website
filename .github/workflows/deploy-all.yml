@@ -67,14 +67,13 @@ jobs:
             echo "Error: El archivo JSON está vacío o no se pudo decodificar correctamente"
             exit 1
           fi
-          echo "GOOGLE_APPLICATION_CREDENTIALS=service-account-stage.json" >> $GITHUB_ENV
-        working-directory: firebase-functions-stage
+          echo "Service account key decodificado exitosamente"
       
       - name: Deploy Firebase Functions-Stage
-        run: firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT_STAGE }}
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/service-account-stage.json"
+          firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT_STAGE }}
         working-directory: firebase-functions-stage
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: firebase-service-account.json
 
   deploy-functions:
     if: github.ref == 'refs/heads/functions'
@@ -106,14 +105,10 @@ jobs:
             echo "Error: El archivo JSON está vacío o no se pudo decodificar correctamente"
             exit 1
           fi
-          echo "Primeros 100 caracteres del JSON:"
-          cat service-account.json | head -c 100
-      
-      - name: Setup Google Cloud credentials
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ github.workspace }}/service-account.json
+          echo "Service account key decodificado exitosamente"
       
       - name: Deploy Firebase Functions
-        run: firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT }}
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/service-account.json"
+          firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT }}
         working-directory: firebase-functions
