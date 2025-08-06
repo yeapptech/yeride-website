@@ -61,11 +61,15 @@ jobs:
         working-directory: firebase-functions-stage/functions
       
       - name: Decode service account key
-        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGE }}' | base64 -d > service-account-stage.json
+        run: |
+          printf '%s' '${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGE }}' | base64 -d > service-account-stage.json
+          if [ ! -s service-account-stage.json ]; then
+            echo "Error: El archivo JSON está vacío o no se pudo decodificar correctamente"
+            exit 1
+          fi
+          echo "Primeros 100 caracteres del JSON:"
+          cat service-account-stage.json | head -c 100
       
-      - name: Setup env file
-        run: echo service-account-stage.json
-
       - name: Setup Google Cloud credentials
         uses: google-github-actions/auth@v2
         with:
@@ -99,7 +103,14 @@ jobs:
         working-directory: firebase-functions/functions
       
       - name: Decode service account key
-        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}' | base64 -d > service-account.json
+        run: |
+          printf '%s' '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}' | base64 -d > service-account.json
+          if [ ! -s service-account.json ]; then
+            echo "Error: El archivo JSON está vacío o no se pudo decodificar correctamente"
+            exit 1
+          fi
+          echo "Primeros 100 caracteres del JSON:"
+          cat service-account.json | head -c 100
       
       - name: Setup Google Cloud credentials
         uses: google-github-actions/auth@v2
