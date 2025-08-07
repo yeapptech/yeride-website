@@ -16,4 +16,3 @@ router.use("/users", users);
 router.use("/service-areas", serviceAreas);
 
 export default router;
-
