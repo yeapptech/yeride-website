@@ -19,7 +19,7 @@ export const updateDriverInsuranceStatus = async (
 
     if (!status || !["verified", "pending", "rejected"].includes(status)) {
       return res.status(400).json({
-        message: `Invalid or missing 'status': ${status}  in request body. Must be 'verified' or 'rejected'.`,
+        message: `Invalid or missing 'status': ${status} in request body. Must be 'verified', 'pending' or 'rejected'.`,
       });
     }
 
@@ -32,11 +32,32 @@ export const updateDriverInsuranceStatus = async (
       return res.status(404).json({ message: "User not found." });
     }
 
-    await userDocRef.update({ insuranceStatus: status });
+    const userData = userDoc.data();
+    if (!userData) {
+      return res.status(500).json({ message: "User data is empty." });
+    }
+
+    let insuranceVerifiedStatus: boolean;
+
+    if (status === "verified") {
+      insuranceVerifiedStatus = true;
+    } else {
+      insuranceVerifiedStatus = false;
+    }
+
+    const updateData: { [key: string]: any } = {
+      insuranceStatus: status,
+      insuranceVerified: insuranceVerifiedStatus,
+    };
+
+    await userDocRef.update(updateData);
+
+    console.log("userdocRef", (await userDocRef.get()).data());
 
     return res.status(200).json({
       success: true,
       message: `User ${userId} insuranceStatus updated to ${status}.`,
+      driverOnBoardingProgress: (await userDocRef.get()).data()
     });
   } catch (error: any) {
     console.error("Error updating user insurance status:", error);
