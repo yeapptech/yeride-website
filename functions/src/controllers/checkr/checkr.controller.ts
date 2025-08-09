@@ -14,13 +14,20 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       'Content-Type': 'application/json',
     },
   });
+
+  let checkrCandidateId: string | null = null;
+
   try {
     if (!CHECKR_SECRET_KEY || !CHECKR_API_URL) {
         console.log("Missing Checkr API configuration. Please set checkr.secret_key and checkr.api_url.");
         return res.status(500).json({ error: "Configuración del servicio de verificación de antecedentes incompleta." });
     }
 
+    if (!(req as any).user || !(req as any).user.uid) {
+        return res.status(401).json({ error: "Usuario no autenticado. Requiere un token de Firebase válido." });
+    }
     const uid = (req as any).user.uid;
+
     const {
       first_name,
       last_name,
@@ -46,24 +53,34 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
     const userData = userDoc.data();
     console.log("User data retrieved:", userData);
 
-    console.log("Attempting to create Checkr candidate...");
-    const candidateRes = await checkrApi.post('/candidates', {
+    const candidatePayload: { [key: string]: any } = {
       first_name,
       last_name,
-      middle_name,
       dob,
       ssn,
       email: userData!.email,
       phone: userData!.phoneNumber,
       zipcode: userData!.address?.zipCode || '90210',
-    });
+    };
+
+    if (middle_name && typeof middle_name === 'string' && middle_name.trim() !== '') {
+      candidatePayload.middle_name = middle_name;
+      candidatePayload.no_middle_name = false;
+    } else {
+      candidatePayload.no_middle_name = true;
+      delete candidatePayload.middle_name;
+    }
+
+    console.log("Attempting to create Checkr candidate with payload:", candidatePayload);
+    const candidateRes = await checkrApi.post('/candidates', candidatePayload);
     const candidate = candidateRes.data;
-    console.log("Checkr candidate created:", candidate);
+    checkrCandidateId = candidate.id;
+    console.log("Checkr candidate created or retrieved (deduplicated by Checkr):", candidate);
 
     console.log("Attempting to create Checkr report...");
     const reportRes = await checkrApi.post('/reports', {
       candidate_id: candidate.id,
-      package: 'complete_criminal',
+      package: 'basic_plus_criminal',
       driver_license_number,
       driver_license_state,
       driver_license_country,
@@ -77,7 +94,7 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
     const updateDataForCheckr: Record<string, any> = {
       checkrCandidateId: candidate.id,
       checkrReportId: report.id,
-      middleName: middle_name || null,
+      middleName: middle_name && typeof middle_name === 'string' && middle_name.trim() !== '' ? middle_name : null,
       ssn: ssn,
       driverLicenseNumber: driver_license_number,
       driverLicenseState: driver_license_state,
@@ -89,7 +106,7 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
     };
 
     if (checkrDataDoc.exists) {
-        await checkrDataRef.update(updateDataForCheckr);
+        await checkrDataRef.set(updateDataForCheckr, { merge: true });
         console.log("CheckrData document updated for UID:", uid);
     } else {
         await checkrDataRef.set({
@@ -103,7 +120,7 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
 
     await userRef.update({
       dateOfBirth: dob,
-      middleName: middle_name || null,
+      middleName: middle_name && typeof middle_name === 'string' && middle_name.trim() !== '' ? middle_name : null,
     });
     console.log("User document updated (non-Checkr fields) for UID:", uid);
 
@@ -126,9 +143,9 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
             if (error.response.data.error) {
                 errorMessage = error.response.data.error;
             } else if (error.response.data.details && Array.isArray(error.response.data.details) && error.response.data.details.length > 0) {
-                errorMessage = error.response.data.details.map(d => `${d.field}: ${d.message}`).join('; ');
+                errorMessage = `Errores de validación de Checkr: ${error.response.data.details.map(d => `${d.field}: ${d.message}`).join('; ')}`;
             } else {
-                errorMessage = JSON.stringify(error.response.data);
+                errorMessage = `Error de la API de Checkr: ${JSON.stringify(error.response.data)}`;
             }
         } else if (typeof error.response.data === 'string') {
           errorMessage = error.response.data;
@@ -145,6 +162,21 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       }
     } else {
       console.log("Unhandled error in startBackgroundCheck:", error);
+    }
+
+    if (checkrCandidateId) {
+        try {
+            console.log(`Attempting to delete Checkr candidate ${checkrCandidateId} due to error.`);
+            await checkrApi.delete(`/candidates/${checkrCandidateId}`);
+            console.log(`Checkr candidate ${checkrCandidateId} successfully deleted.`);
+        } catch (deleteError) {
+            if (axios.isAxiosError(deleteError) && deleteError.response?.status === 404) {
+                 console.log(`Checkr candidate ${checkrCandidateId} was likely already deleted by Checkr or not found.`);
+            } else {
+                console.error(`Failed to delete Checkr candidate ${checkrCandidateId}:`, deleteError);
+                errorMessage += " No se pudo eliminar el candidato de Checkr asociado (inténtelo de nuevo o contacte soporte).";
+            }
+        }
     }
 
     return res.status(statusCode).json({ error: errorMessage });

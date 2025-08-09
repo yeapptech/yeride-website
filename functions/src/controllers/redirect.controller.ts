@@ -3,16 +3,13 @@ import * as functions from 'firebase-functions';
 
 export const handleStripeRedirect = functions.https.onRequest(async (req, res) => {
     const DEEPLINK_BASE_URL = "yeappdriver://";
-    const successPath = "stripe-connect-return";
-    const refreshPath = "stripe-connect-refresh";
-
     const { account_id, state } = req.query;
     const path = req.path.substring(1);
 
-    let redirectUrl = `<span class="math-inline">\{DEEPLINK\_BASE\_URL\}</span>{path}`;
+    let redirectUrl = `${DEEPLINK_BASE_URL}${path}`;
 
     // @ts-ignore
-    const queryParams = new URLSearchParams(req.query).toString();
+    const queryParams = new URLSearchParams(req.query as any).toString();
     if (queryParams) {
         redirectUrl += `?${queryParams}`;
     }

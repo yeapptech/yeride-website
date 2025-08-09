@@ -7,6 +7,8 @@ import { STRIPE_SECRET_KEY } from "../../conf/env.js";
 const db = getFirestore();
 
 const STRIPE_API_VERSION = "2025-06-30.basil";
+const projectID = 'yeapp-stage';
+const region = 'us-central1';
 
 export const createAccountLink = async (req, res) => {
   const stripeClient = new Stripe(STRIPE_SECRET_KEY, {
@@ -14,7 +16,9 @@ export const createAccountLink = async (req, res) => {
   });
   try {
     const uid = req.user.uid;
-    const { return_url, refresh_url } = req.body;
+
+    const return_url = `https://${region}-${projectID}.cloudfunctions.net/stripeRedirect/stripe-connect-return`;
+    const refresh_url = `https://${region}-${projectID}.cloudfunctions.net/stripeRedirect/stripe-connect-refresh`;
 
     if (!return_url || !refresh_url) {
       return res
