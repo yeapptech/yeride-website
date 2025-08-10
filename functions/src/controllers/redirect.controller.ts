@@ -2,7 +2,7 @@
 import * as functions from 'firebase-functions';
 
 export const handleStripeRedirect = functions.https.onRequest(async (req, res) => {
-    const DEEPLINK_BASE_URL = "yeappdriver://";
+    const DEEPLINK_BASE_URL = "yeride://";
     const { account_id, state } = req.query;
     const path = req.path.substring(1);
 
