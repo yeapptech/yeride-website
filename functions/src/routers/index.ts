@@ -5,6 +5,7 @@ import stripe from "./stripe/stripe.routes.js"
 import checkr from "./checkr/checkr.routes.js"
 import users from "./users/users.routes.js";
 import serviceAreas from "./service-areas/service-areas.routes.js";
+import redirect from "./redirect/redirect.routes.js";
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use("/stripe", stripe);
 router.use("/checkr", checkr);
 router.use("/users", users);
 router.use("/service-areas", serviceAreas);
+router.use("/stripeRedirect", redirect);
 
 export default router;

@@ -17,9 +17,9 @@ export const createAccountLink = async (req, res) => {
   try {
     const uid = req.user.uid;
 
-    const return_url = `https://${region}-${projectID}.cloudfunctions.net/stripeRedirect/stripe-connect-return`;
-    const refresh_url = `https://${region}-${projectID}.cloudfunctions.net/stripeRedirect/stripe-connect-refresh`;
-
+    const return_url = req.body.return_url;
+    const refresh_url = req.body.refresh_url;
+    
     if (!return_url || !refresh_url) {
       return res
         .status(400)
