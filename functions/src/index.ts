@@ -6,6 +6,14 @@ import { handleStripeRedirect } from "./controllers/redirect.controller.js";
 
 const app = express();
 
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-custom-header'],
+  credentials: true,
+}));
+
+
 app.use("/v1", router);
 
 app.get('/', (req, res) => {
