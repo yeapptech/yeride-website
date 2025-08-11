@@ -4,6 +4,7 @@ import { getVehiclesByUserId } from "./getVehiclesByUserId.js";
 import { getStripeIdentityByUserId } from "./getStripeIdentityByUserId.js";
 import { getOnboardingProgress } from "./getOnboardingProgress.js";
 import { getCheckrData } from "./getCheckrData.js";
+import { chunkArray } from "../../utils/chunkArray.js";
 
 export const getUsersById = async (req: Request, res: Response) => {
   try {
@@ -63,23 +64,31 @@ export const getPendingDrivers = async (req: Request, res: Response) => {
 
     const userIds = users.map((user) => user.documentId);
 
-    const userDocs = await dbAdmin
-      .collection("users")
-      .where("id", "in", userIds)
-      .get();
+    const userIdChunks = chunkArray(userIds, 30);
 
     const drivers: any[] = [];
+    const queryPromises = userIdChunks.map((chunk) => {
+      return dbAdmin.collection("users").where("id", "in", chunk).get();
+    });
 
-    userDocs.forEach((doc) => {
-      drivers.push({
-        documentId: doc.id,
-        ...doc.data(),
+    const querySnapshots = await Promise.all(queryPromises);
+
+    querySnapshots.forEach((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        drivers.push({
+          documentId: doc.id,
+          ...doc.data(),
+        });
       });
     });
 
     return res.status(200).json(drivers);
-  } catch (error) {
-    return res.status(500).json({ message: "Error fetching drivers", error });
+  } catch (error: any) {
+    console.error("Error fetching drivers:", error);
+    return res.status(500).json({ 
+        message: "Error fetching drivers",
+        error: error.message
+    });
   }
 };
 
