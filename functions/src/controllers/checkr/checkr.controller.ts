@@ -39,7 +39,9 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       driver_license_country,
     } = req.body;
 
-    if (!first_name || !last_name || !dob || !ssn || !driver_license_number || !driver_license_state || !driver_license_country) {
+    console.log("DATA:> :> ", req.body);
+
+    if (!first_name || !last_name || !dob || !ssn || !driver_license_number || !driver_license_state) {
       functions.logger.warn("Missing required candidate information for background check.", { uid, body: req.body });
       return res.status(400).json({ error: "Faltan datos obligatorios para la verificación de antecedentes." });
     }
@@ -61,6 +63,9 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       email: userData!.email,
       phone: userData!.phoneNumber,
       zipcode: userData!.address?.zipCode || '90210',
+      driver_license_number,
+      driver_license_state,
+      ...(driver_license_country && { driver_license_country }),
     };
 
     if (middle_name && typeof middle_name === 'string' && middle_name.trim() !== '') {
@@ -81,9 +86,6 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
     const reportRes = await checkrApi.post('/reports', {
       candidate_id: candidate.id,
       package: 'basic_plus_criminal',
-      driver_license_number,
-      driver_license_state,
-      driver_license_country,
     });
     const report = reportRes.data;
     console.log("Checkr report initiated:", report.id, "Status:", report.status);
@@ -98,7 +100,6 @@ export const startBackgroundCheck = functions.https.onRequest(async (req, res) =
       ssn: ssn,
       driverLicenseNumber: driver_license_number,
       driverLicenseState: driver_license_state,
-      driverLicenseCountry: driver_license_country,
       status: report.status,
       result: null,
       passed: null,
