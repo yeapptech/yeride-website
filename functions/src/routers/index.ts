@@ -8,6 +8,7 @@ import serviceAreas from "./service-areas/service-areas.routes.js";
 import redirect from "./redirect/redirect.routes.js";
 import apiCosts from "./api-cost/apiCost.routes.js";
 import whitelist from "./whitelist/whitelist.routes.js";
+import drivervisualcontrol from "./drivervisualcontrol/drivervisualcontrol.routes.js";
 
 const router = express.Router();
 
@@ -20,5 +21,6 @@ router.use("/service-areas", serviceAreas);
 router.use("/stripeRedirect", redirect);
 router.use("/api-costs", apiCosts);
 router.use("/whitelist", whitelist);
+router.use("/drivervisualcontrol", drivervisualcontrol);
 
 export default router;
