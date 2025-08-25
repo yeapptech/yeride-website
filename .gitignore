@@ -25,5 +25,3 @@ pnpm-debug.log*
 .env-prod
 
 .vscode
-.github
-.github/workflows/
