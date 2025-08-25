@@ -60,12 +60,16 @@ jobs:
         run: npm ci
         working-directory: firebase-functions-stage/functions
       
-      - name: Set Firebase Functions cleanup policy
-        run: firebase functions:artifacts:setpolicy --project ${{ secrets.FIREBASE_PROJECT_STAGE }} --token ${{ secrets.FIREBASE_TOKEN_STAGE }} --force
-        working-directory: firebase-functions-stage
-          
+      - name: Decode service account key
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGE }}' | base64 -d > service-account-stage.json
+      
+      - name: Setup Google Cloud credentials
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ github.workspace }}/service-account-stage.json
+      
       - name: Deploy Firebase Functions-Stage
-        run: firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT_STAGE }} --token ${{ secrets.FIREBASE_TOKEN_STAGE }}
+        run: firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT_STAGE }}
         working-directory: firebase-functions-stage
 
   deploy-functions:
@@ -91,10 +95,14 @@ jobs:
         run: npm ci
         working-directory: firebase-functions/functions
       
-      - name: Set Firebase Functions cleanup policy
-        run: firebase functions:artifacts:setpolicy --project ${{ secrets.FIREBASE_PROJECT }} --token ${{ secrets.FIREBASE_TOKEN }} --force
-        working-directory: firebase-functions
-          
+      - name: Decode service account key
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}' | base64 -d > service-account.json
+      
+      - name: Setup Google Cloud credentials
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ github.workspace }}/service-account.json
+      
       - name: Deploy Firebase Functions
-        run: firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT }} --token ${{ secrets.FIREBASE_TOKEN }}
+        run: firebase deploy --only functions:api --project ${{ secrets.FIREBASE_PROJECT }}
         working-directory: firebase-functions
