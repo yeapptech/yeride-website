@@ -23,7 +23,10 @@ jobs:
       - name: Install, build, and upload your site
         uses: withastro/action@v3
         with:
-          retention-days: 1
+          node-version: "20"
+          package-manager: "npm"
+          path: "./"
+          dist: "./dist"
 
   deploy:
     if: github.ref == 'refs/heads/main'
