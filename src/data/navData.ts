@@ -16,6 +16,10 @@ export const navData = [
         href: 'about'
     },
     {
+        name: "Contact",
+        href: 'contact'
+    },
+    {
         name: "Register",
         href: 'register'
     },

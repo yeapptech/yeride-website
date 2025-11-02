@@ -1,0 +1,154 @@
+---
+---
+
+<header
+  id="main-header"
+  class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-4 fixed w-full z-10 shadow-md"
+>
+  <nav class="container mx-auto px-4 py-4">
+    <div class="flex items-center justify-between flex-wrap">
+      <a href="/" class="text-3xl font-bold">YeRide</a>
+
+      <div class="md:hidden">
+        <button
+          id="mobile-menu-button"
+          class="text-white focus:outline-none focus:text-blue-200"
+        >
+          <svg
+            id="menu-icon-open"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+          <svg
+            id="menu-icon-close"
+            class="h-6 w-6 hidden"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div
+        id="main-navigation"
+        class="hidden md:flex md:space-x-8 md:w-auto md:max-h-full md:overflow-visible md:flex-row
+                       absolute top-full left-0 w-full items-center
+                       bg-gradient-to-r from-blue-600 to-blue-800 shadow-lg md:bg-none md:shadow-none z-10 rounded-b-lg
+                       md:relative md:rounded-b-none mobile-nav-transition"
+      >
+        <a
+          href="/#features"
+          class="nav-link hover:text-blue-200 transition-colors py-2 md:py-0 block text-center"
+          >Features</a
+        >
+        <a
+          href="/#riders"
+          class="nav-link hover:text-blue-200 transition-colors py-2 md:py-0 block text-center"
+          >For Riders</a
+        >
+        <a
+          href="/#drivers"
+          class="nav-link hover:text-blue-200 transition-colors py-2 md:py-0 block text-center"
+          >For Drivers</a
+        >
+        <a
+          href="/about"
+          class="nav-link hover:text-blue-200 transition-colors py-2 md:py-0 block text-center"
+          >About</a
+        >
+        <a
+          href="/contact"
+          class="nav-link hover:text-blue-200 transition-colors py-2 md:py-0 block text-center"
+          >Contact</a
+        >
+        <a
+          href="/#pre-registration"
+          class="nav-link bg-white text-blue-600 hover:bg-blue-50 px-6 py-2 rounded-full font-semibold block text-center md:inline-block mt-4 md:mt-0 mb-4 md:mb-0"
+        >
+          Pre-register Now
+        </a>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<script is:inline>
+  const mobileMenuButton = document.getElementById("mobile-menu-button");
+  const mainNavigation = document.getElementById("main-navigation");
+  const menuIconOpen = document.getElementById("menu-icon-open");
+  const menuIconClose = document.getElementById("menu-icon-close");
+
+  function adjustMenuForScreenSize() {
+    if (window.innerWidth >= 768) {
+      mainNavigation.classList.remove(
+        "hidden",
+        "mobile-nav-open-state",
+        "flex-col"
+      );
+      mainNavigation.classList.add("flex");
+      menuIconOpen.classList.remove("hidden");
+      menuIconClose.classList.add("hidden");
+    } else {
+      if (!mainNavigation.classList.contains("mobile-nav-open-state")) {
+        mainNavigation.classList.add("hidden");
+      }
+      mainNavigation.classList.remove("flex");
+
+      menuIconOpen.classList.remove("hidden");
+      menuIconClose.classList.add("hidden");
+    }
+  }
+
+  adjustMenuForScreenSize();
+
+  if (mobileMenuButton && mainNavigation && menuIconOpen && menuIconClose) {
+    mobileMenuButton.addEventListener("click", () => {
+      mainNavigation.classList.toggle("hidden");
+
+      mainNavigation.classList.toggle("mobile-nav-open-state");
+      mainNavigation.classList.toggle("flex-col");
+
+      menuIconOpen.classList.toggle("hidden");
+      menuIconClose.classList.toggle("hidden");
+    });
+
+    mainNavigation.querySelectorAll(".nav-link").forEach((link) => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth < 768) {
+          mainNavigation.classList.add("hidden");
+          mainNavigation.classList.remove("mobile-nav-open-state");
+          mainNavigation.classList.remove("flex-col");
+          menuIconOpen.classList.remove("hidden");
+          menuIconClose.classList.add("hidden");
+        }
+      });
+    });
+  }
+
+  window.addEventListener("resize", adjustMenuForScreenSize);
+</script>
+
+<style>
+  .mobile-nav-transition {
+    transition: max-height 0.3s ease-in-out;
+  }
+
+  .mobile-nav-open-state {
+    max-height: 500px;
+    overflow: hidden;
+  }
+</style>
