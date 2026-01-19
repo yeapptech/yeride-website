@@ -1,47 +1,83 @@
-# Astro Starter Kit: Minimal
+# YeRide Website
 
-```sh
-npm create astro@latest -- --template minimal
+The official marketing website for YeRide - a community-driven ridesharing platform.
+
+[![Deploy to GitHub Pages](https://github.com/yeapptech/yeride-website/actions/workflows/deploy-all.yml/badge.svg)](https://github.com/yeapptech/yeride-website/actions/workflows/deploy-all.yml)
+
+**Live Site:** [www.yeride.com](https://www.yeride.com)
+
+## Tech Stack
+
+- **[Astro](https://astro.build)** - Static site generator
+- **[Tailwind CSS](https://tailwindcss.com)** - Utility-first CSS framework
+- **[TypeScript](https://www.typescriptlang.org)** - Type safety
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/yeapptech/yeride-website.git
+cd yeride-website
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+echo "PUBLIC_API_URL=https://api.yeride.com/" > .env
+
+# Start development server
+npm run dev
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/minimal)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/minimal)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/minimal/devcontainer.json)
+The site will be available at [http://localhost:4321](http://localhost:4321).
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Scripts
 
-## 🚀 Project Structure
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build production site |
+| `npm run preview` | Preview production build |
+| `npm run astro check` | Run TypeScript checks |
 
-Inside of your Astro project, you'll see the following folders and files:
+## Project Structure
 
-```text
-/
-├── public/
+```
+yeride-website/
 ├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+│   ├── components/     # Reusable UI components
+│   ├── layouts/        # Page layout templates
+│   ├── pages/          # Route pages
+│   ├── data/           # Static data
+│   └── styles/         # Global styles
+├── public/             # Static assets
+├── docs/               # Documentation
+└── dist/               # Build output
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Documentation
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+- [Getting Started](docs/getting-started.md) - Setup and installation
+- [Architecture](docs/architecture.md) - Project structure and design
+- [Components](docs/components.md) - Component reference
+- [API Integration](docs/api-integration.md) - Backend integration
+- [Deployment](docs/deployment.md) - CI/CD and hosting
+- [Contributing](docs/contributing.md) - Development workflow
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Environment Variables
 
-## 🧞 Commands
+| Variable | Description |
+|----------|-------------|
+| `PUBLIC_API_URL` | Backend API base URL (must end with `/`) |
 
-All commands are run from the root of the project, from a terminal:
+## Deployment
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+The site deploys automatically to GitHub Pages when changes are pushed to `main`. See the [Deployment Guide](docs/deployment.md) for details.
 
-## 👀 Want to learn more?
+## Related Repositories
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+- [yeride-admin-api](https://github.com/yeapptech/yeride-admin-api) - Backend API
+
+## License
+
+Copyright (c) YeApp Tech. All rights reserved.
