@@ -165,7 +165,7 @@ import FareResultsCard from "../components/FareResultsCard.astro";
       function renderEstimates(estimates: ServiceEstimate[]) {
         estimatesList.innerHTML = "";
 
-        estimates.forEach((estimate) => {
+        [...estimates].sort((a, b) => a.fare - b.fare).forEach((estimate) => {
           const card = document.createElement("div");
           card.className =
             "bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition duration-300";
