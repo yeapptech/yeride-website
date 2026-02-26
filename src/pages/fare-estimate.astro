@@ -1,0 +1,375 @@
+---
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import FareEstimateForm from "../components/FareEstimateForm.astro";
+import FareResultsCard from "../components/FareResultsCard.astro";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Fare Estimate - YeRide</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+      .pac-container {
+        z-index: 10000;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900 font-sans">
+    <Header />
+
+    <main class="pt-[90px] md:pt-[90px]">
+      <section
+        class="bg-gradient-to-r from-blue-500 to-blue-700 text-white py-20"
+      >
+        <div class="container mx-auto px-4 text-center">
+          <h1 class="text-4xl md:text-5xl font-bold mb-4">
+            Estimate Your Fare
+          </h1>
+          <p class="text-xl mb-8 max-w-2xl mx-auto">
+            Get an instant fare estimate for your ride. Enter your pickup and
+            drop-off locations below.
+          </p>
+        </div>
+      </section>
+
+      <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+          <div class="max-w-4xl mx-auto">
+            <FareEstimateForm />
+
+            <div
+              id="map"
+              class="w-full h-[300px] md:h-[450px] rounded-lg shadow-md mt-8 bg-gray-200 flex items-center justify-center"
+            >
+              <p class="text-gray-400 text-sm" id="map-placeholder">
+                Map will appear here
+              </p>
+            </div>
+
+            <FareResultsCard />
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <Footer />
+
+    <script>
+      import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
+      import { getEstimates } from "../lib/fareEstimate";
+      import type { ServiceEstimate } from "../lib/fareEstimate";
+
+      const SOUTH_FLORIDA_CENTER = { lat: 25.7617, lng: -80.1918 };
+
+      setOptions({
+        key: import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY,
+      });
+
+      let map: google.maps.Map;
+      let pickupPlace: google.maps.places.PlaceResult | null = null;
+      let dropoffPlace: google.maps.places.PlaceResult | null = null;
+      let pickupMarker: google.maps.marker.AdvancedMarkerElement | null = null;
+      let dropoffMarker: google.maps.marker.AdvancedMarkerElement | null = null;
+      let directionsRenderer: google.maps.DirectionsRenderer | null = null;
+
+      const form = document.getElementById(
+        "fare-estimate-form",
+      ) as HTMLFormElement;
+      const estimateButton = document.getElementById(
+        "estimate-button",
+      ) as HTMLButtonElement;
+      const loadingEl = document.getElementById("estimate-loading")!;
+      const errorEl = document.getElementById("estimate-error")!;
+      const resultsContainer = document.getElementById("results-container")!;
+      const routeDistance = document.getElementById("route-distance")!;
+      const routeDuration = document.getElementById("route-duration")!;
+      const estimatesList = document.getElementById("estimates-list")!;
+      const mapPlaceholder = document.getElementById("map-placeholder");
+
+      function showError(message: string) {
+        errorEl.textContent = message;
+        errorEl.classList.remove("hidden");
+      }
+
+      function clearError() {
+        errorEl.textContent = "";
+        errorEl.classList.add("hidden");
+      }
+
+      function setLoading(loading: boolean) {
+        if (loading) {
+          loadingEl.classList.remove("hidden");
+          estimateButton.disabled = true;
+        } else {
+          loadingEl.classList.add("hidden");
+          updateButtonState();
+        }
+      }
+
+      function updateButtonState() {
+        estimateButton.disabled = !pickupPlace?.geometry || !dropoffPlace?.geometry;
+      }
+
+      function clearMarkers() {
+        if (pickupMarker) {
+          pickupMarker.map = null;
+          pickupMarker = null;
+        }
+        if (dropoffMarker) {
+          dropoffMarker.map = null;
+          dropoffMarker = null;
+        }
+      }
+
+      function clearRoute() {
+        if (directionsRenderer) {
+          directionsRenderer.setMap(null);
+          directionsRenderer = null;
+        }
+      }
+
+      function createMarkerLabel(text: string): HTMLDivElement {
+        const label = document.createElement("div");
+        label.style.cssText =
+          "background:#4285f4;color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3)";
+        label.textContent = text;
+        return label;
+      }
+
+      function fitMapToMarkers() {
+        const bounds = new google.maps.LatLngBounds();
+        if (pickupMarker?.position) {
+          bounds.extend(pickupMarker.position as google.maps.LatLng);
+        }
+        if (dropoffMarker?.position) {
+          bounds.extend(dropoffMarker.position as google.maps.LatLng);
+        }
+
+        if (!bounds.isEmpty()) {
+          map.fitBounds(bounds);
+          const listener = google.maps.event.addListener(map, "idle", () => {
+            if (map.getZoom()! > 15) map.setZoom(15);
+            google.maps.event.removeListener(listener);
+          });
+        }
+      }
+
+      function renderEstimates(estimates: ServiceEstimate[]) {
+        estimatesList.innerHTML = "";
+
+        estimates.forEach((estimate) => {
+          const card = document.createElement("div");
+          card.className =
+            "bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition duration-300";
+
+          let chargesHtml = "";
+          if (estimate.appCharges && estimate.appCharges.length > 0) {
+            const chargeItems = estimate.appCharges
+              .map(
+                (charge) =>
+                  `<div class="flex justify-between text-sm text-gray-500">
+                    <span>${charge.description}</span>
+                    <span>$${charge.amount.toFixed(2)}</span>
+                  </div>`,
+              )
+              .join("");
+
+            chargesHtml = `
+              <div class="mt-3 pt-3 border-t border-gray-100">
+                <p class="text-xs font-medium text-gray-400 uppercase mb-1">App Charges</p>
+                ${chargeItems}
+                <div class="flex justify-between text-sm font-medium text-gray-700 mt-1 pt-1 border-t border-gray-100">
+                  <span>Total charges</span>
+                  <span>$${estimate.appChargesTotal.toFixed(2)}</span>
+                </div>
+              </div>
+            `;
+          }
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900">${estimate.serviceName}</h4>
+              </div>
+              <div class="text-right">
+                <p class="text-2xl font-bold text-blue-600">$${estimate.fare.toFixed(2)}</p>
+                <p class="text-xs text-gray-400">estimated fare</p>
+              </div>
+            </div>
+            ${chargesHtml}
+          `;
+
+          estimatesList.appendChild(card);
+        });
+      }
+
+      async function init() {
+        try {
+          const [mapsLib, placesLib, markerLib, routesLib] = await Promise.all([
+            importLibrary("maps"),
+            importLibrary("places"),
+            importLibrary("marker"),
+            importLibrary("routes"),
+          ]);
+
+          const { Map } = mapsLib;
+          const { Autocomplete } = placesLib;
+          const { AdvancedMarkerElement } = markerLib;
+          const { DirectionsService, DirectionsRenderer: DirRenderer } = routesLib;
+
+          map = new Map(document.getElementById("map")!, {
+            center: SOUTH_FLORIDA_CENTER,
+            zoom: 12,
+            mapId: "FARE_ESTIMATE_MAP",
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+          });
+
+          if (mapPlaceholder) mapPlaceholder.style.display = "none";
+
+          const pickupInput = document.getElementById(
+            "pickup-input",
+          ) as HTMLInputElement;
+          const dropoffInput = document.getElementById(
+            "dropoff-input",
+          ) as HTMLInputElement;
+
+          const pickupAutocomplete = new Autocomplete(pickupInput, {
+            fields: ["geometry", "formatted_address", "name"],
+          });
+
+          const dropoffAutocomplete = new Autocomplete(dropoffInput, {
+            fields: ["geometry", "formatted_address", "name"],
+          });
+
+          pickupAutocomplete.addListener("place_changed", () => {
+            pickupPlace = pickupAutocomplete.getPlace();
+            if (pickupPlace?.geometry?.location) {
+              clearRoute();
+              if (pickupMarker) pickupMarker.map = null;
+              pickupMarker = new AdvancedMarkerElement({
+                position: pickupPlace.geometry.location,
+                map,
+                content: createMarkerLabel("A"),
+              });
+              fitMapToMarkers();
+            }
+            updateButtonState();
+          });
+
+          dropoffAutocomplete.addListener("place_changed", () => {
+            dropoffPlace = dropoffAutocomplete.getPlace();
+            if (dropoffPlace?.geometry?.location) {
+              clearRoute();
+              if (dropoffMarker) dropoffMarker.map = null;
+              dropoffMarker = new AdvancedMarkerElement({
+                position: dropoffPlace.geometry.location,
+                map,
+                content: createMarkerLabel("B"),
+              });
+              fitMapToMarkers();
+            }
+            updateButtonState();
+          });
+
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            clearError();
+
+            if (!pickupPlace?.geometry?.location || !dropoffPlace?.geometry?.location) {
+              showError("Please select valid pickup and drop-off locations.");
+              return;
+            }
+
+            setLoading(true);
+            resultsContainer.classList.add("hidden");
+
+            try {
+              const directionsService = new DirectionsService();
+              const result = await directionsService.route({
+                origin: pickupPlace.geometry.location,
+                destination: dropoffPlace.geometry.location,
+                travelMode: google.maps.TravelMode.DRIVING,
+              });
+
+              clearMarkers();
+              clearRoute();
+              directionsRenderer = new DirRenderer({
+                map,
+                suppressMarkers: false,
+              });
+              directionsRenderer.setDirections(result);
+
+              const leg = result.routes[0].legs[0];
+              const distanceMeters = leg.distance!.value;
+              const durationSeconds = leg.duration!.value;
+              const durationMinutes = Math.ceil(durationSeconds / 60);
+
+              routeDistance.textContent = leg.distance!.text;
+              routeDuration.textContent = leg.duration!.text;
+
+              const fareResponse = await getEstimates(
+                distanceMeters,
+                durationMinutes,
+              );
+
+              if (fareResponse.estimates.length === 0) {
+                showError(
+                  "No services available for this route. Please try a different location.",
+                );
+              } else {
+                renderEstimates(fareResponse.estimates);
+                resultsContainer.classList.remove("hidden");
+              }
+            } catch (err: any) {
+              const code = err?.code;
+              if (code === "functions/unavailable") {
+                showError(
+                  "Fare estimate service is temporarily unavailable. Please try again later.",
+                );
+              } else if (code === "functions/not-found") {
+                showError(
+                  "No services available in this area yet.",
+                );
+              } else if (
+                err?.message?.includes("ZERO_RESULTS") ||
+                err?.message?.includes("NOT_FOUND")
+              ) {
+                showError(
+                  "No driving route found between these locations. Please check your addresses.",
+                );
+              } else {
+                showError(
+                  "An error occurred while estimating your fare. Please try again.",
+                );
+                console.error("Fare estimate error:", err);
+              }
+            } finally {
+              setLoading(false);
+            }
+          });
+        } catch (err) {
+          showError(
+            "Could not load map services. Please refresh the page and try again.",
+          );
+          console.error("Google Maps load error:", err);
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>
