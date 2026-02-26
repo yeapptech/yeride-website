@@ -16,13 +16,9 @@ import FareResultsCard from "../components/FareResultsCard.astro";
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
       html {
         scroll-behavior: smooth;
-      }
-      .pac-container {
-        z-index: 10000;
       }
     </style>
   </head>
@@ -78,8 +74,8 @@ import FareResultsCard from "../components/FareResultsCard.astro";
       });
 
       let map: google.maps.Map;
-      let pickupPlace: google.maps.places.PlaceResult | null = null;
-      let dropoffPlace: google.maps.places.PlaceResult | null = null;
+      let pickupLocation: google.maps.LatLng | null = null;
+      let dropoffLocation: google.maps.LatLng | null = null;
       let pickupMarker: google.maps.marker.AdvancedMarkerElement | null = null;
       let dropoffMarker: google.maps.marker.AdvancedMarkerElement | null = null;
       let directionsRenderer: google.maps.DirectionsRenderer | null = null;
@@ -119,7 +115,7 @@ import FareResultsCard from "../components/FareResultsCard.astro";
       }
 
       function updateButtonState() {
-        estimateButton.disabled = !pickupPlace?.geometry || !dropoffPlace?.geometry;
+        estimateButton.disabled = !pickupLocation || !dropoffLocation;
       }
 
       function clearMarkers() {
@@ -225,7 +221,7 @@ import FareResultsCard from "../components/FareResultsCard.astro";
           ]);
 
           const { Map } = mapsLib;
-          const { Autocomplete } = placesLib;
+          const PlaceAutocompleteElement = (placesLib as any).PlaceAutocompleteElement as typeof google.maps.places.PlaceAutocompleteElement;
           const { AdvancedMarkerElement } = markerLib;
           const { DirectionsService, DirectionsRenderer: DirRenderer } = routesLib;
 
@@ -240,28 +236,26 @@ import FareResultsCard from "../components/FareResultsCard.astro";
 
           if (mapPlaceholder) mapPlaceholder.style.display = "none";
 
-          const pickupInput = document.getElementById(
-            "pickup-input",
-          ) as HTMLInputElement;
-          const dropoffInput = document.getElementById(
-            "dropoff-input",
-          ) as HTMLInputElement;
+          const pickupContainer = document.getElementById("pickup-container")!;
+          const dropoffContainer = document.getElementById("dropoff-container")!;
 
-          const pickupAutocomplete = new Autocomplete(pickupInput, {
-            fields: ["geometry", "formatted_address", "name"],
-          });
+          const pickupAutocomplete = new PlaceAutocompleteElement({} as any);
+          pickupAutocomplete.id = "pickup-autocomplete";
+          pickupContainer.appendChild(pickupAutocomplete);
 
-          const dropoffAutocomplete = new Autocomplete(dropoffInput, {
-            fields: ["geometry", "formatted_address", "name"],
-          });
+          const dropoffAutocomplete = new PlaceAutocompleteElement({} as any);
+          dropoffAutocomplete.id = "dropoff-autocomplete";
+          dropoffContainer.appendChild(dropoffAutocomplete);
 
-          pickupAutocomplete.addListener("place_changed", () => {
-            pickupPlace = pickupAutocomplete.getPlace();
-            if (pickupPlace?.geometry?.location) {
+          pickupAutocomplete.addEventListener("gmp-placeselect", async (e: any) => {
+            const place = e.place;
+            await place.fetchFields({ fields: ["location", "displayName", "formattedAddress"] });
+            if (place.location) {
+              pickupLocation = place.location;
               clearRoute();
               if (pickupMarker) pickupMarker.map = null;
               pickupMarker = new AdvancedMarkerElement({
-                position: pickupPlace.geometry.location,
+                position: pickupLocation,
                 map,
                 content: createMarkerLabel("A"),
               });
@@ -270,13 +264,15 @@ import FareResultsCard from "../components/FareResultsCard.astro";
             updateButtonState();
           });
 
-          dropoffAutocomplete.addListener("place_changed", () => {
-            dropoffPlace = dropoffAutocomplete.getPlace();
-            if (dropoffPlace?.geometry?.location) {
+          dropoffAutocomplete.addEventListener("gmp-placeselect", async (e: any) => {
+            const place = e.place;
+            await place.fetchFields({ fields: ["location", "displayName", "formattedAddress"] });
+            if (place.location) {
+              dropoffLocation = place.location;
               clearRoute();
               if (dropoffMarker) dropoffMarker.map = null;
               dropoffMarker = new AdvancedMarkerElement({
-                position: dropoffPlace.geometry.location,
+                position: dropoffLocation,
                 map,
                 content: createMarkerLabel("B"),
               });
@@ -289,7 +285,7 @@ import FareResultsCard from "../components/FareResultsCard.astro";
             e.preventDefault();
             clearError();
 
-            if (!pickupPlace?.geometry?.location || !dropoffPlace?.geometry?.location) {
+            if (!pickupLocation || !dropoffLocation) {
               showError("Please select valid pickup and drop-off locations.");
               return;
             }
@@ -300,8 +296,8 @@ import FareResultsCard from "../components/FareResultsCard.astro";
             try {
               const directionsService = new DirectionsService();
               const result = await directionsService.route({
-                origin: pickupPlace.geometry.location,
-                destination: dropoffPlace.geometry.location,
+                origin: pickupLocation,
+                destination: dropoffLocation,
                 travelMode: google.maps.TravelMode.DRIVING,
               });
 
