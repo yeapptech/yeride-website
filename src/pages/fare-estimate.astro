@@ -247,8 +247,8 @@ import FareResultsCard from "../components/FareResultsCard.astro";
           dropoffAutocomplete.id = "dropoff-autocomplete";
           dropoffContainer.appendChild(dropoffAutocomplete);
 
-          pickupAutocomplete.addEventListener("gmp-placeselect", async (e: any) => {
-            const place = e.place;
+          pickupAutocomplete.addEventListener("gmp-select", async (e: any) => {
+            const place = e.placePrediction.toPlace();
             await place.fetchFields({ fields: ["location", "displayName", "formattedAddress"] });
             if (place.location) {
               pickupLocation = place.location;
@@ -264,8 +264,8 @@ import FareResultsCard from "../components/FareResultsCard.astro";
             updateButtonState();
           });
 
-          dropoffAutocomplete.addEventListener("gmp-placeselect", async (e: any) => {
-            const place = e.place;
+          dropoffAutocomplete.addEventListener("gmp-select", async (e: any) => {
+            const place = e.placePrediction.toPlace();
             await place.fetchFields({ fields: ["location", "displayName", "formattedAddress"] });
             if (place.location) {
               dropoffLocation = place.location;
