@@ -9,7 +9,9 @@ export interface AppCharge {
 
 export interface ServiceEstimate {
   serviceId: string;
-  serviceName: string;
+  name: string;
+  description: string;
+  seat: number | null;
   fare: number;
   appCharges: AppCharge[];
   appChargesTotal: number;
