@@ -170,30 +170,6 @@ import FareResultsCard from "../components/FareResultsCard.astro";
           card.className =
             "bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition duration-300";
 
-          let chargesHtml = "";
-          if (estimate.appCharges && estimate.appCharges.length > 0) {
-            const chargeItems = estimate.appCharges
-              .map(
-                (charge) =>
-                  `<div class="flex justify-between text-sm text-gray-500">
-                    <span>${charge.description}</span>
-                    <span>$${charge.amount.toFixed(2)}</span>
-                  </div>`,
-              )
-              .join("");
-
-            chargesHtml = `
-              <div class="mt-3 pt-3 border-t border-gray-100">
-                <p class="text-xs font-medium text-gray-400 uppercase mb-1">App Charges</p>
-                ${chargeItems}
-                <div class="flex justify-between text-sm font-medium text-gray-700 mt-1 pt-1 border-t border-gray-100">
-                  <span>Total charges</span>
-                  <span>$${estimate.appChargesTotal.toFixed(2)}</span>
-                </div>
-              </div>
-            `;
-          }
-
           card.innerHTML = `
             <div class="flex items-center justify-between">
               <div>
@@ -204,7 +180,6 @@ import FareResultsCard from "../components/FareResultsCard.astro";
                 <p class="text-xs text-gray-400">estimated fare</p>
               </div>
             </div>
-            ${chargesHtml}
           `;
 
           estimatesList.appendChild(card);
