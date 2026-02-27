@@ -173,7 +173,7 @@ import FareResultsCard from "../components/FareResultsCard.astro";
           card.innerHTML = `
             <div class="flex items-center justify-between">
               <div>
-                <h4 class="text-lg font-semibold text-gray-900">${estimate.name}${estimate.seat ? ` <span class="text-sm font-normal text-gray-400">${estimate.seat} seats</span>` : ""}</h4>
+                <h4 class="text-lg font-semibold text-gray-900">${estimate.name}${estimate.seat ? ` <span class="text-sm font-normal text-gray-400">Seats: ${estimate.seat}</span>` : ""}</h4>
                 ${estimate.description ? `<p class="text-sm text-gray-500">${estimate.description}</p>` : ""}
               </div>
               <div class="text-right">
