@@ -1,0 +1,23 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/astro-check.sh\"",
+            "timeout": 120,
+            "statusMessage": "Type-checking Astro files..."
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/env-var-drift.sh\"",
+            "timeout": 15,
+            "statusMessage": "Checking PUBLIC_ env vars..."
+          }
+        ]
+      }
+    ]
+  }
+}
