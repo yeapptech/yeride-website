@@ -4,64 +4,73 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-YeRide website — a static marketing and pre-registration site for a community-driven ridesharing platform. Built with Astro, deployed to GitHub Pages at https://www.yeride.com.
+YeRide website — a static marketing, pre-registration, and fare-estimate site for a community-driven ridesharing platform. Astro 5, static output, deployed to GitHub Pages at https://www.yeride.com.
 
 ## Commands
 
 ```bash
 npm run dev        # Dev server at http://localhost:4321
-npm run build      # Type-check (astro check) + production build → dist/
+npm run build      # astro check (type-check) + astro build → dist/
 npm run preview    # Preview production build locally
 ```
 
-There is no test runner configured. No linter configured.
+No test runner and no linter are configured. `npm run build` is the only automated verification gate — `astro check` runs first, so a type error fails the build.
 
 ## Environment Variables
 
-Create a `.env` file for local development:
+All five are `PUBLIC_` (client-side) and are injected in CI from GitHub Secrets. Create a `.env` for local development:
+
 ```
-PUBLIC_API_URL=https://api.yeride.com/
+PUBLIC_API_URL=https://api.yeride.com/          # must end with a trailing slash
+PUBLIC_GOOGLE_MAPS_API_KEY=...
+PUBLIC_FIREBASE_API_KEY=...
+PUBLIC_FIREBASE_AUTH_DOMAIN=...
+PUBLIC_FIREBASE_PROJECT_ID=...
 ```
 
-The `PUBLIC_` prefix makes it available client-side. Used by the PreRegistrationForm component to POST to `${PUBLIC_API_URL}v1/auth/register`.
+Adding a new env var requires editing `.github/workflows/deploy-all.yml` (the "Create env file" step writes `.env` line by line) **and** adding the GitHub Secret — otherwise it is silently empty in production.
 
 ## Architecture
 
 **Framework:** Astro 5 (static output, zero JS by default)
-**Styling:** Tailwind CSS 3 via `@astrojs/tailwind` integration + Open Props for CSS custom properties
-**Deployment:** GitHub Actions → GitHub Pages (triggered on push to `main`)
+**Styling:** Tailwind CSS 3 via `@astrojs/tailwind`
+**Deployment:** GitHub Actions → GitHub Pages on push to `main`
 
-### Key directories
+### Two independent backends
 
-- `src/pages/` — File-based routing. Each `.astro` file = a route
-- `src/components/` — Reusable Astro components (Header, Footer, PreRegistrationForm, navBar)
-- `src/layouts/` — BaseLayout.astro (used by secondary pages, **not** used by index.astro)
-- `src/styles/main.css` — Global styles (Open Props imports)
-- `public/` — Static assets served as-is (images, favicon, CNAME)
-- `docs/` — Project documentation (architecture, components, API, deployment, contributing)
+The site talks to two unrelated services; don't conflate them.
 
-### Layout inconsistency to be aware of
+1. **Pre-registration** (`src/components/PreRegistrationForm.astro`) — plain `fetch` POST to `${PUBLIC_API_URL}v1/auth/register`. The form logic lives in one large `is:inline` script that receives the URL via `define:vars`, so it is *not* bundled and cannot use imports.
+2. **Fare estimates** (`src/pages/fare-estimate.astro` + `src/lib/fareEstimate.ts`) — Firebase **callable function** `estimateFares`, hardcoded to region `us-east1` in `src/lib/firebase.ts`. Service area defaults to `us-fl-south-florida`. The page script loads Google Maps libraries (`maps`, `places`, `marker`, `routes`) via `@googlemaps/js-api-loader`, resolves pickup/dropoff, computes distance + duration, then calls `getEstimates()`.
 
-The homepage (`index.astro`) is self-contained with its own inline header/footer and loads Tailwind via CDN. Other pages use `BaseLayout.astro` with the `Header` and `Footer` components and get Tailwind from the Astro integration. This means changes to shared navigation need to be applied in multiple places.
+`firebase-admin` is in `package.json` but unused in `src/`. Firebase Auth and Firestore are not used — only `firebase/functions`.
 
-### Third-party integrations
+### Page structure is inconsistent — check before editing shared UI
 
-- **Firebase SDK** (`firebase` package) — client-side, used for pre-registration
-- **Tally.so** — embedded contact form on `/contact` (form ID: `mJa5J7`)
-- **Google Fonts** — Inter (400, 600, 700)
+There is no single layout. Each page declares its own `<html>`/`<head>`:
+
+- `src/pages/404.astro` — the **only** page using `BaseLayout.astro`, which is also the only consumer of `navBar.astro`, `src/data/navData.ts`, and `src/styles/main.css` (Open Props from unpkg). `navData.ts` lists routes (`ride`, `drive`, `register`) that don't exist.
+- `src/pages/index.astro` — fully self-contained, with its own inline header and footer markup (does *not* use the `Header`/`Footer` components).
+- `about`, `contact`, `privacy-policy`, `fare-estimate` — self-contained `<html>` importing the `Header` and `Footer` components.
+
+Consequence: a navigation or footer change usually needs edits in **both** `src/components/Header.astro` / `Footer.astro` **and** the inline copies in `index.astro`.
+
+Also: `index`, `about`, `contact`, and `privacy-policy` load Tailwind from `https://cdn.tailwindcss.com` in `<head>`, *on top of* the `@astrojs/tailwind` build. `fare-estimate.astro` relies on the integration alone. When adding a page, match whichever surrounding page you're copying rather than assuming the integration is enough.
+
+### Other integrations
+
+- **Tally.so** — embedded contact form on `/contact` (form ID `mJa5J7`)
+- **Google Fonts** — Inter (400, 600, 700), linked per page
+- `src/pages/redirect.astro` — bare HTML that bounces to the `yeride://register` deep link
 
 ## Coding Conventions
 
-- Astro components use `.astro` extension with scoped `<style>` tags
-- Use Tailwind utility classes directly; **never use `@apply`**
-- Minimize client-side JavaScript; use `client:*` directives only when hydration is needed
-- TypeScript for type safety (extends `astro/tsconfigs/base`)
-- Conventional Commits for commit messages (feat, fix, docs, chore, etc.)
-- Mobile-first responsive design using Tailwind breakpoints (sm, md, lg)
+- Astro components (`.astro`) with scoped `<style>` tags
+- Tailwind utility classes directly; **never use `@apply`**
+- Minimize client-side JS; `client:*` directives only when hydration is genuinely needed
+- Mobile-first responsive design (`sm`, `md`, `lg`)
+- Conventional Commits (`feat`, `fix`, `docs`, `chore`, …)
 
-## Deployment
+## Further Documentation
 
-Pushes to `main` trigger `.github/workflows/deploy-all.yml`:
-1. Checkout → Node 20 setup → inject `PUBLIC_API_URL` from GitHub Secrets into `.env`
-2. `npm ci` → `npm run build`
-3. Upload `dist/` artifact → deploy to GitHub Pages
+`docs/` holds longer-form guides: `architecture.md`, `components.md`, `api-integration.md`, `deployment.md`, `getting-started.md`, `contributing.md`.
