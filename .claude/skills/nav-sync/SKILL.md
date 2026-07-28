@@ -19,6 +19,11 @@ added to all four, or it appears on some pages and not others.
 reached only by `BaseLayout.astro` → `404.astro`. Its entries (`ride`, `drive`,
 `register`) point at routes that do not exist.
 
+`BaseLayout.astro` renders `<Nav />` + `<slot />` and **no footer at all**, so
+`404.astro` has no footer to add a link to. Full-site footer coverage there is a
+structural change (import and render `Footer.astro`), not a link edit — treat it
+as out of scope unless asked.
+
 Inventory every surface before and after the change — the two lists must match:
 
 ```bash
