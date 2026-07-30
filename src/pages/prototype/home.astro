@@ -1,0 +1,59 @@
+---
+// PROTOTYPE (wayfinder #33) — THROWAWAY. Two home-page comps on the real brand
+// tokens, switchable via ?variant=A|B and ?lang=en|es.
+//   npm run dev  →  http://localhost:4321/prototype/home
+// This site is `output: 'static'`, so Astro.url.searchParams is always empty here.
+// All four combos are therefore rendered and the matching one revealed by a tiny
+// inline script. Throwaway-grade on purpose.
+import '@fontsource-variable/nunito';
+import '../../../.prototype-brand/tokens.css';
+import VariantA from './_VariantA.astro';
+import VariantB from './_VariantB.astro';
+import Switcher from './_Switcher.astro';
+
+const variants = [
+  { key: 'A', name: 'The Fork — light-first, symmetric doors' },
+  { key: 'B', name: 'The Marquee — dark-first, stacked fork' },
+];
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>PROTOTYPE — YeRide home</title>
+    <link rel="icon" href="/prototype/yeride-mark.svg" />
+    <style>
+      :root {
+        font-family: var(--font-brand);
+      }
+      [data-proto] {
+        display: none;
+      }
+      html[data-v='A'][data-lang='en'] [data-proto='A-en'],
+      html[data-v='A'][data-lang='es'] [data-proto='A-es'],
+      html[data-v='B'][data-lang='en'] [data-proto='B-en'],
+      html[data-v='B'][data-lang='es'] [data-proto='B-es'] {
+        display: block;
+      }
+    </style>
+    <script is:inline>
+      // Runs before paint so there's no flash of the wrong variant.
+      (function () {
+        var p = new URLSearchParams(location.search);
+        var r = document.documentElement;
+        r.dataset.v = p.get('variant') === 'B' ? 'B' : 'A';
+        r.dataset.lang = p.get('lang') === 'es' ? 'es' : 'en';
+        r.lang = r.dataset.lang;
+      })();
+    </script>
+  </head>
+  <body>
+    <div data-proto="A-en"><VariantA lang="en" /></div>
+    <div data-proto="A-es"><VariantA lang="es" /></div>
+    <div data-proto="B-en"><VariantB lang="en" /></div>
+    <div data-proto="B-es"><VariantB lang="es" /></div>
+    <Switcher variants={variants} />
+  </body>
+</html>

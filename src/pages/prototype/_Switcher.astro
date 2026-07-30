@@ -1,0 +1,68 @@
+---
+// PROTOTYPE (wayfinder #33) — floating variant switcher. Deliberately ugly so it
+// reads as scaffolding, not design. Hidden in production builds. All state is
+// client-side (the site is statically output).
+interface Props {
+  variants: { key: string; name: string }[];
+}
+const { variants } = Astro.props;
+---
+
+{
+  !import.meta.env.PROD && (
+    <div
+      class="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 flex items-stretch overflow-hidden rounded-xl border border-white/20 bg-neutral-900 font-mono text-[13px] text-white shadow-2xl"
+      data-proto-switcher
+      data-variants={JSON.stringify(variants)}
+    >
+      <button type="button" data-step="-1" class="px-4 py-3 hover:bg-white/15" aria-label="Previous variant">
+        ←
+      </button>
+      <span data-proto-label class="flex items-center border-x border-white/20 px-5 py-3 whitespace-nowrap" />
+      <button type="button" data-step="1" class="px-4 py-3 hover:bg-white/15" aria-label="Next variant">
+        →
+      </button>
+      <button type="button" data-proto-lang class="border-l border-white/20 px-4 py-3 uppercase hover:bg-white/15" />
+    </div>
+  )
+}
+
+<script>
+  const bar = document.querySelector<HTMLElement>('[data-proto-switcher]');
+  if (bar) {
+    const variants: { key: string; name: string }[] = JSON.parse(bar.dataset.variants!);
+    const root = document.documentElement;
+    const cur = () => variants.findIndex((v) => v.key === root.dataset.v);
+
+    const go = (variant: string, lang: string) => {
+      location.search = `?variant=${variant}&lang=${lang}`;
+    };
+    const step = (d: number) => {
+      const n = variants[(cur() + d + variants.length) % variants.length];
+      go(n.key, root.dataset.lang!);
+    };
+
+    const v = variants[cur()];
+    bar.querySelector('[data-proto-label]')!.textContent = `${v.key} — ${v.name}`;
+    const langBtn = bar.querySelector<HTMLElement>('[data-proto-lang]')!;
+    const otherLang = root.dataset.lang === 'en' ? 'es' : 'en';
+    langBtn.textContent = otherLang;
+    langBtn.onclick = () => go(root.dataset.v!, otherLang);
+
+    bar.querySelectorAll<HTMLElement>('[data-step]').forEach((b) => {
+      b.onclick = () => step(Number(b.dataset.step));
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const el = document.activeElement;
+      if (
+        el instanceof HTMLInputElement ||
+        el instanceof HTMLTextAreaElement ||
+        (el instanceof HTMLElement && el.isContentEditable)
+      )
+        return;
+      if (e.key === 'ArrowLeft') step(-1);
+      if (e.key === 'ArrowRight') step(1);
+    });
+  }
+</script>

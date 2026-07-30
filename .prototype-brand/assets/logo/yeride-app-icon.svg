@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- YeRide app icon — full-bleed Cab Yellow square (the OS applies its own corner mask).
+       Figure Pullman, pin paper with Pullman dot, per the approved icon scheme. -->
+  <rect width="100" height="100" fill="#F7B731"/>
+  <g transform="translate(50 50) scale(0.8) translate(-50 -50)">
+    <g transform="rotate(-10 52 66)">
+      <g fill="none" stroke="#644117" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M52 82 C50 72 55 61 52 52"/>
+        <path d="M52 52 C48 44 37 34 30 26"/>
+        <path d="M52 52 C58 52 62 50 66 46"/>
+      </g>
+      <path d="M50 40 C50 40 38 27 38 20 A12 12 0 1 1 62 20 C62 27 50 40 50 40 Z" fill="#FBF8F3" transform="translate(52 19) scale(0.82) translate(-50 -20)"/>
+      <circle cx="52" cy="19" r="3.6" fill="#644117"/>
+    </g>
+  </g>
+</svg>

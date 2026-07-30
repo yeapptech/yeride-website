@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- YeRide mark, reversed (paper) for dark or Pullman Brown grounds. Pin dot is a true knockout. -->
+  <g transform="rotate(-10 52 66)">
+    <g fill="none" stroke="#FBF8F3" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M52 82 C50 72 55 61 52 52"/>
+      <path d="M52 52 C48 44 37 34 30 26"/>
+      <path d="M52 52 C58 52 62 50 66 46"/>
+    </g>
+    <path fill="#FBF8F3" fill-rule="evenodd" transform="translate(52 19) scale(0.82) translate(-50 -20)"
+      d="M50 40 C50 40 38 27 38 20 A12 12 0 1 1 62 20 C62 27 50 40 50 40 Z
+         M50 15.6 A4.4 4.4 0 1 0 50 24.4 A4.4 4.4 0 1 0 50 15.6 Z"/>
+  </g>
+</svg>

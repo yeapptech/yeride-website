@@ -1,0 +1,9 @@
+/* YeRide design tokens — derived from tokens.json (source of truth).
+   Edit tokens.json first, mirror here, then `npm run check`. */
+:root {
+  --color-cab-yellow: #F7B731;
+  --color-pullman-brown: #644117;
+  --color-ink: #2A211A;
+  --color-paper: #FBF8F3;
+  --font-brand: Nunito, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}

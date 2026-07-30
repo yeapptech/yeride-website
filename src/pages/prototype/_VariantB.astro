@@ -1,0 +1,127 @@
+---
+// PROTOTYPE (wayfinder #33) — Variant B: "The Marquee"
+// Dark-first. A full-bleed Ink stage carries the tagline alone as the hero; the
+// audience split is demoted to a second beat — two stacked full-width rows on paper,
+// not side-by-side doors. Third beat is a Cab Yellow ground band (ink text on yellow),
+// the one posture Variant A never shows.
+import { copy, type Lang } from './_copy';
+const { lang } = Astro.props as { lang: Lang };
+const t = copy[lang];
+const other = lang === 'en' ? 'es' : 'en';
+
+const rows = [
+  {
+    eyebrow: t.driverEyebrow,
+    offer: t.driverOffer,
+    support: t.driverSupport,
+    cta: t.driverCta,
+    href: '/drivers',
+    rule: 'bg-cab-yellow',
+  },
+  {
+    eyebrow: t.riderEyebrow,
+    offer: t.riderOffer,
+    support: t.riderSupport,
+    cta: t.riderCta,
+    href: '/riders',
+    rule: 'bg-pullman-brown',
+  },
+];
+---
+
+<div class="font-brand bg-paper">
+  <!-- THE MARQUEE — full-bleed ink stage, tagline alone -->
+  <section class="bg-ink min-h-screen flex flex-col">
+    <header class="mx-auto w-full max-w-7xl px-6 py-6 flex items-center gap-6">
+      <a href="/" class="shrink-0">
+        <img src="/prototype/yeride-mark-reversed.svg" alt="YeRide" class="h-9 w-auto" />
+      </a>
+      <nav class="ml-auto flex items-center gap-7 text-[15px] font-semibold text-paper/75">
+        <a href="/fees" class="hover:text-paper">{t.nav.fees}</a>
+        <a href="/fare-estimate" class="hover:text-paper">{t.nav.estimate}</a>
+        <a href="/about" class="hidden sm:inline hover:text-paper">{t.nav.about}</a>
+        <a
+          href={`?variant=B&lang=${other}`}
+          class="rounded-full border border-paper/30 px-3 py-1 text-xs font-bold uppercase tracking-caps text-paper/70 hover:border-paper/70"
+          >{other}</a
+        >
+      </nav>
+    </header>
+
+    <div class="flex-1 flex items-center">
+      <div class="mx-auto w-full max-w-5xl px-6 py-20 text-center">
+        <h1
+          class="text-paper font-extrabold tracking-headline text-[clamp(2.75rem,8vw,6.5rem)] leading-[0.98] text-balance"
+        >
+          {t.tagline}
+        </h1>
+        <p class="mx-auto mt-8 max-w-2xl text-paper/70 text-[clamp(1.05rem,1.6vw,1.35rem)]">
+          {t.ratesLine}
+        </p>
+        <a
+          href="/fees"
+          class="mt-11 inline-flex items-center gap-2 rounded-full bg-cab-yellow px-9 py-4 text-ink font-bold text-[18px] hover:brightness-95"
+        >
+          {t.feesCta}
+          <span aria-hidden="true">→</span>
+        </a>
+        <p class="mt-6 text-paper/45 text-[14px]">{t.factsNote}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECOND BEAT — the fork, stacked rows on paper -->
+  <section class="bg-paper">
+    <div class="mx-auto max-w-6xl px-6">
+      {
+        rows.map((r) => (
+          <a
+            href={r.href}
+            class="group flex flex-col md:flex-row md:items-center gap-6 md:gap-12 border-b border-ink/10 py-14 first:border-t"
+          >
+            <div class="md:w-52 shrink-0">
+              <span class={`block h-1.5 w-12 ${r.rule}`} />
+              <p class="mt-4 text-xs font-bold uppercase tracking-caps text-ink/50">{r.eyebrow}</p>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-ink font-extrabold tracking-headline text-[clamp(2rem,4.4vw,3.25rem)] leading-[1.05]">
+                {r.offer}
+              </h2>
+              <p class="mt-4 text-ink/70 text-[17px] leading-relaxed max-w-2xl">{r.support}</p>
+            </div>
+            <span class="shrink-0 inline-flex items-center gap-2 font-bold text-ink text-[16px] underline underline-offset-4 group-hover:no-underline">
+              {r.cta}
+              <span aria-hidden="true">→</span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- THIRD BEAT — Cab Yellow ground, ink text -->
+  <section class="bg-cab-yellow">
+    <div
+      class="mx-auto max-w-6xl px-6 py-16 flex flex-col md:flex-row md:items-center gap-6 md:gap-12"
+    >
+      <p
+        class="flex-1 text-ink font-extrabold tracking-headline text-[clamp(1.75rem,3.4vw,2.75rem)] leading-[1.1]"
+      >
+        {t.feesBanner}
+      </p>
+      <div class="flex flex-wrap gap-x-8 gap-y-2 text-ink/80 font-semibold text-[16px]">
+        {t.facts.map((f) => <span>{f}</span>)}
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-ink">
+    <div
+      class="mx-auto max-w-6xl px-6 py-10 flex flex-wrap items-center gap-4 text-[14px] text-paper/55"
+    >
+      <img src="/prototype/yeride-mark-reversed.svg" alt="" class="h-6 w-auto" />
+      <span>{t.footerNote}</span>
+      <span class="ml-auto">© 2026 YeRide</span>
+    </div>
+  </footer>
+</div>
