@@ -1,0 +1,496 @@
+# YeRide website — per-page EN/ES copy map
+
+Resolves [yeapptech/yeride-website#34](https://github.com/yeapptech/yeride-website/issues/34) (wayfinder map [#30](https://github.com/yeapptech/yeride-website/issues/30)).
+
+This is the copy the page-implementation tickets execute **verbatim**. Where a string is
+marked **canonical**, it comes from `@yeapptech/yeride-brand` `docs/messaging.md` and must
+not be reworded, re-cased, or re-punctuated. Everything else is support copy authored for
+this site — rephrasable in future campaigns, but binding for this build.
+
+Sources: `docs/messaging.md`, `docs/positioning.md`, `docs/identity.md` (brand repo, binding);
+`research/fee-schedule-source.md` and `research/cash-statute.md` (this repo, closed research
+tickets); the approved Variant D comp from [#33](https://github.com/yeapptech/yeride-website/issues/33).
+
+---
+
+## 0. Global rules
+
+1. **EN and ES ship together.** No page merges with one language.
+2. **Spanish is authored, not translated.** Informal **tú** throughout. Pan-Latin Miami
+   vocabulary — *carro* not *coche*, *manejar* not *conducir*. No voseo, no Spain-isms.
+   The one exception is the legal pages (§ 3.8, § 3.9), which are formal-register
+   translations by deliberate decision.
+3. **Routes are mirrored with English slugs.** `/drivers` → `/es/drivers`. Every page has an
+   `/es/` twin except `/404` and `/redirect` (§ 3.10, § 3.11).
+4. **No fee amount is ever hard-coded in copy.** Amounts render only from the live fetch.
+5. **Gated copy must not appear anywhere.** See § 5.
+
+---
+
+## 1. Shared chrome
+
+### 1.1 Header
+
+Order is fixed. Audience pages first, then the two proof pages, then the toggle.
+
+| Slot | EN | ES |
+|---|---|---|
+| Logo alt | YeRide | YeRide |
+| Nav 1 → `/drivers` | Drivers | Maneja |
+| Nav 2 → `/riders` | Riders | Viaja |
+| Nav 3 → `/fees` | Fees | Tarifas |
+| Nav 4 → `/fare-estimate` | Fare estimate | Estimar tarifa |
+| Language toggle | ES | EN |
+| Toggle `aria-label` | Ver esta página en español | View this page in English |
+
+The toggle preserves the current page (`/fees` ⇄ `/es/fees`). At the narrowest breakpoint the
+comp drops nav links; the **mark and the toggle always survive** — ES parity is not a
+progressive enhancement.
+
+### 1.2 Footer
+
+| Slot | EN | ES |
+|---|---|---|
+| Link → `/about` | About | Nosotros |
+| Link → `/contact` | Contact | Contacto |
+| Link → `/privacy-policy` | Privacy Policy | Privacidad |
+| Link → `/terms` | Terms | Términos |
+| Place line | Built in South Florida. | Hecho en el Sur de la Florida. |
+| Entity line | YeRide is built by YeAPP TECH LLC, a Florida software company. | YeRide es un producto de YeAPP TECH LLC, una empresa de software de la Florida. |
+| Copyright | © 2026 YeRide | © 2026 YeRide |
+
+**Social links: X/Twitter only** — `https://twitter.com/yeride_app`, `aria-label` "YeRide on X"
+/ "YeRide en X". The Facebook and Instagram icons are **removed**; they pointed at `#`. Do not
+re-add a social icon without a working URL.
+
+The "Terms of Service" link previously pointed at `#`. It now points at the real `/terms` page
+(§ 3.9).
+
+---
+
+## 2. Shared blocks
+
+### 2.1 Availability block
+
+Runs directly beneath the pre-registration form on `/drivers` and `/riders`, and in the form's
+success state. This is the page's honest statement of what exists today.
+
+| Slot | EN | ES |
+|---|---|---|
+| Lead | YeRide is live on Android. | YeRide ya está en Android. |
+| Play badge alt | Get it on Google Play | Disponible en Google Play |
+| iOS line | iOS is in beta — join the TestFlight. | iOS está en beta — únete al TestFlight. |
+
+**There is no App Store badge.** There is no App Store listing; the badge that shipped
+previously linked to TestFlight. It is removed and must not return until a public App Store
+listing exists.
+
+### 2.2 Pre-registration form
+
+One component, embedded on `/drivers` and `/riders`, with `role` **pre-set by page** — the
+dropdown is removed. Heading differs by page (§ 3.2, § 3.3); everything below is shared.
+
+| Slot | EN | ES |
+|---|---|---|
+| First name label | First name | Nombre |
+| First name placeholder | Your first name | Tu nombre |
+| Last name label | Last name | Apellido |
+| Last name placeholder | Your last name | Tu apellido |
+| Email label | Email | Correo electrónico |
+| Email placeholder | you@example.com | tucorreo@ejemplo.com |
+| Phone label | Phone | Teléfono |
+| Phone placeholder | +1 305 555 0100 | +1 305 555 0100 |
+| Password label | Password | Contraseña |
+| Password placeholder | Create a password | Crea una contraseña |
+| Confirm label | Confirm password | Confirma la contraseña |
+| Confirm placeholder | Type it again | Escríbela otra vez |
+| Submit | Pre-register | Pre-regístrate |
+| Submitting | Sending… | Enviando… |
+
+**Validation (client-side, shown per field):**
+
+| Case | EN | ES |
+|---|---|---|
+| Required field empty | This one's required. | Este campo es obligatorio. |
+| Email malformed | That doesn't look like an email address. | Ese correo no parece válido. |
+| Phone malformed | Include the country code, like +1 305 555 0100. | Incluye el código de país, como +1 305 555 0100. |
+| Password too short | Use at least 8 characters. | Usa al menos 8 caracteres. |
+| Passwords differ | Those two don't match. | Las dos no coinciden. |
+
+**Server outcomes — by failure class. The raw API string is logged, never displayed.**
+
+| Class | EN | ES |
+|---|---|---|
+| Success | You're pre-registered. | Ya estás pre-registrado. |
+| Email already registered | That email is already registered. | Ese correo ya está registrado. |
+| Rejected input (4xx) | Check the details and try again. | Revisa los datos e intenta de nuevo. |
+| Network / unreachable | We couldn't reach the server. Try again in a moment. | No pudimos conectar. Intenta de nuevo en un momento. |
+| Anything else (5xx) | Something went wrong. Try again. | Algo salió mal. Intenta de nuevo. |
+
+The success state renders the availability block (§ 2.1) beneath the success line, so the
+person is told where the app actually is.
+
+> **Flagged, decided against changing (2026-07-31):** this form POSTs to
+> `${PUBLIC_API_URL}v1/auth/register` and creates a real production account, and Android is
+> already live — so "pre-register" is a label the product has outgrown. Keeping the
+> pre-registration framing was an explicit call. The copy above therefore never says
+> "early access", "coming soon", or "when we launch": pairing the label with § 2.1 keeps
+> the page truthful even though the label is loose.
+
+### 2.3 Fee label map
+
+Fee line names arrive from the database as a single `description` string per charge. The site
+keeps an ES lookup keyed by the charge `id`, used by **both** `/fees` and `/fare-estimate`.
+
+```ts
+// src/i18n/feeLabels.ts
+export const feeLabels: Record<string, { en: string; es: string }> = {
+  'booking-fee':     { en: 'Booking fee',     es: 'Cargo por reserva' },
+  'dispatch-fee':    { en: 'Dispatch fee',    es: 'Cargo por despacho' },
+  'platform-fee':    { en: 'Platform fee',    es: 'Cargo de plataforma' },
+  'trip-insurance':  { en: 'Trip insurance',  es: 'Seguro del viaje' },
+  'card-processing': { en: 'Card processing', es: 'Procesamiento de tarjeta' },
+};
+```
+
+Charge ids must be read off production before the build ticket lands — the keys above are the
+names `docs/positioning.md` uses, not verified ids. An **unknown id falls back to the backend
+`description` verbatim in both languages**, and the build check (#41) fails on any id the map
+doesn't cover, so a new charge is a visible, fixable miss rather than a silent English leak.
+
+---
+
+## 3. Pages
+
+### 3.1 `/` and `/es/` — home
+
+Structure is the approved Variant D language (Cab Yellow → Ink → Paper), with the audience fork
+moved **up into the hero** and `/fees` demoted to the nav and the paper strip.
+
+**Yellow hero** — the mark leads; no wordmark lockup on yellow.
+
+| Slot | EN | ES |
+|---|---|---|
+| H1 **(canonical)** | Your ride, fair and clear. | Tu viaje, justo y claro. |
+| Sub | Published rates — base, miles, minutes. The fare follows the ride. | Tarifas publicadas — base, millas, minutos. El precio sigue al viaje. |
+| CTA 1 → `/drivers` | Drive with YeRide | Maneja con YeRide |
+| CTA 2 → `/riders` | Ride with YeRide | Viaja con YeRide |
+
+**Ink band** — the two offers. No buttons; each half links as a whole block.
+
+| Slot | EN | ES |
+|---|---|---|
+| Eyebrow, left (Cab Yellow text — legal on Ink only) | For drivers | Para quien maneja |
+| H2 left **(canonical)** | Keep what you earn. | Lo que ganas es tuyo. |
+| Support left | No commission. Flat, published tech fees — plus insurance and card processing at cost, zero markup. | Sin comisión. Tarifas de tecnología fijas y publicadas — más el seguro y el procesamiento de tarjeta al costo, sin recargo. |
+| Eyebrow, right | For riders | Para quien viaja |
+| H2 right **(canonical)** | Pay what the ride is worth. | Paga lo justo. |
+| Support right | Your fare goes to the person driving — not to a percentage cut. | Tu tarifa es para la persona que maneja — no para la comisión de una app. |
+
+**Paper strip** — the facts, the limit, the fee link.
+
+| Slot | EN | ES |
+|---|---|---|
+| Fact 1 | No commission. | Sin comisión. |
+| Fact 2 | Flat, published fees. | Tarifas fijas y publicadas. |
+| Fact 3 | Card or cash. | Tarjeta o efectivo. |
+| Limit note | Estimates are estimates — the meter decides. | Un estimado es un estimado — el taxímetro decide. |
+| Link → `/fees` | See the fee schedule | Ver el tarifario |
+
+The home page carries **no pre-registration form**. Its job is the fork.
+
+### 3.2 `/drivers` and `/es/drivers`
+
+Pillars are the spine, in `docs/messaging.md` order. Driver pillar 2 is **gated and absent**;
+its slot placement belongs to [#43](https://github.com/yeapptech/yeride-website/issues/43) and
+is deliberately not decided here.
+
+| Slot | EN | ES |
+|---|---|---|
+| Eyebrow | For drivers | Para quien maneja |
+| H1 **(canonical, pillar 1)** | Keep what you earn. | Lo que ganas es tuyo. |
+| Support | YeRide takes no commission. You pay flat, published tech fees — plus insurance and card processing at cost, zero markup. No subscriptions, no hidden fees. | YeRide no cobra comisión. Pagas tarifas de tecnología fijas y publicadas — más el seguro y el procesamiento de tarjeta al costo, sin recargo. Sin suscripciones, sin cargos escondidos. |
+| H2 **(canonical, pillar 3)** | Trying costs nothing. | Probar no cuesta nada. |
+| Support | Run YeRide alongside Uber and Lyft. You were driving anyway. | Usa YeRide junto a Uber y Lyft. Igual ya estabas manejando. |
+| *(gated pillar-2 slot — #43)* | — | — |
+| Fee pointer H3 | Flat, published fees. No commission. | Tarifas fijas y publicadas. Sin comisión. |
+| Fee pointer link → `/fees` | See exactly what you pay | Mira exactamente lo que pagas |
+| Form heading | Pre-register as a driver | Pre-regístrate para manejar |
+| Form sub | Takes a minute. | Toma un minuto. |
+
+Form `role` is pre-set to `driver`. Availability block (§ 2.1) sits beneath the form.
+
+**Uber and Lyft are named here and only here** — `docs/positioning.md` licenses driver-facing
+copy to say "run YeRide alongside Uber and Lyft", and says rider copy should not name them.
+No invented per-trip price or earnings comparison appears anywhere; no earnings dollar figure
+appears anywhere.
+
+### 3.3 `/riders` and `/es/riders`
+
+| Slot | EN | ES |
+|---|---|---|
+| Eyebrow | For riders | Para quien viaja |
+| H1 **(canonical, pillar 1)** | Pay what the ride is worth. | Paga lo justo. |
+| Support | Your fare goes to the person driving — not to a percentage cut. | Tu tarifa es para la persona que maneja — no para la comisión de una app. |
+| H2 **(canonical, pillar 2)** | Same math every trip. | Las mismas cuentas en cada viaje. |
+| Support | Published rates — base, miles, minutes. The fare follows the ride, not what an app thinks you'll pay. | Tarifas publicadas — base, millas, minutos. El precio sigue al viaje, no lo que la app cree que puedes pagar. |
+| Support line **(canonical, pillar 3 — never a headline)** | Card or cash. | Tarjeta o efectivo. |
+| — its support | Pay how you actually pay. | Paga como pagas tú. |
+| Fee pointer H3 | Every fee, published. | Cada cargo, publicado. |
+| Fee pointer link → `/fees` | See the fee schedule | Ver el tarifario |
+| Estimate link → `/fare-estimate` | Estimate a fare | Estima una tarifa |
+| Form heading | Pre-register as a rider | Pre-regístrate para viajar |
+| Form sub | Takes a minute. | Toma un minuto. |
+
+Form `role` is pre-set to `rider`. Availability block (§ 2.1) sits beneath the form.
+"Card or cash." runs as a support line, **never as a section headline** — `docs/messaging.md`
+marks it supporting. Cleared to run by
+[`research/cash-statute.md`](https://github.com/yeapptech/yeride-website/blob/research/cash-statute/research/cash-statute.md):
+Fla. Stat. § 627.748 imposes no electronic-payment mandate.
+
+### 3.4 `/fees` and `/es/fees`
+
+Ships positioning obligation #3. All amounts come from the live fetch; **nothing is
+hard-coded**. Two families, in `docs/positioning.md` order.
+
+| Slot | EN | ES |
+|---|---|---|
+| H1 | The fee schedule | El tarifario |
+| Lead | Every fee YeRide charges, and every cost it passes through. Current amounts, fetched live. | Cada cargo que cobra YeRide y cada costo que traslada. Montos actuales, en vivo. |
+| Rate card H2 | The rate card | El tarifario base |
+| Rate row: base | Base | Base |
+| Rate row: distance | Per mile | Por milla |
+| Rate row: time | Per minute | Por minuto |
+| Rate row: minimum | Minimum fare | Tarifa mínima |
+| Unit note | Metered per kilometer; the per-mile figure is an exact conversion. | Se mide por kilómetro; la cifra por milla es una conversión exacta. |
+| Family 1 H2 | YeRide tech fees | Cargos de tecnología de YeRide |
+| Family 1 lead | Flat, per-trip, published. This is how YeRide earns — never a percentage of the fare. | Fijos, por viaje y publicados. Así gana YeRide — nunca un porcentaje de la tarifa. |
+| Family 2 H2 | Passed through at cost — zero markup | Trasladados al costo — sin recargo |
+| Family 2 lead | Costs YeRide forwards without touching. | Costos que YeRide traslada sin tocar. |
+| Insurance note | The coverage Florida requires during a ride. The rider's share and the driver's share are separate, published lines. | La cobertura que la Florida exige durante el viaje. La parte de quien viaja y la de quien maneja son líneas separadas y publicadas. |
+| Card note | The card networks' standard rate, borne by the driver on card fares. Cash fares have none. | La tarifa estándar de las redes de tarjetas, que paga quien maneja en viajes con tarjeta. Los viajes en efectivo no la tienen. |
+| Example H2 | Example at today's rates | Ejemplo con las tarifas de hoy |
+| Example note | Computed from the schedule above, not a quote. | Calculado con el tarifario de arriba; no es una cotización. |
+| Surge H2 | No surge today | Hoy no hay recargo por demanda |
+| Surge body | There is no demand surcharge right now. If we ever add one, these rules hold: it will be published and capped, shown to you before you request a ride, and 100% of it goes to the driver. YeRide's fees never change with demand. | Ahora mismo no hay recargo por demanda. Si algún día agregamos uno, estas reglas se cumplen: será publicado y con tope, se te muestra antes de pedir el viaje, y el 100% es para quien maneja. Los cargos de YeRide nunca cambian con la demanda. |
+| Fetched stamp | Fetched live · {timestamp} | En vivo · {timestamp} |
+| Loading | Loading current rates… | Cargando las tarifas actuales… |
+| Error | We couldn't load the current rates. Refresh, or [contact us](/contact). | No pudimos cargar las tarifas actuales. Recarga la página o [escríbenos](/contact). |
+| Estimate link → `/fare-estimate` | Estimate a fare | Estima una tarifa |
+
+**Formula-based charges** render as a plain-language rule from the endpoint's human-readable
+form (e.g. "$0.10 per minute" / "$0.10 por minuto"), not as a fixed amount. If the endpoint
+cannot produce a readable form for a charge, render the `description` and the rule it does
+supply — never invent one. Per
+[`research/fee-schedule-source.md`](https://github.com/yeapptech/yeride-website/blob/research/fee-schedule-source/research/fee-schedule-source.md),
+the endpoint returns fields verbatim, so a broken document must be **visible** on this page,
+not masked: a missing rate renders as an explicit gap, never as `$0.00`.
+
+The example is computed client-side from the schedule just fetched. It must never be a
+hard-coded number, and it must be labelled as an example on the same screen as the figures.
+
+### 3.5 `/fare-estimate` and `/es/fare-estimate`
+
+Keeps the Firebase callable `estimateFares` and the Google Maps loader. The itemized
+`appCharges` the backend already returns are now **rendered**, in the neutral in-product tone
+`docs/messaging.md` prescribes for fees: numbers, named lines, no persuasion.
+
+| Slot | EN | ES |
+|---|---|---|
+| H1 | Estimate a fare | Estima una tarifa |
+| Lead | Where from, where to. We'll show what the ride would cost at today's rates. | De dónde a dónde. Te mostramos lo que costaría el viaje con las tarifas de hoy. |
+| Pickup label | Pickup | Recogida |
+| Pickup placeholder | Where are you starting? | ¿Dónde empiezas? |
+| Dropoff label | Drop-off | Destino |
+| Dropoff placeholder | Where are you going? | ¿A dónde vas? |
+| Submit | Estimate the fare | Estimar la tarifa |
+| Calculating | Working it out… | Calculando… |
+| Route H2 | The route | La ruta |
+| Distance | Distance | Distancia |
+| Duration | Estimated time | Tiempo estimado |
+| Results H2 | Available services | Servicios disponibles |
+| Fare caption | estimated fare | tarifa estimada |
+| Seats | {n} seats | {n} asientos |
+| Fee block heading | Fees included | Cargos incluidos |
+| Limit note | Estimates are estimates — the meter decides. | Un estimado es un estimado — el taxímetro decide. |
+| Fee link → `/fees` | See the full fee schedule | Ver el tarifario completo |
+| No route error | We couldn't find a route between those two places. | No encontramos una ruta entre esos dos lugares. |
+| Service error | We couldn't get an estimate right now. Try again in a moment. | No pudimos calcular el estimado ahora. Intenta de nuevo en un momento. |
+| Outside area | We're not in that area yet. | Todavía no estamos en esa zona. |
+
+Fee lines use the § 2.3 label map. The **gated headline copy does not run here** — no
+"See the math", no "Cuentas claras", no claim that YeRide shows the math on every trip. The
+page shows lines; it makes no claim about them.
+
+**Build note, not a copy decision:** confirm whether `fare` already includes `appChargesTotal`
+before shipping the "Fees included" heading. If the fee total is *additive* rather than
+included, the heading must read "Fees" / "Cargos" and the total line must be shown. The label
+above assumes inclusive; verify against `estimateFares` and correct if wrong.
+
+Also drop the unused `firebase-admin` dependency (already in ticket #38).
+
+### 3.6 `/about` and `/es/about`
+
+| Slot | EN | ES |
+|---|---|---|
+| H1 | About YeRide | Sobre YeRide |
+| Identity paragraph | **Verbatim** from brand `docs/identity.md`, "Who we are". Do not shorten except from the top. | **Blocked** — see below. |
+| Mission H2 | Our mission | Nuestra misión |
+| Mission | Make ridesharing fair: drivers keep what they earn, riders pay what the ride is worth. | Hacer justo el transporte compartido: que quien maneja se quede con lo que gana y quien viaja pague lo justo. |
+| Values H2 | What we hold to | En qué nos sostenemos |
+| Value 1 | Transparency — every fee flat, published, and visible. | Transparencia — cada cargo fijo, publicado y a la vista. |
+| Value 2 | Fairness to both sides — never grow one side's number by squeezing the other. | Justicia para ambos lados — nunca subir el número de un lado apretando al otro. |
+| Value 3 | Respect for the people doing the work — drivers are customers, not costs. | Respeto por quien hace el trabajo — quien maneja es cliente, no un costo. |
+| Value 4 | Earn by efficiency, not extraction. | Ganar por eficiencia, no por extracción. |
+| Entity line | YeRide is built by YeAPP TECH LLC, a Florida software company founded by Hernando Sierra. | YeRide es un producto de YeAPP TECH LLC, una empresa de software de la Florida fundada por Hernando Sierra. |
+
+> **`/es/about` is blocked.** `docs/identity.md` carries the identity paragraph in **English
+> only**, and `docs/messaging.md` requires canonical text to be *authored* in each language,
+> not translated. An issue is filed against **yeride-brand** for an authored ES identity
+> paragraph; `/es/about` consumes it verbatim when it lands. Do not improvise it here.
+
+### 3.7 `/contact` and `/es/contact`
+
+| Slot | EN | ES |
+|---|---|---|
+| H1 | Contact us | Contáctanos |
+| Lead | Questions, problems, or something we got wrong — write to us. | Preguntas, problemas o algo que hicimos mal — escríbenos. |
+| Email label | Email | Correo |
+| Email value | support@yeride.com | support@yeride.com |
+| Place label | Where we are | Dónde estamos |
+| Place value | Built in South Florida. | Hecho en el Sur de la Florida. |
+| Form heading | Send us a message | Mándanos un mensaje |
+
+**Removed:** the "Response Time — Within 24 hours" block (an unbacked service promise) and
+"Location — United States" (replaced by the brand's own South Florida line).
+
+**Corrected:** the address was `support@yeride.app`; it is `support@yeride.com`.
+
+**Tally:** `/contact` keeps form `mJa5J7`. `/es/contact` embeds a **Spanish twin form that does
+not yet exist** — it must be created and its id recorded before the page ships. Fields mirror
+the English form; question text is authored ES, not translated.
+
+### 3.8 `/privacy-policy` and `/es/privacy-policy`
+
+**Not specified here.** The current policy is boilerplate dated 30 Sep 2024 that predates the
+fee structure, the cash option, and the location data the meter uses. The decision is to
+**rewrite the English policy to match what YeRide actually does, then translate it** — a
+legal-review task, not a copy-map entry. Tracked as its own ticket.
+
+Two strings are fixed now, and appear on **both** language versions:
+
+| Slot | EN | ES |
+|---|---|---|
+| H1 | Privacy Policy | Política de privacidad |
+| Governing-language note | The English version governs in the event of any conflict. | En caso de conflicto, prevalece la versión en inglés. |
+
+Register for both legal pages is **formal**, not the site-wide informal *tú* — a deliberate
+exception to § 0.2.
+
+### 3.9 `/terms` and `/es/terms`
+
+**New page.** The footer promised "Terms of Service" via a dead `#` link; the page now exists.
+Content is authored under the same legal pass as § 3.8 and is not specified here.
+
+| Slot | EN | ES |
+|---|---|---|
+| H1 | Terms of Service | Términos de servicio |
+| Governing-language note | The English version governs in the event of any conflict. | En caso de conflicto, prevalece la versión en inglés. |
+
+### 3.10 `/404` — single file, language switched client-side
+
+GitHub Pages serves one root `404.html` for every missing path, so `/es/404` would never be
+reached. One file renders English by default and switches to Spanish when
+`location.pathname` starts with `/es/`.
+
+| Slot | EN | ES |
+|---|---|---|
+| H1 | We can't find that page. | No encontramos esa página. |
+| Sub | It may have moved, or the link may be wrong. | Puede que se haya movido o que el enlace esté mal. |
+| Link → `/` | Home | Inicio |
+| Link → `/fees` | Fees | Tarifas |
+| Link → `/fare-estimate` | Fare estimate | Estimar tarifa |
+
+Exempt from the route-parity check by name (§ 6).
+
+### 3.11 `/redirect` — single file, language switched client-side
+
+Bounces to the `yeride://register` deep link. Same path-based switch, English default.
+
+| Slot | EN | ES |
+|---|---|---|
+| Body | Opening YeRide… | Abriendo YeRide… |
+| Manual fallback | Not redirected? Open YeRide. | ¿No abrió? Abre YeRide. |
+
+Exempt from the route-parity check by name (§ 6).
+
+---
+
+## 4. Titles and meta descriptions
+
+`<title>` and `meta description` are copy and are specified here. OG/social images, sitemap,
+structured data, and analytics remain out of scope for this ticket.
+
+| Route | `<title>` | `meta description` |
+|---|---|---|
+| `/` | Your ride, fair and clear. \| YeRide | Rideshare built in South Florida. No commission, flat published fees, and a rate card anyone can read. |
+| `/es/` | Tu viaje, justo y claro. \| YeRide | Transporte compartido hecho en el Sur de la Florida. Sin comisión, tarifas fijas y publicadas, y un tarifario que cualquiera puede leer. |
+| `/drivers` | Keep what you earn. \| YeRide for drivers | No commission — flat, published tech fees plus insurance and card processing at cost. Run YeRide alongside Uber and Lyft. |
+| `/es/drivers` | Lo que ganas es tuyo. \| YeRide | Sin comisión — tarifas de tecnología fijas y publicadas, más seguro y procesamiento de tarjeta al costo. Usa YeRide junto a Uber y Lyft. |
+| `/riders` | Pay what the ride is worth. \| YeRide for riders | Published rates — base, miles, minutes. The same math every trip, and every fee published. Card or cash. |
+| `/es/riders` | Paga lo justo. \| YeRide | Tarifas publicadas — base, millas, minutos. Las mismas cuentas en cada viaje y cada cargo publicado. Tarjeta o efectivo. |
+| `/fees` | The fee schedule \| YeRide | Every fee YeRide charges and every cost it passes through at cost, with current amounts fetched live. |
+| `/es/fees` | El tarifario \| YeRide | Cada cargo que cobra YeRide y cada costo que traslada al costo, con los montos actuales en vivo. |
+| `/fare-estimate` | Estimate a fare \| YeRide | See what a ride would cost at today's published rates, with every fee itemized. Estimates are estimates — the meter decides. |
+| `/es/fare-estimate` | Estimar tarifa \| YeRide | Mira lo que costaría un viaje con las tarifas publicadas de hoy, con cada cargo detallado. Un estimado es un estimado — el taxímetro decide. |
+| `/about` | About YeRide \| YeRide | Why YeRide exists, who built it, and the four things it holds to. |
+| `/es/about` | Sobre YeRide \| YeRide | Por qué existe YeRide, quién lo construyó y las cuatro cosas en las que se sostiene. |
+| `/contact` | Contact us \| YeRide | Questions, problems, or something we got wrong — reach the team behind YeRide. |
+| `/es/contact` | Contáctanos \| YeRide | Preguntas, problemas o algo que hicimos mal — escríbele al equipo de YeRide. |
+| `/privacy-policy` | Privacy Policy \| YeRide | How YeRide collects, uses, and protects your personal data. |
+| `/es/privacy-policy` | Política de privacidad \| YeRide | Cómo YeRide recopila, usa y protege tus datos personales. |
+| `/terms` | Terms of Service \| YeRide | The terms that govern your use of YeRide. |
+| `/es/terms` | Términos de servicio \| YeRide | Los términos que rigen tu uso de YeRide. |
+| `/404` | Page not found \| YeRide | *(none)* |
+| `/redirect` | Opening YeRide… | *(none)* |
+
+Every page carries `hreflang` alternates for its EN/ES pair plus `x-default` → the EN route.
+
+---
+
+## 5. Gated and never-claimed strings
+
+The copy-gate lint (#41) fails the build on any of these outside an explicitly allowlisted slot.
+
+**Gated** — correct claims that must not run until positioning obligations 1–3 all ship:
+
+- `See the math` · `Cuentas claras` · `see the math on every trip`
+- any copy claiming a visible per-trip fee breakdown in the app
+
+**Never claimed** — these never run, gate or no gate:
+
+- `locked` / upfront-price language · `no surprises`
+- `no surge ever` / `nunca habrá recargo` (note: "no surge **today**" is permitted, § 3.4)
+- `cheapest` / `lowest fees` / `más barato`
+- any earnings dollar figure
+- any invented per-trip price or earnings comparison against Uber or Lyft
+- safety claims beyond Fla. Stat. § 627.748
+
+Rider pillar 2 ("Same math every trip." / "Las mismas cuentas en cada viaje.") is **not gated**
+— it claims published rates, not fee breakdowns, and runs at launch on `/riders`.
+
+---
+
+## 6. Notes for the build tickets
+
+1. **Route-parity check (#41)** skips `404` and `redirect` by name, with a comment saying they
+   are single-file by design. Every other route must have its `/es/` twin.
+2. **Fee-label check (#41)** fails on any charge `id` returned by `getFeeSchedule` that § 2.3
+   doesn't cover.
+3. **`/es/about` is blocked** on the yeride-brand ES identity paragraph.
+4. **`/privacy-policy` and `/terms`** are blocked on the legal-rewrite ticket.
+5. **The ES Tally form** does not exist yet; `/es/contact` cannot ship without its id.
+6. **Driver pillar-2 slot placement** is [#43](https://github.com/yeapptech/yeride-website/issues/43)'s
+   decision, not this map's. § 3.2 marks the slot and stops there.
+7. **Verify `fare` vs `appChargesTotal`** before shipping the "Fees included" heading (§ 3.5).
+8. **Charge ids in § 2.3 are unverified** — read them off production before the build.
