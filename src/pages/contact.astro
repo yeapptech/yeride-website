@@ -1,138 +1,113 @@
 ---
-import Header from "../components/Header.astro";
-import Footer from "../components/Footer.astro";
+// Body content below is pre-redesign — the brand rebuild of this page is
+// ticket #39.
+import BaseLayout from "../layouts/BaseLayout.astro";
 
-// You can replace this with your actual Tally form ID
-// Get your form ID from your Tally dashboard
 const TALLY_FORM_ID = "mJa5J7"; // Form ID from https://tally.so/r/mJa5J7
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Contact Us - YeRide</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      html {
-        scroll-behavior: smooth;
-      }
+<BaseLayout title="Contact Us - YeRide">
+  <main>
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+        <!-- Header Section -->
+        <div class="text-center mb-12">
+          <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Get in Touch
+          </h1>
+          <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+            Have questions about YeRide? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+          </p>
+        </div>
 
-      /* Additional styles for better form integration */
-      #tally-form-container {
-        min-height: 600px;
-      }
-
-      /* Ensure the iframe resizes properly */
-      iframe[data-tally-src] {
-        border: none;
-      }
-    </style>
-  </head>
-  <body class="bg-gray-50 text-gray-900 font-sans">
-    <Header />
-
-    <main class="pt-[90px] md:pt-[90px]">
-      <div class="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-4xl mx-auto">
-      <!-- Header Section -->
-      <div class="text-center mb-12">
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-          Get in Touch
-        </h1>
-        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-          Have questions about YeRide? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
-        </p>
-      </div>
-
-      <!-- Contact Info Cards -->
-      <div class="grid md:grid-cols-3 gap-6 mb-12">
-        <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition duration-300">
-          <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-4">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-            </svg>
+        <!-- Contact Info Cards -->
+        <div class="grid md:grid-cols-3 gap-6 mb-12">
+          <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition duration-300">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-4">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Email</h3>
+            <p class="text-gray-600">support@yeride.app</p>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Email</h3>
-          <p class="text-gray-600">support@yeride.app</p>
-        </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition duration-300">
-          <div class="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-4">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
+          <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition duration-300">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-4">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Location</h3>
+            <p class="text-gray-600">United States</p>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Location</h3>
-          <p class="text-gray-600">United States</p>
-        </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition duration-300">
-          <div class="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-full mb-4">
-            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+          <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition duration-300">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-full mb-4">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Response Time</h3>
+            <p class="text-gray-600">Within 24 hours</p>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Response Time</h3>
-          <p class="text-gray-600">Within 24 hours</p>
         </div>
-      </div>
 
-      <!-- Tally Form Section -->
-      <div class="bg-white rounded-lg shadow-lg p-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">
-          Send Us a Message
-        </h2>
+        <!-- Tally Form Section -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+            Send Us a Message
+          </h2>
 
-        <!-- Tally Form Embed -->
-        <div id="tally-form-container" class="w-full">
-          <!-- The Tally form will be embedded here -->
-          <iframe
-            id="tally-form"
-            data-tally-src={`https://tally.so/embed/${TALLY_FORM_ID}?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1`}
-            loading="lazy"
-            width="100%"
-            height="600"
-            title="Contact form"
-            class="rounded-lg border-0"
-          ></iframe>
+          <!-- Tally Form Embed -->
+          <div id="tally-form-container" class="w-full">
+            <iframe
+              id="tally-form"
+              data-tally-src={`https://tally.so/embed/${TALLY_FORM_ID}?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1`}
+              loading="lazy"
+              width="100%"
+              height="600"
+              title="Contact form"
+              class="rounded-lg border-0"
+            ></iframe>
+          </div>
         </div>
-      </div>
 
-      <!-- Additional Help Section -->
-      <div class="mt-12 text-center">
-        <h3 class="text-xl font-semibold text-gray-900 mb-4">
-          Looking for something else?
-        </h3>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a
-            href="/#pre-registration"
-            class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition duration-300"
-          >
-            Pre-register Now
-          </a>
-          <a
-            href="/"
-            class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition duration-300"
-          >
-            Back to Home
-          </a>
+        <!-- Additional Help Section -->
+        <div class="mt-12 text-center">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">
+            Looking for something else?
+          </h3>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="/#pre-registration"
+              class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition duration-300"
+            >
+              Pre-register Now
+            </a>
+            <a
+              href="/"
+              class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition duration-300"
+            >
+              Back to Home
+            </a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-    </main>
+  </main>
 
-    <!-- Tally Form Widget Script -->
-    <script is:inline src="https://tally.so/widgets/embed.js"></script>
+  <!-- Tally Form Widget Script -->
+  <script is:inline src="https://tally.so/widgets/embed.js"></script>
+</BaseLayout>
 
-    <Footer />
-  </body>
-</html>
+<style>
+  #tally-form-container {
+    min-height: 600px;
+  }
+
+  iframe[data-tally-src] {
+    border: none;
+  }
+</style>

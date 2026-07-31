@@ -1,56 +1,33 @@
 ---
-import Header from "../components/Header.astro";
-import Footer from "../components/Footer.astro";
+// Body content below is pre-redesign — the brand rebuild of this page is
+// ticket #39.
+import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>About Us - YeRide</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      html {
-        scroll-behavior: smooth;
-      }
-    </style>
-  </head>
-  <body class="bg-gray-50 text-gray-900 font-sans">
-    <Header />
+<BaseLayout title="About Us - YeRide">
+  <main>
+    <section class="bg-gradient-to-r from-blue-500 to-blue-700 text-white py-20">
+      <div class="container mx-auto px-4 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+          About YeRide
+        </h1>
+        <p class="text-xl mb-8 max-w-2xl mx-auto">
+          A community-driven movement dedicated to making transportation fair and equitable.
+        </p>
+      </div>
+    </section>
 
-    <main class="pt-[90px] md:pt-[90px]">
-      <section class="bg-gradient-to-r from-blue-500 to-blue-700 text-white py-20">
-        <div class="container mx-auto px-4 text-center">
-          <h1 class="text-4xl md:text-5xl font-bold mb-4">
-            About YeRide
-          </h1>
-          <p class="text-xl mb-8 max-w-2xl mx-auto">
-            A community-driven movement dedicated to making transportation fair and equitable.
+    <section class="py-16 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto">
+          <p class="text-lg mb-6 text-gray-700 leading-relaxed">
+            At YeRide, we're not just a ridesharing app; we're a community-driven
+            movement dedicated to making transportation fair and equitable.
+            Our mission is to connect riders and drivers directly, eliminating
+            the middleman, and fostering a local community of happy riders and drivers.
           </p>
         </div>
-      </section>
-
-      <section class="py-16 bg-white">
-        <div class="container mx-auto px-4">
-          <div class="max-w-3xl mx-auto">
-            <p class="text-lg mb-6 text-gray-700 leading-relaxed">
-              At YeRide, we're not just a ridesharing app; we're a community-driven
-              movement dedicated to making transportation fair and equitable.
-              Our mission is to connect riders and drivers directly, eliminating
-              the middleman, and fostering a local community of happy riders and drivers.
-            </p>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <Footer />
-  </body>
-</html>
-
+      </div>
+    </section>
+  </main>
+</BaseLayout>
