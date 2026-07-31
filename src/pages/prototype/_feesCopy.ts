@@ -5,10 +5,12 @@
 //
 // MOCK DATA: production hard-codes nothing — /fees fetches the schedule at runtime
 // (research/fee-schedule-source.md). The amounts below are plausible stand-ins so the
-// comp can be judged with real-looking density. Shape mirrors the recommended
-// getFeeSchedule response: per-tier rate docs (per KM — miles are display math) plus
-// app-charge docs rendered as plain-language rules, split into the two
-// positioning.md families.
+// comp can be judged with real-looking density. Shape mirrors the real store, the
+// `serviceAreas/{areaId}` collection: `rideServices` docs (baseFare, costPerKm,
+// costPerMinute, minimumFare — per KM, miles are display math) plus `appCharges`
+// docs rendered as plain-language rules, split into the two positioning.md families.
+// The real `rideServices.cancelationFee` field is not shown: copy-map § 3.4's rate
+// rows omit it — flagged on build ticket #40, not this comp's call.
 
 export type Lang = 'en' | 'es';
 
