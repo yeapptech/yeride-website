@@ -44,6 +44,12 @@ export const feesCopy = {
     exampleFees: 'YeRide tech fees',
     exampleInsurance: 'Trip insurance — rider share',
     exampleTotal: 'Example total',
+    riderColH: 'What the rider pays',
+    driverColH: 'What the driver keeps',
+    colTotal: 'Total',
+    driverTotalCard: 'Total — card fare',
+    cashNotePre: 'On a cash fare there’s no card processing — the driver keeps ',
+    cashNotePost: '.',
   },
   es: {
     h1: 'El tarifario',
@@ -76,6 +82,12 @@ export const feesCopy = {
     exampleFees: 'Cargos de tecnología de YeRide',
     exampleInsurance: 'Seguro del viaje — parte de quien viaja',
     exampleTotal: 'Total del ejemplo',
+    riderColH: 'Lo que paga quien viaja',
+    driverColH: 'Lo que le queda a quien maneja',
+    colTotal: 'Total',
+    driverTotalCard: 'Total — viaje con tarjeta',
+    cashNotePre: 'En un viaje en efectivo no hay procesamiento de tarjeta — a quien maneja le quedan ',
+    cashNotePost: '.',
   },
 } as const;
 
@@ -126,3 +138,14 @@ export const example = {
   insurance: 0.9,
 };
 export const exampleTotal = example.fare + example.fees + example.insurance;
+
+// Driver side of the same example trip: the metered fare is the driver's, minus the
+// driver's insurance share and (on card fares) the card networks' rate applied to
+// the rider's card total. Money reconciles: rider total = driver take + YeRide tech
+// fees + both insurance shares + card processing.
+export const driverCosts = {
+  insurance: 1.35, // trip-insurance-driver mock rule
+  card: 0.029 * exampleTotal + 0.3, // card-processing mock rule on the card total
+};
+export const driverKeepsCard = example.fare - driverCosts.insurance - driverCosts.card;
+export const driverKeepsCash = example.fare - driverCosts.insurance;

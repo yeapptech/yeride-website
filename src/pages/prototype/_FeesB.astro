@@ -6,7 +6,20 @@
 // example runs as Cab-Yellow-as-text on the dark ground (legal on dark only).
 // Object-led where A is document-led: the card IS the page's subject.
 import { copy, type Lang } from './_copy';
-import { feesCopy, tiers, perMile, usd, techFees, passThroughs, chargeLabels, example, exampleTotal } from './_feesCopy';
+import {
+  feesCopy,
+  tiers,
+  perMile,
+  usd,
+  techFees,
+  passThroughs,
+  chargeLabels,
+  example,
+  exampleTotal,
+  driverCosts,
+  driverKeepsCard,
+  driverKeepsCash,
+} from './_feesCopy';
 const { lang } = Astro.props as { lang: Lang };
 const t = feesCopy[lang];
 const nav = copy[lang].nav;
@@ -117,29 +130,56 @@ const families = [
       </div>
     </div>
 
-    <!-- example — Cab Yellow as text on the dark ground -->
+    <!-- example — rider/driver breakdown, two ledgers on the dark ground -->
     <section data-fetch="loaded" class="mt-14 border-t border-paper/15 pt-10">
       <h2 class="text-paper font-extrabold tracking-headline text-[1.35rem]">{t.exampleH2}</h2>
       <p class="mt-1.5 text-paper/50 text-[13px]">{t.exampleTrip} — {t.exampleNote}</p>
-      <dl class="mt-6 grid gap-6 sm:grid-cols-4 sm:gap-8 max-w-3xl tabular-nums">
-        {
-          (
-            [
-              [t.exampleFare, usd(example.fare), false],
-              [t.exampleFees, usd(example.fees), false],
-              [t.exampleInsurance, usd(example.insurance), false],
-              [t.exampleTotal, usd(exampleTotal), true],
-            ] as const
-          ).map(([label, amount, isTotal]) => (
-            <div>
-              <dt class={`text-[13px] uppercase tracking-caps font-semibold ${isTotal ? 'text-cab-yellow' : 'text-paper/50'}`}>
-                {label}
-              </dt>
-              <dd class={`mt-1 font-extrabold text-[1.75rem] ${isTotal ? 'text-cab-yellow' : 'text-paper'}`}>{amount}</dd>
-            </div>
-          ))
-        }
-      </dl>
+      <div class="mt-8 grid gap-10 md:grid-cols-2 md:gap-14 max-w-3xl tabular-nums">
+        <!-- what the rider pays -->
+        <div>
+          {/* Cab Yellow as text — legal on dark grounds only */}
+          <p class="text-xs font-bold uppercase tracking-caps text-cab-yellow">{t.riderColH}</p>
+          <ul class="mt-4 text-[15px]">
+            <li class="flex items-baseline justify-between gap-4 border-b border-paper/15 py-2.5 text-paper">
+              <span>{t.exampleFare}</span><span class="font-bold">{usd(example.fare)}</span>
+            </li>
+            <li class="flex items-baseline justify-between gap-4 border-b border-paper/15 py-2.5 text-paper">
+              <span>{t.exampleFees}</span><span class="font-bold">{usd(example.fees)}</span>
+            </li>
+            <li class="flex items-baseline justify-between gap-4 border-b border-paper/15 py-2.5 text-paper">
+              <span>{chargeLabels['trip-insurance-rider'][lang]}</span><span class="font-bold">{usd(example.insurance)}</span>
+            </li>
+            <li class="flex items-baseline justify-between gap-4 py-3">
+              <span class="font-bold text-cab-yellow">{t.colTotal}</span>
+              <span class="font-extrabold text-cab-yellow text-[1.5rem] leading-none">{usd(exampleTotal)}</span>
+            </li>
+          </ul>
+        </div>
+        <!-- what the driver keeps -->
+        <div>
+          <p class="text-xs font-bold uppercase tracking-caps text-cab-yellow">{t.driverColH}</p>
+          <ul class="mt-4 text-[15px]">
+            <li class="flex items-baseline justify-between gap-4 border-b border-paper/15 py-2.5 text-paper">
+              <span>{t.exampleFare}</span><span class="font-bold">{usd(example.fare)}</span>
+            </li>
+            <li class="flex items-baseline justify-between gap-4 border-b border-paper/15 py-2.5 text-paper">
+              <span>{chargeLabels['trip-insurance-driver'][lang]}</span>
+              <span class="font-bold">−{usd(driverCosts.insurance)}</span>
+            </li>
+            <li class="flex items-baseline justify-between gap-4 border-b border-paper/15 py-2.5 text-paper">
+              <span>{chargeLabels['card-processing'][lang]}</span>
+              <span class="font-bold">−{usd(driverCosts.card)}</span>
+            </li>
+            <li class="flex items-baseline justify-between gap-4 py-3">
+              <span class="font-bold text-cab-yellow">{t.driverTotalCard}</span>
+              <span class="font-extrabold text-cab-yellow text-[1.5rem] leading-none">{usd(driverKeepsCard)}</span>
+            </li>
+          </ul>
+          <p class="text-[12.5px] text-paper/50">
+            {t.cashNotePre}<span class="font-bold text-paper/75">{usd(driverKeepsCash)}</span>{t.cashNotePost}
+          </p>
+        </div>
+      </div>
     </section>
 
     <!-- surge — static copy, present in every fetch state -->
