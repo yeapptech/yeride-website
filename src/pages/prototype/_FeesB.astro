@@ -64,28 +64,26 @@ const families = [
             <h2 class="text-ink font-extrabold tracking-headline text-[1.3rem]">{t.rateCardH2}</h2>
             <img src="/prototype/yeride-app-icon.svg" alt="" class="h-9 w-auto -mr-1" />
           </div>
-          <table class="mt-4 w-full text-[15px] tabular-nums">
+          {/* ride services as ROWS (HITL reaction on #36) — scales as tiers are added */}
+          <table class="mt-4 w-full text-[14px] tabular-nums">
             <thead>
-              <tr class="border-b border-ink/25 text-ink/60 text-[12px] uppercase tracking-caps">
-                <th class="py-2 text-left font-bold"></th>
-                {tiers.map((tier) => <th class="py-2 text-right font-bold">{tier.name}</th>)}
+              <tr class="border-b border-ink/25 text-ink/60 text-[11px] uppercase tracking-caps">
+                <th class="py-2 pr-2 text-left font-bold"></th>
+                <th class="py-2 pl-2 text-right font-bold">{t.rateRows.base}</th>
+                <th class="py-2 pl-2 text-right font-bold">{t.rateRows.distance}</th>
+                <th class="py-2 pl-2 text-right font-bold">{t.rateRows.time}</th>
+                <th class="py-2 pl-2 text-right font-bold">{t.rateRows.minimum}</th>
               </tr>
             </thead>
             <tbody class="text-ink">
               {
-                (
-                  [
-                    [t.rateRows.base, (x: (typeof tiers)[number]) => usd(x.baseFare)],
-                    [t.rateRows.distance, (x: (typeof tiers)[number]) => usd(perMile(x.costPerKm))],
-                    [t.rateRows.time, (x: (typeof tiers)[number]) => usd(x.costPerMinute)],
-                    [t.rateRows.minimum, (x: (typeof tiers)[number]) => usd(x.minimumFare)],
-                  ] as const
-                ).map(([label, fmt]) => (
+                tiers.map((tier) => (
                   <tr class="border-b border-ink/15 last:border-b-0">
-                    <td class="py-2.5 font-semibold">{label}</td>
-                    {tiers.map((tier) => (
-                      <td class="py-2.5 text-right font-extrabold">{fmt(tier)}</td>
-                    ))}
+                    <td class="py-3 pr-2 font-semibold">{tier.name}</td>
+                    <td class="py-3 pl-2 text-right font-extrabold">{usd(tier.baseFare)}</td>
+                    <td class="py-3 pl-2 text-right font-extrabold">{usd(perMile(tier.costPerKm))}</td>
+                    <td class="py-3 pl-2 text-right font-extrabold">{usd(tier.costPerMinute)}</td>
+                    <td class="py-3 pl-2 text-right font-extrabold">{usd(tier.minimumFare)}</td>
                   </tr>
                 ))
               }
@@ -107,7 +105,7 @@ const families = [
                   <li class="border-b border-ink/10 py-2.5 last:border-b-0">
                     <div class="flex items-baseline justify-between gap-3">
                       <span class="text-ink">{chargeLabels[c.id][lang]}</span>
-                      <span class="shrink-0 font-bold text-ink tabular-nums">{c.rule[lang]}</span>
+                      <span class="text-right font-bold text-ink tabular-nums">{c.rule[lang]}</span>
                     </div>
                     {fam.notes[c.id] && <p class="mt-1.5 text-[12.5px] text-ink/50">{fam.notes[c.id]}</p>}
                   </li>
