@@ -19,6 +19,8 @@ import {
   driverCosts,
   driverKeepsCard,
   driverKeepsCash,
+  serviceAreas,
+  currentAreaId,
 } from './_feesCopy';
 const { lang } = Astro.props as { lang: Lang };
 const t = feesCopy[lang];
@@ -69,7 +71,18 @@ const families = [
       </p>
     </div>
 
-    <div data-fetch="loaded" class="mt-12 grid gap-10 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-16">
+    <div data-fetch="loaded">
+      <!-- service-area picker — the whole page (card, charges, example) is per-area -->
+      <label class="mt-8 flex items-center gap-3">
+        <span class="text-xs font-bold uppercase tracking-caps text-paper/50">{t.areaLabel}</span>
+        <select
+          class="rounded-full border border-paper/30 bg-ink px-4 py-2 text-[14px] font-semibold text-paper hover:border-paper/60"
+        >
+          {serviceAreas.map((a) => <option selected={a.id === currentAreaId}>{a.name}</option>)}
+        </select>
+      </label>
+
+      <div class="mt-8 grid gap-10 lg:grid-cols-[minmax(0,30rem)_1fr] lg:gap-16">
       <!-- THE POSTED CARD -->
       <div>
         <div class="rounded-2xl bg-cab-yellow px-6 py-7 shadow-2xl sm:px-7">
@@ -77,8 +90,35 @@ const families = [
             <h2 class="text-ink font-extrabold tracking-headline text-[1.3rem]">{t.rateCardH2}</h2>
             <img src="/prototype/yeride-app-icon.svg" alt="" class="h-9 w-auto -mr-1" />
           </div>
-          {/* ride services as ROWS (HITL reaction on #36) — scales as tiers are added */}
-          <table class="mt-4 w-full text-[14px] tabular-nums">
+          {/* ride services as ROWS (HITL reaction on #36) — scales as tiers are added.
+              Six columns don't fit a 390px card, so below sm each service transposes
+              to its own mini-ledger; the row table holds from sm up. */}
+          <div class="sm:hidden mt-1">
+            {
+              tiers.map((tier) => (
+                <div class="mt-4 border-t-2 border-ink/25 pt-2 first:mt-2">
+                  <p class="text-[12px] font-bold uppercase tracking-caps text-ink/60">{tier.name}</p>
+                  <ul class="text-[14px] tabular-nums text-ink">
+                    {(
+                      [
+                        [t.rateRows.base, usd(tier.baseFare)],
+                        [t.rateRows.distance, usd(perMile(tier.costPerKm))],
+                        [t.rateRows.time, usd(tier.costPerMinute)],
+                        [t.rateRows.minimum, usd(tier.minimumFare)],
+                        [t.rateRows.cancellation, usd(tier.cancelationFee)],
+                      ] as const
+                    ).map(([label, amount]) => (
+                      <li class="flex items-baseline justify-between gap-3 border-b border-ink/15 py-2 last:border-b-0">
+                        <span class="font-semibold">{label}</span>
+                        <span class="font-extrabold">{amount}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))
+            }
+          </div>
+          <table class="hidden sm:table mt-4 w-full text-[14px] tabular-nums">
             <thead>
               <tr class="border-b border-ink/25 text-ink/60 text-[11px] uppercase tracking-caps">
                 <th class="py-2 pr-2 text-left font-bold"></th>
@@ -86,6 +126,7 @@ const families = [
                 <th class="py-2 pl-2 text-right font-bold">{t.rateRows.distance}</th>
                 <th class="py-2 pl-2 text-right font-bold">{t.rateRows.time}</th>
                 <th class="py-2 pl-2 text-right font-bold">{t.rateRows.minimum}</th>
+                <th class="py-2 pl-2 text-right font-bold">{t.rateRows.cancellation}</th>
               </tr>
             </thead>
             <tbody class="text-ink">
@@ -97,6 +138,7 @@ const families = [
                     <td class="py-3 pl-2 text-right font-extrabold">{usd(perMile(tier.costPerKm))}</td>
                     <td class="py-3 pl-2 text-right font-extrabold">{usd(tier.costPerMinute)}</td>
                     <td class="py-3 pl-2 text-right font-extrabold">{usd(tier.minimumFare)}</td>
+                    <td class="py-3 pl-2 text-right font-extrabold">{usd(tier.cancelationFee)}</td>
                   </tr>
                 ))
               }
@@ -127,6 +169,7 @@ const families = [
             </section>
           ))
         }
+        </div>
       </div>
     </div>
 

@@ -19,7 +19,14 @@ export const feesCopy = {
     h1: 'The fee schedule',
     lead: 'Every fee YeRide charges, and every cost it passes through. Current amounts, fetched live.',
     rateCardH2: 'The rate card',
-    rateRows: { base: 'Base', distance: 'Per mile', time: 'Per minute', minimum: 'Minimum fare' },
+    rateRows: {
+      base: 'Base',
+      distance: 'Per mile',
+      time: 'Per minute',
+      minimum: 'Minimum fare',
+      cancellation: 'Cancellation fee',
+    },
+    areaLabel: 'Service area',
     unitNote: 'Metered per kilometer; the per-mile figure is an exact conversion.',
     family1H2: 'YeRide tech fees',
     family1Lead: 'Flat, per-trip, published. This is how YeRide earns — never a percentage of the fare.',
@@ -57,7 +64,14 @@ export const feesCopy = {
     h1: 'El tarifario',
     lead: 'Cada cargo que cobra YeRide y cada costo que traslada. Montos actuales, en vivo.',
     rateCardH2: 'El tarifario base',
-    rateRows: { base: 'Base', distance: 'Por milla', time: 'Por minuto', minimum: 'Tarifa mínima' },
+    rateRows: {
+      base: 'Base',
+      distance: 'Por milla',
+      time: 'Por minuto',
+      minimum: 'Tarifa mínima',
+      cancellation: 'Cargo por cancelación',
+    },
+    areaLabel: 'Área de servicio',
     unitNote: 'Se mide por kilómetro; la cifra por milla es una conversión exacta.',
     family1H2: 'Cargos de tecnología de YeRide',
     family1Lead: 'Fijos, por viaje y publicados. Así gana YeRide — nunca un porcentaje de la tarifa.',
@@ -97,10 +111,21 @@ export const feesCopy = {
 
 const KM_PER_MILE = 1.609344;
 
+// Field names mirror serviceAreas/{areaId}/rideServices docs — including the real
+// single-l `cancelationFee` spelling.
 export const tiers = [
-  { id: 'standard', name: 'Standard', baseFare: 2.5, costPerKm: 1.12, costPerMinute: 0.3, minimumFare: 8 },
-  { id: 'xl', name: 'XL', baseFare: 3.75, costPerKm: 1.71, costPerMinute: 0.45, minimumFare: 12 },
+  { id: 'standard', name: 'Standard', baseFare: 2.5, costPerKm: 1.12, costPerMinute: 0.3, minimumFare: 8, cancelationFee: 5 },
+  { id: 'xl', name: 'XL', baseFare: 3.75, costPerKm: 1.71, costPerMinute: 0.45, minimumFare: 12, cancelationFee: 7.5 },
 ] as const;
+
+// Mock available-areas list for the picker. NOTE: real serviceAreas docs carry only
+// `identifier` (no display-name field) — labels need a site-side map or a new field;
+// flagged on build ticket #40.
+export const serviceAreas = [
+  { id: 'us-fl-south-florida', name: 'South Florida' },
+  { id: 'us-fl-tampa-bay', name: 'Tampa Bay' },
+] as const;
+export const currentAreaId = 'us-fl-south-florida';
 
 export const perMile = (costPerKm: number) => costPerKm * KM_PER_MILE;
 export const usd = (n: number) => `$${n.toFixed(2)}`;
