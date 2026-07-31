@@ -1,0 +1,62 @@
+---
+// PROTOTYPE (wayfinder #33) — throwaway verification harness.
+// Chrome clamps window width on macOS, so a real 390px viewport can't be had by
+// resizing. These iframes give true narrow viewports.
+//   http://localhost:4321/prototype/phone?variant=D&lang=en
+const widths = [
+  { w: 390, label: 'iPhone 14 / 390' },
+  { w: 360, label: 'Android / 360' },
+];
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>PROTOTYPE — phone frames</title>
+    <style is:inline>
+      body {
+        margin: 0;
+        background: #333;
+        font: 12px ui-monospace, monospace;
+        color: #fff;
+        display: flex;
+        gap: 24px;
+        padding: 16px;
+        align-items: flex-start;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        padding: 6px 2px;
+      }
+      iframe {
+        border: 0;
+        background: #fff;
+        height: 1500px;
+      }
+    </style>
+    <script is:inline>
+      // forward ?variant / ?lang through to the framed page
+      addEventListener('DOMContentLoaded', function () {
+        var p = new URLSearchParams(location.search);
+        var q = '?variant=' + (p.get('variant') || 'D') + '&lang=' + (p.get('lang') || 'en');
+        document.querySelectorAll('iframe').forEach(function (f) {
+          f.src = '/prototype/home' + q;
+        });
+      });
+    </script>
+  </head>
+  <body>
+    {
+      widths.map((d) => (
+        <figure>
+          <figcaption>{d.label}</figcaption>
+          <iframe width={d.w} title={d.label} />
+        </figure>
+      ))
+    }
+  </body>
+</html>
