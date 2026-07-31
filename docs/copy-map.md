@@ -251,17 +251,24 @@ Fla. Stat. § 627.748 imposes no electronic-payment mandate.
 ### 3.4 `/fees` and `/es/fees`
 
 Ships positioning obligation #3. All amounts come from the live fetch; **nothing is
-hard-coded**. Two families, in `docs/positioning.md` order.
+hard-coded**. Two families, in `docs/positioning.md` order. The page carries a
+**service-area picker** fed by the fetched available-areas list — every figure on the
+page re-fetches for the chosen area — and the rate card includes each service's
+cancellation fee. The example renders as a two-column **rider-pays / driver-keeps**
+breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per the
+#36 prototype reactions.)*
 
 | Slot | EN | ES |
 |---|---|---|
 | H1 | The fee schedule | El tarifario |
 | Lead | Every fee YeRide charges, and every cost it passes through. Current amounts, fetched live. | Cada cargo que cobra YeRide y cada costo que traslada. Montos actuales, en vivo. |
+| Area picker label | Service area | Área de servicio |
 | Rate card H2 | The rate card | El tarifario base |
 | Rate row: base | Base | Base |
 | Rate row: distance | Per mile | Por milla |
 | Rate row: time | Per minute | Por minuto |
 | Rate row: minimum | Minimum fare | Tarifa mínima |
+| Rate row: cancellation | Cancellation fee | Cargo por cancelación |
 | Unit note | Metered per kilometer; the per-mile figure is an exact conversion. | Se mide por kilómetro; la cifra por milla es una conversión exacta. |
 | Family 1 H2 | YeRide tech fees | Cargos de tecnología de YeRide |
 | Family 1 lead | Flat, per-trip, published. This is how YeRide earns — never a percentage of the fare. | Fijos, por viaje y publicados. Así gana YeRide — nunca un porcentaje de la tarifa. |
@@ -271,6 +278,13 @@ hard-coded**. Two families, in `docs/positioning.md` order.
 | Card note | The card networks' standard rate, borne by the driver on card fares. Cash fares have none. | La tarifa estándar de las redes de tarjetas, que paga quien maneja en viajes con tarjeta. Los viajes en efectivo no la tienen. |
 | Example H2 | Example at today's rates | Ejemplo con las tarifas de hoy |
 | Example note | Computed from the schedule above, not a quote. | Calculado con el tarifario de arriba; no es una cotización. |
+| Example rider col H3 | What the rider pays | Lo que paga quien viaja |
+| Example driver col H3 | What the driver keeps | Lo que le queda a quien maneja |
+| Example row: fare | Metered fare | Tarifa del taxímetro |
+| Example row: fees | YeRide tech fees | Cargos de tecnología de YeRide |
+| Example row: rider total | Total | Total |
+| Example row: driver total | Total — card fare | Total — viaje con tarjeta |
+| Example cash note | On a cash fare there’s no card processing — the driver keeps {amount}. | En un viaje en efectivo no hay procesamiento de tarjeta — a quien maneja le quedan {amount}. |
 | Surge H2 | No surge today | Hoy no hay recargo por demanda |
 | Surge body | There is no demand surcharge right now. If we ever add one, these rules hold: it will be published and capped, shown to you before you request a ride, and 100% of it goes to the driver. YeRide's fees never change with demand. | Ahora mismo no hay recargo por demanda. Si algún día agregamos uno, estas reglas se cumplen: será publicado y con tope, se te muestra antes de pedir el viaje, y el 100% es para quien maneja. Los cargos de YeRide nunca cambian con la demanda. |
 | Fetched stamp | Fetched live · {timestamp} | En vivo · {timestamp} |
