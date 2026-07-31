@@ -6,7 +6,8 @@ import tailwind from "@astrojs/tailwind";
 export default defineConfig({
   integrations: [tailwind()],
   // site: 'http://yeapptech.github.io',
-  site: "https://yeride.com",
+  // must match CNAME — hreflang/canonical URLs in BaseLayout derive from it
+  site: "https://www.yeride.com",
   //output: "server",
   // adapter: node({
   //   mode: 'standalone',

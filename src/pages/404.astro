@@ -1,8 +1,12 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro"
+// Single-file for every missing path (GitHub Pages serves one root 404.html);
+// the client-side language switch and copy-map content are ticket #39.
+import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout>
-    <h1>404 Not Found</h1>
-    <a href="/">Go Home</a>
+<BaseLayout title="Page not found | YeRide" alternates={false}>
+  <main class="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6">
+    <h1 class="text-3xl font-bold tracking-headline">404 Not Found</h1>
+    <a href="/" class="mt-4 inline-block font-semibold underline underline-offset-4 hover:no-underline">Go Home</a>
+  </main>
 </BaseLayout>
