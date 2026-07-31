@@ -1,0 +1,437 @@
+---
+// /fees — locked layout B "The Posted Card" (wayfinder #36), copy per
+// docs/copy-map.md §3.4. Ink ground; the rate card is a Cab Yellow card object
+// (app-icon scheme — no wordmark on yellow), the two fee families are paper
+// panels beside it, and the example runs as Cab-Yellow-as-text on the dark
+// ground (legal on dark only).
+//
+// Every amount comes from the runtime fetch — nothing here is hard-coded
+// (copy-map §0.4) — so the card, the charge panels and the example are built by
+// the client script below. The headings, leads, surge section and CTA are static:
+// they are claims about how YeRide charges, true in every fetch state.
+import appIcon from "@yeapptech/yeride-brand/assets/logo/yeride-app-icon.svg";
+import { feesCopy, type Lang } from "../i18n/feesCopy";
+
+export interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = feesCopy[lang];
+const esPrefix = lang === "es" ? "/es" : "";
+---
+
+<main class="bg-ink">
+  <div class="mx-auto w-full max-w-6xl px-5 pb-16 pt-8 sm:px-6 sm:pt-12">
+    {/* "Fetched live" is a claim about this render — only the loaded state earns it. */}
+    <p
+      data-fee-stamp
+      hidden
+      class="text-xs font-bold uppercase tracking-caps text-cab-yellow"
+    >
+    </p>
+
+    <h1
+      class="mt-3 max-w-2xl font-extrabold tracking-headline text-[2.1rem] leading-[1.05] text-paper sm:text-[2.75rem] md:text-[3.25rem]"
+    >
+      {t.h1}
+    </h1>
+    <p class="mt-4 max-w-xl text-[16px] text-paper/70 sm:text-[18px]">{t.lead}</p>
+
+    <div data-fee-state="loading" class="mt-12">
+      <p class="text-[15px] text-paper/60">{t.loading}</p>
+      <div
+        class="mt-6 h-64 max-w-md animate-pulse rounded-2xl bg-paper/10"
+        aria-hidden="true"
+      >
+      </div>
+    </div>
+
+    <div
+      data-fee-state="error"
+      hidden
+      class="mt-12 max-w-xl rounded-xl border border-paper/25 bg-paper/5 px-5 py-4"
+    >
+      <p class="text-[15px] text-paper" role="alert">
+        {t.errorPre}<a
+          href={`${esPrefix}/contact`}
+          class="font-bold text-cab-yellow underline underline-offset-2"
+          >{t.errorLink}</a
+        >{t.errorPost}
+      </p>
+    </div>
+
+    <div data-fee-state="loaded" hidden>
+      {/* every figure on the page is per-area — changing this re-fetches */}
+      <label class="mt-8 flex items-center gap-3">
+        <span class="text-xs font-bold uppercase tracking-caps text-paper/50"
+          >{t.areaLabel}</span
+        >
+        <select
+          data-fee-area
+          class="rounded-full border border-paper/30 bg-ink px-4 py-2 text-[14px] font-semibold text-paper hover:border-paper/60"
+        >
+        </select>
+      </label>
+
+      <div class="mt-8 grid gap-10 lg:grid-cols-[minmax(0,30rem)_1fr] lg:gap-16">
+        <div>
+          <div class="rounded-2xl bg-cab-yellow px-6 py-7 shadow-2xl sm:px-7">
+            <div class="flex items-center justify-between gap-4">
+              <h2 class="font-extrabold tracking-headline text-[1.3rem] text-ink">
+                {t.rateCardH2}
+              </h2>
+              <img src={appIcon.src} alt="" class="-mr-1 h-9 w-auto" />
+            </div>
+            <div data-fee-card></div>
+          </div>
+          <p class="mt-3 max-w-sm text-[13px] text-paper/50">{t.unitNote}</p>
+        </div>
+
+        <div
+          data-fee-families
+          class="grid items-start gap-6 md:grid-cols-2"
+        >
+        </div>
+      </div>
+
+      <section class="mt-14 border-t border-paper/15 pt-10">
+        <h2 class="font-extrabold tracking-headline text-[1.35rem] text-paper">
+          {t.exampleH2}
+        </h2>
+        <div data-fee-example></div>
+      </section>
+    </div>
+
+    {/* surge is static copy — it holds in every fetch state */}
+    <section class="mt-14 max-w-3xl border-t border-paper/15 pt-10">
+      <h2 class="font-extrabold tracking-headline text-[1.35rem] text-paper">
+        {t.surgeH2}
+      </h2>
+      <p class="mt-3 text-[15px] leading-relaxed text-paper/70 sm:text-[16px]">
+        {t.surgeBody}
+      </p>
+    </section>
+
+    <a
+      href={`${esPrefix}/fare-estimate`}
+      class="mt-12 flex w-full items-center justify-center gap-2 rounded-full bg-cab-yellow px-8 py-4 text-[16px] font-bold text-ink hover:bg-paper sm:inline-flex sm:w-auto"
+    >
+      {t.estimateLink}
+      <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</main>
+
+<script>
+  import {
+    getFeeSchedule,
+    perMile,
+    metersToMiles,
+    usd,
+    type AppCharge,
+    type ChargeRule,
+    type FeeSchedule,
+    type RideService,
+  } from "../lib/feeSchedule";
+  import { feeLabels, serviceAreaName, type ChargeLabel } from "../i18n/feeLabels";
+  import { feesCopy, type Lang } from "../i18n/feesCopy";
+
+  const lang = (document.documentElement.lang === "es" ? "es" : "en") as Lang;
+  const t = feesCopy[lang];
+
+  function el<T extends Element>(sel: string): T | null {
+    return document.querySelector<T>(sel);
+  }
+
+  const stamp = el<HTMLParagraphElement>("[data-fee-stamp]");
+  const states = {
+    loading: el<HTMLElement>('[data-fee-state="loading"]'),
+    error: el<HTMLElement>('[data-fee-state="error"]'),
+    loaded: el<HTMLElement>('[data-fee-state="loaded"]'),
+  };
+  const areaSelect = el<HTMLSelectElement>("[data-fee-area]");
+  const cardSlot = el<HTMLElement>("[data-fee-card]");
+  const familiesSlot = el<HTMLElement>("[data-fee-families]");
+  const exampleSlot = el<HTMLElement>("[data-fee-example]");
+
+  function show(state: keyof typeof states) {
+    for (const [name, node] of Object.entries(states)) {
+      if (node) node.hidden = name !== state;
+    }
+    // the stamp is part of the loaded state and nothing else
+    if (stamp) stamp.hidden = state !== "loaded";
+  }
+
+  const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  /** A missing rate is a gap in the source document — never $0.00. */
+  const GAP = "—";
+  const rate = (n: number | null | undefined) => usd(n) ?? GAP;
+
+  /** Phrase the endpoint's machine-readable rule; never invent one. */
+  function ruleText(rule: ChargeRule | null | undefined): string {
+    if (!rule) return GAP;
+    switch (rule.kind) {
+      case "flat":
+        return `${usd(rule.amount)} ${t.perTrip}`;
+      case "per_minute":
+        return `${usd(rule.amount)} ${t.perMinute}`;
+      case "per_km":
+        return `${usd(perMile(rule.amount))} ${t.perMile}`;
+      case "percent_of_fare": {
+        const base = `${rule.percent}% ${t.percentOfFare}`;
+        return rule.plus ? `${base} + ${usd(rule.plus)}` : base;
+      }
+      default:
+        return GAP;
+    }
+  }
+
+  function fetchedStamp(iso: string): string {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return t.fetchedStamp;
+    const time = new Intl.DateTimeFormat(t.locale, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(d);
+    const date = new Intl.DateTimeFormat(t.locale, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(d);
+    return `${t.fetchedStamp} · ${time} · ${date}`;
+  }
+
+  // ---- the posted card ----------------------------------------------------
+
+  const rateColumns = (s: RideService) =>
+    [
+      [t.rateRows.base, rate(s.baseFare)],
+      [t.rateRows.distance, rate(typeof s.costPerKm === "number" ? perMile(s.costPerKm) : null)],
+      [t.rateRows.time, rate(s.costPerMinute)],
+      [t.rateRows.minimum, rate(s.minimumFare)],
+      [t.rateRows.cancellation, rate(s.cancelationFee)],
+    ] as const;
+
+  function renderCard(services: RideService[]): string {
+    // Six columns don't fit a 390px card, so below sm each service transposes to
+    // its own mini-ledger; the services-as-rows table holds from sm up (#36).
+    const miniLedgers = services
+      .map(
+        (s) => `<div class="mt-4 border-t-2 border-ink/25 pt-2 first:mt-2">
+          <p class="text-[12px] font-bold uppercase tracking-caps text-ink/60">${esc(s.name)}</p>
+          <ul class="text-[14px] tabular-nums text-ink">${rateColumns(s)
+            .map(
+              ([label, amount]) =>
+                `<li class="flex items-baseline justify-between gap-3 border-b border-ink/15 py-2 last:border-b-0">
+                  <span class="font-semibold">${esc(label)}</span>
+                  <span class="font-extrabold">${esc(amount)}</span>
+                </li>`,
+            )
+            .join("")}</ul>
+        </div>`,
+      )
+      .join("");
+
+    const head = rateColumns(services[0])
+      .map(([label]) => `<th class="py-2 pl-2 text-right font-bold">${esc(label)}</th>`)
+      .join("");
+
+    const rows = services
+      .map(
+        (s) => `<tr class="border-b border-ink/15 last:border-b-0">
+          <td class="py-3 pr-2 font-semibold">${esc(s.name)}</td>
+          ${rateColumns(s)
+            .map(
+              ([, amount]) =>
+                `<td class="py-3 pl-2 text-right font-extrabold">${esc(amount)}</td>`,
+            )
+            .join("")}
+        </tr>`,
+      )
+      .join("");
+
+    return `<div class="mt-1 sm:hidden">${miniLedgers}</div>
+      <table class="mt-4 hidden w-full text-[14px] tabular-nums sm:table">
+        <thead>
+          <tr class="border-b border-ink/25 text-[11px] uppercase tracking-caps text-ink/60">
+            <th class="py-2 pr-2 text-left font-bold"></th>${head}
+          </tr>
+        </thead>
+        <tbody class="text-ink">${rows}</tbody>
+      </table>`;
+  }
+
+  // ---- the fee families ---------------------------------------------------
+
+  const chargeNotes: Record<string, string> = {
+    "trip-insurance-driver": t.insuranceNote,
+    "card-processing": t.cardNote,
+  };
+
+  const label = (c: AppCharge): ChargeLabel | undefined => feeLabels[c.id];
+  // An unmapped id keeps the backend description verbatim in both languages
+  // rather than leaking an English guess (copy-map §2.3).
+  const chargeName = (c: AppCharge) => label(c)?.[lang] ?? c.description;
+
+  function renderFamilies(charges: AppCharge[]): string {
+    const panels: { h2: string; lead: string; charges: AppCharge[] }[] = [
+      {
+        h2: t.family1H2,
+        lead: t.family1Lead,
+        charges: charges.filter((c) => label(c)?.family === "tech"),
+      },
+      {
+        h2: t.family2H2,
+        lead: t.family2Lead,
+        charges: charges.filter((c) => label(c)?.family === "passthrough"),
+      },
+      {
+        // Filing an unclassified charge into either family would be a claim
+        // about YeRide's economics that nothing supports — it gets its own panel.
+        h2: t.otherFamilyH2,
+        lead: t.otherFamilyLead,
+        charges: charges.filter((c) => !label(c)),
+      },
+    ];
+
+    return panels
+      .filter((p) => p.charges.length > 0)
+      .map(
+        (p) => `<section class="rounded-2xl bg-paper px-6 py-6">
+          <h2 class="font-extrabold tracking-headline text-[1.15rem] leading-snug text-ink">${esc(p.h2)}</h2>
+          <p class="mt-2 text-[14px] text-ink/65">${esc(p.lead)}</p>
+          <ul class="mt-3 text-[14px]">${p.charges
+            .map(
+              (c) => `<li class="border-b border-ink/10 py-2.5 last:border-b-0">
+                <div class="flex items-baseline justify-between gap-3">
+                  <span class="text-ink">${esc(chargeName(c))}</span>
+                  <span class="text-right font-bold tabular-nums text-ink">${esc(ruleText(c.rule))}</span>
+                </div>
+                ${
+                  chargeNotes[c.id]
+                    ? `<p class="mt-1.5 text-[12.5px] text-ink/50">${esc(chargeNotes[c.id])}</p>`
+                    : ""
+                }
+              </li>`,
+            )
+            .join("")}</ul>
+        </section>`,
+      )
+      .join("");
+  }
+
+  // ---- the example ledger -------------------------------------------------
+
+  const ledgerRow = (name: string, amount: string) =>
+    `<li class="flex items-baseline justify-between gap-4 border-b border-paper/15 py-2.5 text-paper">
+      <span>${esc(name)}</span><span class="font-bold">${esc(amount)}</span>
+    </li>`;
+
+  // Cab Yellow as text — legal on dark grounds only (#33).
+  const ledgerTotal = (name: string, amount: string) =>
+    `<li class="flex items-baseline justify-between gap-4 py-3">
+      <span class="font-bold text-cab-yellow">${esc(name)}</span>
+      <span class="text-[1.5rem] font-extrabold leading-none text-cab-yellow">${esc(amount)}</span>
+    </li>`;
+
+  function renderExample(schedule: FeeSchedule): string {
+    const ex = schedule.example;
+    // The ledger's claim is that the money reconciles across both columns. An
+    // unclassified charge would land on neither side, so the ledger is withheld
+    // rather than shown short.
+    const classified = schedule.appCharges.every((c) => label(c));
+    if (!ex || !classified) {
+      return `<p class="mt-3 max-w-xl text-[14px] text-paper/60">${esc(t.exampleUnavailable)}</p>`;
+    }
+
+    const amounts = new Map(ex.appCharges.map((c) => [c.id, c.amount]));
+    const of = (id: string) => amounts.get(id) ?? 0;
+    const ids = (test: (l: ChargeLabel) => boolean) =>
+      schedule.appCharges.filter((c) => {
+        const l = label(c);
+        return l ? test(l) : false;
+      });
+
+    const techTotal = ids((l) => l.family === "tech").reduce((n, c) => n + of(c.id), 0);
+    const riderPass = ids((l) => l.family === "passthrough" && l.payer === "rider");
+    const driverPass = ids((l) => l.family === "passthrough" && l.payer === "driver");
+
+    const riderTotal =
+      ex.fare + techTotal + riderPass.reduce((n, c) => n + of(c.id), 0);
+    const driverCard = ex.fare - driverPass.reduce((n, c) => n + of(c.id), 0);
+    const driverCash =
+      ex.fare -
+      driverPass.filter((c) => !label(c)?.cardOnly).reduce((n, c) => n + of(c.id), 0);
+
+    const service = schedule.rideServices.find((s) => s.id === ex.serviceId);
+    const miles = Math.round(metersToMiles(ex.distanceMeters) * 10) / 10;
+    const trip = [
+      `${miles} ${t.miles}`,
+      `${ex.durationMinutes} ${t.minutes}`,
+      service?.name,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
+    return `<p class="mt-1.5 text-[13px] text-paper/50">${esc(trip)} — ${esc(t.exampleNote)}</p>
+      <div class="mt-8 grid max-w-3xl gap-10 tabular-nums md:grid-cols-2 md:gap-14">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-caps text-cab-yellow">${esc(t.riderColH)}</p>
+          <ul class="mt-4 text-[15px]">
+            ${ledgerRow(t.exampleFare, usd(ex.fare) ?? GAP)}
+            ${ledgerRow(t.exampleFees, usd(techTotal) ?? GAP)}
+            ${riderPass.map((c) => ledgerRow(chargeName(c), usd(of(c.id)) ?? GAP)).join("")}
+            ${ledgerTotal(t.colTotal, usd(riderTotal) ?? GAP)}
+          </ul>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-caps text-cab-yellow">${esc(t.driverColH)}</p>
+          <ul class="mt-4 text-[15px]">
+            ${ledgerRow(t.exampleFare, usd(ex.fare) ?? GAP)}
+            ${driverPass.map((c) => ledgerRow(chargeName(c), `−${usd(of(c.id)) ?? GAP}`)).join("")}
+            ${ledgerTotal(t.driverTotalCard, usd(driverCard) ?? GAP)}
+          </ul>
+          <p class="text-[12.5px] text-paper/50">${esc(t.cashNotePre)}<span class="font-bold text-paper/75">${esc(
+            usd(driverCash) ?? GAP,
+          )}</span>${esc(t.cashNotePost)}</p>
+        </div>
+      </div>`;
+  }
+
+  // ---- fetch --------------------------------------------------------------
+
+  function render(schedule: FeeSchedule) {
+    if (!schedule.rideServices?.length) throw new Error("schedule has no ride services");
+
+    if (stamp) stamp.textContent = fetchedStamp(schedule.fetchedAt);
+    if (areaSelect) {
+      areaSelect.innerHTML = (schedule.areas ?? [schedule.area])
+        .map(
+          (a) =>
+            `<option value="${esc(a.id)}"${a.id === schedule.area.id ? " selected" : ""}>${esc(
+              serviceAreaName(a.id, a.identifier),
+            )}</option>`,
+        )
+        .join("");
+    }
+    if (cardSlot) cardSlot.innerHTML = renderCard(schedule.rideServices);
+    if (familiesSlot) familiesSlot.innerHTML = renderFamilies(schedule.appCharges ?? []);
+    if (exampleSlot) exampleSlot.innerHTML = renderExample(schedule);
+    show("loaded");
+  }
+
+  async function load(areaId?: string) {
+    show("loading");
+    try {
+      render(await getFeeSchedule(areaId));
+    } catch (err) {
+      console.error("[fees] could not load the schedule", err);
+      show("error");
+    }
+  }
+
+  areaSelect?.addEventListener("change", () => load(areaSelect.value));
+  load();
+</script>

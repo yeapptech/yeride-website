@@ -18,7 +18,7 @@ No test runner and no linter are configured. `npm run build` is the only automat
 
 ## Environment Variables
 
-All five are `PUBLIC_` (client-side) and are injected in CI from GitHub Secrets. Create a `.env` for local development:
+All six are `PUBLIC_` (client-side) and are injected in CI from GitHub Secrets. Create a `.env` for local development:
 
 ```
 PUBLIC_API_URL=https://api.yeride.com/          # must end with a trailing slash
@@ -26,6 +26,7 @@ PUBLIC_GOOGLE_MAPS_API_KEY=...
 PUBLIC_FIREBASE_API_KEY=...
 PUBLIC_FIREBASE_AUTH_DOMAIN=...
 PUBLIC_FIREBASE_PROJECT_ID=...
+PUBLIC_FEE_SCHEDULE_URL=...                     # public getFeeSchedule endpoint (/fees)
 ```
 
 Adding a new env var requires editing `.github/workflows/deploy-all.yml` (the "Create env file" step writes `.env` line by line) **and** adding the GitHub Secret — otherwise it is silently empty in production.

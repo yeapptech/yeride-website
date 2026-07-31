@@ -1,0 +1,15 @@
+---
+// /fees — positioning obligation #3, web side (wayfinder #40).
+// Title and meta description per docs/copy-map.md §4.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import FeeSchedule from "../components/FeeSchedule.astro";
+---
+
+<BaseLayout
+  title="The fee schedule | YeRide"
+  description="Every fee YeRide charges and every cost it passes through at cost, with current amounts fetched live."
+  lang="en"
+  headerGround="ink"
+>
+  <FeeSchedule lang="en" />
+</BaseLayout>

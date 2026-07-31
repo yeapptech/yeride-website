@@ -34,6 +34,7 @@ jobs:
           echo "PUBLIC_FIREBASE_API_KEY=${{ secrets.PUBLIC_FIREBASE_API_KEY }}" >> .env
           echo "PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.PUBLIC_FIREBASE_AUTH_DOMAIN }}" >> .env
           echo "PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.PUBLIC_FIREBASE_PROJECT_ID }}" >> .env
+          echo "PUBLIC_FEE_SCHEDULE_URL=${{ secrets.PUBLIC_FEE_SCHEDULE_URL }}" >> .env
 
       - name: Install dependencies
         # NPM_TOKEN: org read-only classic PAT with read:packages — the
