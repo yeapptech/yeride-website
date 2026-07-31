@@ -1,20 +1,31 @@
 ---
-// PROTOTYPE (wayfinder #33) — THROWAWAY. Two home-page comps on the real brand
-// tokens, switchable via ?variant=A|B and ?lang=en|es.
+// PROTOTYPE (wayfinder #33) — THROWAWAY. Five home-page comps on the real brand
+// tokens, switchable via ?variant=A|B|C|D|E and ?lang=en|es.
 //   npm run dev  →  http://localhost:4321/prototype/home
 // This site is `output: 'static'`, so Astro.url.searchParams is always empty here.
-// All four combos are therefore rendered and the matching one revealed by a tiny
-// inline script. Throwaway-grade on purpose.
+// All combos are therefore rendered and the matching one revealed by a tiny inline
+// script that runs before paint. Throwaway-grade on purpose.
 import '@fontsource-variable/nunito';
 import '../../../.prototype-brand/tokens.css';
 import VariantA from './_VariantA.astro';
 import VariantB from './_VariantB.astro';
+import VariantC from './_VariantC.astro';
+import VariantD from './_VariantD.astro';
+import VariantE from './_VariantE.astro';
 import Switcher from './_Switcher.astro';
 
 const variants = [
-  { key: 'A', name: 'The Fork — light-first, symmetric doors' },
-  { key: 'B', name: 'The Marquee — dark-first, stacked fork' },
+  { key: 'A', name: 'The Fork — light, symmetric doors' },
+  { key: 'B', name: 'The Marquee — dark, tagline alone' },
+  { key: 'C', name: 'The Rate Card — light, object-led' },
+  { key: 'D', name: 'The Hail — yellow ground, mark-led' },
+  { key: 'E', name: 'The Statement — dark, single column' },
 ];
+const langs = ['en', 'es'] as const;
+
+const reveal = variants
+  .flatMap((v) => langs.map((l) => `html[data-v='${v.key}'][data-lang='${l}'] [data-proto='${v.key}-${l}']`))
+  .join(',\n      ');
 ---
 
 <html lang="en">
@@ -24,26 +35,20 @@ const variants = [
     <meta name="robots" content="noindex" />
     <title>PROTOTYPE — YeRide home</title>
     <link rel="icon" href="/prototype/yeride-mark.svg" />
-    <style>
-      :root {
-        font-family: var(--font-brand);
-      }
-      [data-proto] {
-        display: none;
-      }
-      html[data-v='A'][data-lang='en'] [data-proto='A-en'],
-      html[data-v='A'][data-lang='es'] [data-proto='A-es'],
-      html[data-v='B'][data-lang='en'] [data-proto='B-en'],
-      html[data-v='B'][data-lang='es'] [data-proto='B-es'] {
-        display: block;
-      }
-    </style>
+    {/* is:inline so Astro doesn't try to parse the dynamic content as scoped CSS */}
+    <style is:inline set:html={`
+      :root { font-family: var(--font-brand); }
+      [data-proto] { display: none; }
+      ${reveal} { display: block; }
+    `} />
     <script is:inline>
       // Runs before paint so there's no flash of the wrong variant.
       (function () {
         var p = new URLSearchParams(location.search);
+        var keys = ['A', 'B', 'C', 'D', 'E'];
+        var v = (p.get('variant') || 'A').toUpperCase();
         var r = document.documentElement;
-        r.dataset.v = p.get('variant') === 'B' ? 'B' : 'A';
+        r.dataset.v = keys.indexOf(v) === -1 ? 'A' : v;
         r.dataset.lang = p.get('lang') === 'es' ? 'es' : 'en';
         r.lang = r.dataset.lang;
       })();
@@ -54,6 +59,12 @@ const variants = [
     <div data-proto="A-es"><VariantA lang="es" /></div>
     <div data-proto="B-en"><VariantB lang="en" /></div>
     <div data-proto="B-es"><VariantB lang="es" /></div>
+    <div data-proto="C-en"><VariantC lang="en" /></div>
+    <div data-proto="C-es"><VariantC lang="es" /></div>
+    <div data-proto="D-en"><VariantD lang="en" /></div>
+    <div data-proto="D-es"><VariantD lang="es" /></div>
+    <div data-proto="E-en"><VariantE lang="en" /></div>
+    <div data-proto="E-es"><VariantE lang="es" /></div>
     <Switcher variants={variants} />
   </body>
 </html>

@@ -29,6 +29,15 @@ export const copy = {
     facts: ['No commission.', 'Flat, published fees.', 'Card or cash.'],
     factsNote: 'Estimates are estimates — the meter decides.',
 
+    // rider pillar 2 — NOT gated (it claims published rates, not fee breakdowns)
+    sameMath: 'Same math every trip.',
+    rateCardTitle: 'The rate card',
+    rateRows: ['Base', 'Per mile', 'Per minute'],
+    // No amounts are invented: positioning.md forbids hard-coding fee numbers, and
+    // /fees fetches the real rate card at runtime. The comp shows the slots.
+    rateNote: 'Live rates load from the fee schedule.',
+    statementLead: 'What YeRide promises, in full:',
+
     nav: { fees: 'Fees', estimate: 'Fare estimate', about: 'About' },
     footerNote: 'Built in South Florida.',
   },
@@ -53,6 +62,12 @@ export const copy = {
 
     facts: ['Sin comisión.', 'Tarifas fijas y publicadas.', 'Tarjeta o efectivo.'],
     factsNote: 'Un estimado es un estimado — el taxímetro decide.',
+
+    sameMath: 'Las mismas cuentas en cada viaje.',
+    rateCardTitle: 'El tarifario',
+    rateRows: ['Base', 'Por milla', 'Por minuto'],
+    rateNote: 'Las tarifas reales cargan del tarifario.',
+    statementLead: 'Lo que YeRide promete, completo:',
 
     nav: { fees: 'Tarifas', estimate: 'Estimar tarifa', about: 'Nosotros' },
     footerNote: 'Hecho en el Sur de la Florida.',

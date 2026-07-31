@@ -1,0 +1,103 @@
+---
+// PROTOTYPE (wayfinder #33) — Variant C: "The Rate Card"
+// Light, object-led. The hero is not type and not a split — it is a *thing*: the
+// published rate card, rendered as a physical object. "Numbers over adjectives"
+// (messaging.md voice principle 1) taken literally. Asymmetric two-column: argument
+// left, artifact right. The audience fork is demoted to two inline buttons.
+// No fee amounts are invented — positioning.md forbids hard-coding them, and /fees
+// fetches the real card at runtime. The comp shows the slots.
+import { copy, type Lang } from './_copy';
+const { lang } = Astro.props as { lang: Lang };
+const t = copy[lang];
+const other = lang === 'en' ? 'es' : 'en';
+---
+
+<div class="font-brand bg-paper min-h-screen flex flex-col">
+  <header class="border-b border-ink/10">
+    <div class="mx-auto max-w-7xl px-6 py-5 flex items-center gap-6">
+      <a href="/" class="shrink-0">
+        <img src="/prototype/yeride-lockup.svg" alt="YeRide" class="h-8 w-auto" />
+      </a>
+      <nav class="ml-auto flex items-center gap-7 text-[15px] font-semibold text-ink/80">
+        <a href="/fees" class="hover:text-ink">{t.nav.fees}</a>
+        <a href="/fare-estimate" class="hover:text-ink">{t.nav.estimate}</a>
+        <a href="/about" class="hidden sm:inline hover:text-ink">{t.nav.about}</a>
+        <a
+          href={`?variant=C&lang=${other}`}
+          class="rounded-full border border-ink/25 px-3 py-1 text-xs font-bold uppercase tracking-caps text-ink/70 hover:border-ink/50"
+          >{other}</a
+        >
+      </nav>
+    </div>
+  </header>
+
+  <!-- argument left, artifact right -->
+  <div class="flex-1 mx-auto w-full max-w-7xl px-6 py-16 md:py-24">
+    <div class="grid lg:grid-cols-[1fr_auto] gap-14 lg:gap-20 items-center">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-caps text-ink/50">{t.tagline}</p>
+        <h1
+          class="mt-4 text-ink font-extrabold tracking-headline text-[clamp(2.5rem,5vw,4.25rem)] leading-[1.02] max-w-2xl"
+        >
+          {t.sameMath}
+        </h1>
+        <p class="mt-6 text-ink/70 text-[18px] leading-relaxed max-w-lg">{t.ratesLine}</p>
+
+        <div class="mt-10 flex flex-wrap gap-3">
+          <a
+            href="/drivers"
+            class="inline-flex items-center gap-2 rounded-full bg-cab-yellow px-7 py-3.5 text-ink font-bold text-[17px] hover:brightness-95"
+          >
+            {t.driverCta}
+            <span aria-hidden="true">→</span>
+          </a>
+          <a
+            href="/riders"
+            class="inline-flex items-center gap-2 rounded-full border-2 border-ink/20 px-7 py-3.5 text-ink font-bold text-[17px] hover:border-ink/50"
+          >
+            {t.riderCta}
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
+
+        <p class="mt-7 text-ink/50 text-[15px]">{t.factsNote}</p>
+      </div>
+
+      <!-- the artifact -->
+      <div class="w-full lg:w-[26rem] rounded-2xl overflow-hidden shadow-xl shadow-ink/10">
+        <div class="bg-pullman-brown px-7 py-5 flex items-center gap-3">
+          <img src="/prototype/yeride-mark-reversed.svg" alt="" class="h-7 w-auto" />
+          <p class="text-paper font-bold text-[17px] tracking-headline">{t.rateCardTitle}</p>
+        </div>
+        <div class="bg-paper">
+          {
+            t.rateRows.map((row) => (
+              <div class="flex items-baseline justify-between gap-6 px-7 py-5 border-b border-ink/10">
+                <span class="text-ink/70 text-[16px]">{row}</span>
+                {/* no tabular-nums: Nunito ships no `tnum` and its digits are
+                    uniform-width already (brand-system.md) */}
+                <span class="text-ink font-bold text-[26px]">—</span>
+              </div>
+            ))
+          }
+          <div class="px-7 py-5 flex items-center gap-3">
+            <span class="h-1 w-8 bg-cab-yellow shrink-0"></span>
+            <p class="text-ink/55 text-[14px]">{t.rateNote}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="border-t border-ink/10">
+    <div
+      class="mx-auto max-w-7xl px-6 py-8 flex flex-wrap items-center gap-x-8 gap-y-3 text-[14px] text-ink/55"
+    >
+      <img src="/prototype/yeride-mark.svg" alt="" class="h-6 w-auto" />
+      {t.facts.map((f) => <span class="font-semibold text-ink/75">{f}</span>)}
+      <a href="/fees" class="ml-auto text-ink font-bold underline underline-offset-4"
+        >{t.feesCta} →</a
+      >
+    </div>
+  </footer>
+</div>
