@@ -1,0 +1,71 @@
+---
+// PROTOTYPE (wayfinder #36) — THROWAWAY. Three fee-schedule comps on the real brand
+// tokens, switchable via ?variant=A|B|C, ?lang=en|es and ?state=loaded|loading|error.
+//   npm run dev  →  http://localhost:4321/prototype/fees
+// Same reveal trick as home.astro: `output: 'static'` means searchParams are empty
+// at build, so all variant×lang combos render and a pre-paint script reveals one.
+// The fetch STATE is cheaper: each variant marks its runtime-fetched regions with
+// data-fetch="loaded|loading|error" and CSS below shows exactly one set, so states
+// don't multiply the rendered combos.
+import '@fontsource-variable/nunito';
+import '../../../.prototype-brand/tokens.css';
+import FeesA from './_FeesA.astro';
+import FeesB from './_FeesB.astro';
+import FeesC from './_FeesC.astro';
+import Switcher from './_FeesSwitcher.astro';
+
+const variants = [
+  { key: 'A', name: 'The Ledger — paper, one ruled column' },
+  { key: 'B', name: 'The Posted Card — ink, card object' },
+  { key: 'C', name: 'The Spec Sheet — yellow hero, guided read' },
+];
+const langs = ['en', 'es'] as const;
+const states = ['loaded', 'loading', 'error'] as const;
+
+const reveal = variants
+  .flatMap((v) => langs.map((l) => `html[data-v='${v.key}'][data-lang='${l}'] [data-proto='${v.key}-${l}']`))
+  .join(',\n      ');
+const stateCss = states
+  .map((s) => `html[data-state='${s}'] [data-fetch]:not([data-fetch='${s}']) { display: none; }`)
+  .join('\n      ');
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>PROTOTYPE — YeRide fee schedule</title>
+    <link rel="icon" href="/prototype/yeride-mark.svg" />
+    {/* is:inline so Astro doesn't try to parse the dynamic content as scoped CSS */}
+    <style is:inline set:html={`
+      :root { font-family: var(--font-brand); }
+      [data-proto] { display: none; }
+      ${reveal} { display: block; }
+      ${stateCss}
+    `} />
+    <script is:inline>
+      // Runs before paint so there's no flash of the wrong variant.
+      (function () {
+        var p = new URLSearchParams(location.search);
+        var keys = ['A', 'B', 'C'];
+        var v = (p.get('variant') || 'A').toUpperCase();
+        var s = p.get('state') || 'loaded';
+        var r = document.documentElement;
+        r.dataset.v = keys.indexOf(v) === -1 ? 'A' : v;
+        r.dataset.lang = p.get('lang') === 'es' ? 'es' : 'en';
+        r.dataset.state = ['loaded', 'loading', 'error'].indexOf(s) === -1 ? 'loaded' : s;
+        r.lang = r.dataset.lang;
+      })();
+    </script>
+  </head>
+  <body>
+    <div data-proto="A-en"><FeesA lang="en" /></div>
+    <div data-proto="A-es"><FeesA lang="es" /></div>
+    <div data-proto="B-en"><FeesB lang="en" /></div>
+    <div data-proto="B-es"><FeesB lang="es" /></div>
+    <div data-proto="C-en"><FeesC lang="en" /></div>
+    <div data-proto="C-es"><FeesC lang="es" /></div>
+    <Switcher variants={variants} />
+  </body>
+</html>

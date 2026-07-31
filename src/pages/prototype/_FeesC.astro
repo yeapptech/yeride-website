@@ -1,0 +1,217 @@
+---
+// PROTOTYPE (wayfinder #36) — Fees Variant C: "The Spec Sheet" — MOBILE-FIRST
+// Direct continuation of the Hail grammar: Cab Yellow hero (app-icon scheme, mark
+// leading), then a paper DOCUMENT with a sticky section index (md+; a scrolling pill
+// row on phones) and editorial, display-size figures — definition lists, not tables.
+// Surge lands as an Ink band, mirroring the home page's inversion. Where A is a
+// ledger and B is an object, C is a guided read.
+import { copy, type Lang } from './_copy';
+import {
+  feesCopy,
+  tiers,
+  perMile,
+  usd,
+  techFees,
+  passThroughs,
+  chargeLabels,
+  example,
+  exampleTotal,
+  type Charge,
+} from './_feesCopy';
+const { lang } = Astro.props as { lang: Lang };
+const t = feesCopy[lang];
+const nav = copy[lang].nav;
+const other = lang === 'en' ? 'es' : 'en';
+
+const families: { id: string; h2: string; lead: string; charges: Charge[]; notes: Record<string, string> }[] = [
+  { id: 'tech', h2: t.family1H2, lead: t.family1Lead, charges: techFees, notes: {} },
+  {
+    id: 'passthrough',
+    h2: t.family2H2,
+    lead: t.family2Lead,
+    charges: passThroughs,
+    notes: { 'trip-insurance-driver': t.insuranceNote, 'card-processing': t.cardNote },
+  },
+];
+
+const index = [
+  { href: '#rates', label: t.rateCardH2 },
+  { href: '#tech', label: t.family1H2 },
+  { href: '#passthrough', label: t.family2H2 },
+  { href: '#example', label: t.exampleH2 },
+  { href: '#surge', label: t.surgeH2 },
+];
+---
+
+<div class="font-brand bg-paper min-h-screen">
+  <!-- YELLOW HERO — the Hail grammar -->
+  <section class="bg-cab-yellow">
+    <header class="mx-auto w-full max-w-6xl px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-4">
+      <a href="/" class="shrink-0"><img src="/prototype/yeride-app-icon.svg" alt="YeRide" class="h-9 sm:h-10 w-auto" /></a>
+      <nav class="ml-auto flex items-center gap-5 text-[14px] font-semibold text-ink/75">
+        <a href="/fare-estimate" class="hidden sm:inline hover:text-ink">{nav.estimate}</a>
+        <a
+          href={`?variant=C&lang=${other}`}
+          class="rounded-full border border-ink/30 px-3 py-1.5 text-xs font-bold uppercase tracking-caps text-ink/70 hover:border-ink/60"
+          >{other}</a
+        >
+      </nav>
+    </header>
+    <div class="mx-auto w-full max-w-6xl px-5 pb-12 pt-4 sm:px-6 sm:pb-16 md:pb-20">
+      <h1 class="text-ink font-extrabold tracking-headline text-[2.1rem] leading-[1.05] sm:text-[2.75rem] md:text-[3.5rem] max-w-3xl">
+        {t.h1}
+      </h1>
+      <p class="mt-4 text-ink/75 text-[16px] sm:text-[18px] max-w-xl">{t.lead}</p>
+      <p
+        data-fetch="loaded"
+        class="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-[13px] font-semibold text-paper"
+      >
+        <span class="inline-block h-2 w-2 rounded-full bg-cab-yellow" aria-hidden="true"></span>
+        {t.fetchedStamp} · {t.timestamp}
+      </p>
+    </div>
+  </section>
+
+  <!-- fetch states -->
+  <div data-fetch="loading" class="mx-auto w-full max-w-6xl px-5 py-14 sm:px-6">
+    <p class="text-ink/60 text-[15px]">{t.loading}</p>
+    <div class="mt-6 grid gap-4 sm:grid-cols-3 animate-pulse" aria-hidden="true">
+      <div class="h-28 rounded-xl bg-ink/10"></div>
+      <div class="h-28 rounded-xl bg-ink/10"></div>
+      <div class="h-28 rounded-xl bg-ink/10"></div>
+    </div>
+  </div>
+  <div data-fetch="error" class="mx-auto w-full max-w-6xl px-5 py-14 sm:px-6">
+    <div class="max-w-xl border-l-4 border-cab-yellow bg-ink px-5 py-4">
+      <p class="text-paper text-[15px]">
+        {t.errorPre}<a href="/contact" class="font-bold underline underline-offset-2 text-cab-yellow">{t.errorLink}</a>{t.errorPost}
+      </p>
+    </div>
+  </div>
+
+  <!-- PAPER DOCUMENT with sticky index -->
+  <div data-fetch="loaded" class="mx-auto w-full max-w-6xl px-5 sm:px-6 md:grid md:grid-cols-[14rem_1fr] md:gap-14 lg:grid-cols-[16rem_1fr]">
+    <!-- index: pills on phones, sticky rail from md -->
+    <nav class="sticky top-0 z-10 -mx-5 bg-paper/95 px-5 py-3 backdrop-blur md:static md:z-auto md:m-0 md:bg-transparent md:p-0 md:pt-14">
+      <ul class="flex gap-2 overflow-x-auto md:sticky md:top-8 md:block md:space-y-1">
+        {
+          index.map((i) => (
+            <li class="shrink-0">
+              <a
+                href={i.href}
+                class="block whitespace-nowrap rounded-full border border-ink/15 px-3.5 py-1.5 text-[13px] font-semibold text-ink/60 hover:border-ink/40 hover:text-ink md:whitespace-normal md:rounded-none md:border-0 md:border-l-2 md:border-ink/10 md:px-3 md:py-1.5 md:text-[14px] md:hover:border-ink"
+              >
+                {i.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="pb-4 pt-8 md:pt-14">
+      <!-- rate card: per-tier figure groups, not a table -->
+      <section id="rates" class="scroll-mt-20">
+        <h2 class="text-ink font-extrabold tracking-headline text-[1.5rem] sm:text-[1.75rem]">{t.rateCardH2}</h2>
+        <div class="mt-6 space-y-8">
+          {
+            tiers.map((tier) => (
+              <div>
+                <p class="text-[13px] font-bold uppercase tracking-caps text-ink/45">{tier.name}</p>
+                <dl class="mt-3 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4 tabular-nums">
+                  {(
+                    [
+                      [t.rateRows.base, usd(tier.baseFare)],
+                      [t.rateRows.distance, usd(perMile(tier.costPerKm))],
+                      [t.rateRows.time, usd(tier.costPerMinute)],
+                      [t.rateRows.minimum, usd(tier.minimumFare)],
+                    ] as const
+                  ).map(([label, amount]) => (
+                    <div class="border-t-2 border-ink pt-2">
+                      <dd class="font-extrabold text-ink text-[1.6rem] sm:text-[1.9rem] leading-none">{amount}</dd>
+                      <dt class="mt-1.5 text-[13px] text-ink/55">{label}</dt>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ))
+          }
+        </div>
+        <p class="mt-5 text-[13px] text-ink/50 max-w-prose">{t.unitNote}</p>
+      </section>
+
+      <!-- families as editorial sections -->
+      {
+        families.map((fam) => (
+          <section id={fam.id} class="mt-16 scroll-mt-20">
+            <h2 class="text-ink font-extrabold tracking-headline text-[1.5rem] sm:text-[1.75rem]">{fam.h2}</h2>
+            <p class="mt-2 text-ink/65 text-[15px] sm:text-[16px] max-w-prose">{fam.lead}</p>
+            <dl class="mt-6 grid gap-x-6 gap-y-7 sm:grid-cols-3 tabular-nums">
+              {fam.charges.map((c) => (
+                <div class="border-t-2 border-ink pt-2">
+                  <dd class="font-extrabold text-ink text-[1.35rem] sm:text-[1.5rem] leading-tight">{c.rule[lang]}</dd>
+                  <dt class="mt-1.5 text-[13px] text-ink/55">{chargeLabels[c.id][lang]}</dt>
+                  {fam.notes[c.id] && <p class="mt-2 text-[12.5px] text-ink/45">{fam.notes[c.id]}</p>}
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))
+      }
+
+      <!-- example -->
+      <section id="example" class="mt-16 scroll-mt-20">
+        <h2 class="text-ink font-extrabold tracking-headline text-[1.5rem] sm:text-[1.75rem]">{t.exampleH2}</h2>
+        <p class="mt-1.5 text-[13px] text-ink/50">{t.exampleTrip} — {t.exampleNote}</p>
+        <div class="mt-5 flex flex-wrap items-center gap-x-3 gap-y-4 text-ink tabular-nums">
+          {
+            (
+              [
+                [t.exampleFare, usd(example.fare)],
+                [t.exampleFees, usd(example.fees)],
+                [t.exampleInsurance, usd(example.insurance)],
+              ] as const
+            ).map(([label, amount], i) => (
+              <>
+                {i > 0 && <span class="text-ink/30 text-[1.4rem] font-light" aria-hidden="true">+</span>}
+                <div>
+                  <p class="font-extrabold text-[1.6rem] leading-none">{amount}</p>
+                  <p class="mt-1 text-[12.5px] text-ink/55 max-w-[9rem]">{label}</p>
+                </div>
+              </>
+            ))
+          }
+          <div class="flex items-center gap-3">
+            <span class="text-ink/30 text-[1.4rem] font-light" aria-hidden="true">=</span>
+            <div class="rounded-xl bg-ink px-5 py-3">
+              <p class="font-extrabold text-cab-yellow text-[1.6rem] leading-none">{usd(exampleTotal)}</p>
+              <p class="mt-1 text-[12.5px] text-paper/60">{t.exampleTotal}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- SURGE — the Ink inversion band; static copy, present in every fetch state -->
+  <section id="surge" class="mt-14 bg-ink scroll-mt-0">
+    <div class="mx-auto w-full max-w-6xl px-5 py-12 sm:px-6 sm:py-14">
+      <h2 class="text-paper font-extrabold tracking-headline text-[1.6rem] sm:text-[2rem]">{t.surgeH2}</h2>
+      <p class="mt-4 text-paper/70 text-[15px] sm:text-[17px] leading-relaxed max-w-2xl">{t.surgeBody}</p>
+      <a
+        href="/fare-estimate"
+        class="mt-8 flex sm:inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-cab-yellow px-8 py-4 text-ink font-bold text-[16px] hover:bg-paper"
+      >
+        {t.estimateLink}
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <footer class="bg-paper">
+    <div class="mx-auto w-full max-w-6xl px-5 py-6 sm:px-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px] text-ink/55">
+      <img src="/prototype/yeride-mark.svg" alt="" class="h-6 w-auto" />
+      <span class="ml-auto">© 2026 YeRide</span>
+    </div>
+  </footer>
+</div>

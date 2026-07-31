@@ -1,0 +1,179 @@
+---
+// PROTOTYPE (wayfinder #36) — Fees Variant A: "The Ledger" — MOBILE-FIRST
+// The whole schedule as ONE continuous ruled ledger on paper, narrow measure, dense
+// tabular numbers. The page reads like the printed rate card in a cab window: no
+// bands, no cards — sections are rules in a single document. The example renders as
+// a receipt on Ink. Yellow appears only in the thin header strip (app-icon scheme —
+// no wordmark on yellow).
+import { copy, type Lang } from './_copy';
+import { feesCopy, tiers, perMile, usd, techFees, passThroughs, chargeLabels, example, exampleTotal } from './_feesCopy';
+const { lang } = Astro.props as { lang: Lang };
+const t = feesCopy[lang];
+const nav = copy[lang].nav;
+const other = lang === 'en' ? 'es' : 'en';
+---
+
+<div class="font-brand bg-paper min-h-screen">
+  <!-- thin yellow header strip -->
+  <header class="bg-cab-yellow">
+    <div class="mx-auto w-full max-w-2xl px-5 py-3 flex items-center gap-4">
+      <a href="/" class="shrink-0"><img src="/prototype/yeride-app-icon.svg" alt="YeRide" class="h-8 w-auto" /></a>
+      <nav class="ml-auto flex items-center gap-5 text-[14px] font-semibold text-ink/75">
+        <a href="/fare-estimate" class="hidden sm:inline hover:text-ink">{nav.estimate}</a>
+        <a
+          href={`?variant=A&lang=${other}`}
+          class="rounded-full border border-ink/30 px-3 py-1.5 text-xs font-bold uppercase tracking-caps text-ink/70 hover:border-ink/60"
+          >{other}</a
+        >
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto w-full max-w-2xl px-5 pb-16 pt-10 sm:pt-14">
+    <h1 class="text-ink font-extrabold tracking-headline text-[2.1rem] leading-[1.05] sm:text-[2.6rem]">{t.h1}</h1>
+    <p class="mt-3 text-ink/70 text-[16px] sm:text-[17px] max-w-prose">{t.lead}</p>
+
+    <!-- fetch states -->
+    <div data-fetch="loading" class="mt-10">
+      <p class="text-ink/60 text-[15px]">{t.loading}</p>
+      <div class="mt-6 space-y-3 animate-pulse" aria-hidden="true">
+        <div class="h-4 w-2/3 rounded bg-ink/10"></div>
+        <div class="h-4 w-full rounded bg-ink/10"></div>
+        <div class="h-4 w-full rounded bg-ink/10"></div>
+        <div class="h-4 w-1/2 rounded bg-ink/10"></div>
+      </div>
+    </div>
+    <div data-fetch="error" class="mt-10 border-l-4 border-ink bg-ink/5 px-4 py-3">
+      <p class="text-ink text-[15px]">
+        {t.errorPre}<a href="/contact" class="font-bold underline underline-offset-2">{t.errorLink}</a>{t.errorPost}
+      </p>
+    </div>
+
+    <div data-fetch="loaded">
+      <p class="mt-6 text-[13px] font-semibold uppercase tracking-caps text-ink/45">
+        {t.fetchedStamp} · {t.timestamp}
+      </p>
+
+      <!-- THE LEDGER — one ruled document -->
+      <!-- rate card -->
+      <section class="mt-10">
+        <h2 class="border-b-2 border-ink pb-2 text-ink font-extrabold tracking-headline text-[1.35rem]">
+          {t.rateCardH2}
+        </h2>
+        <table class="w-full text-[15px] sm:text-[16px] tabular-nums">
+          <thead>
+            <tr class="border-b border-ink/15 text-ink/50 text-[13px] uppercase tracking-caps">
+              <th class="py-2.5 text-left font-semibold"></th>
+              {tiers.map((tier) => <th class="py-2.5 text-right font-semibold">{tier.name}</th>)}
+            </tr>
+          </thead>
+          <tbody class="text-ink">
+            <tr class="border-b border-ink/10">
+              <td class="py-2.5">{t.rateRows.base}</td>
+              {tiers.map((tier) => <td class="py-2.5 text-right font-bold">{usd(tier.baseFare)}</td>)}
+            </tr>
+            <tr class="border-b border-ink/10">
+              <td class="py-2.5">{t.rateRows.distance}</td>
+              {tiers.map((tier) => <td class="py-2.5 text-right font-bold">{usd(perMile(tier.costPerKm))}</td>)}
+            </tr>
+            <tr class="border-b border-ink/10">
+              <td class="py-2.5">{t.rateRows.time}</td>
+              {tiers.map((tier) => <td class="py-2.5 text-right font-bold">{usd(tier.costPerMinute)}</td>)}
+            </tr>
+            <tr class="border-b border-ink/10">
+              <td class="py-2.5">{t.rateRows.minimum}</td>
+              {tiers.map((tier) => <td class="py-2.5 text-right font-bold">{usd(tier.minimumFare)}</td>)}
+            </tr>
+          </tbody>
+        </table>
+        <p class="mt-2.5 text-[13px] text-ink/50">{t.unitNote}</p>
+      </section>
+
+      <!-- family 1 -->
+      <section class="mt-12">
+        <h2 class="border-b-2 border-ink pb-2 text-ink font-extrabold tracking-headline text-[1.35rem]">
+          {t.family1H2}
+        </h2>
+        <p class="mt-2.5 text-ink/70 text-[15px]">{t.family1Lead}</p>
+        <ul class="mt-3 text-[15px] sm:text-[16px]">
+          {
+            techFees.map((c) => (
+              <li class="flex items-baseline justify-between gap-4 border-b border-ink/10 py-2.5">
+                <span class="text-ink">{chargeLabels[c.id][lang]}</span>
+                <span class="shrink-0 font-bold text-ink tabular-nums">{c.rule[lang]}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <!-- family 2 -->
+      <section class="mt-12">
+        <h2 class="border-b-2 border-ink pb-2 text-ink font-extrabold tracking-headline text-[1.35rem]">
+          {t.family2H2}
+        </h2>
+        <p class="mt-2.5 text-ink/70 text-[15px]">{t.family2Lead}</p>
+        <ul class="mt-3 text-[15px] sm:text-[16px]">
+          {
+            passThroughs.map((c) => (
+              <li class="border-b border-ink/10 py-2.5">
+                <div class="flex items-baseline justify-between gap-4">
+                  <span class="text-ink">{chargeLabels[c.id][lang]}</span>
+                  <span class="shrink-0 font-bold text-ink tabular-nums">{c.rule[lang]}</span>
+                </div>
+                {c.id === 'trip-insurance-driver' && <p class="mt-1.5 text-[13px] text-ink/50 max-w-prose">{t.insuranceNote}</p>}
+                {c.id === 'card-processing' && <p class="mt-1.5 text-[13px] text-ink/50 max-w-prose">{t.cardNote}</p>}
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <!-- example as a receipt on Ink -->
+      <section class="mt-12">
+        <h2 class="text-ink font-extrabold tracking-headline text-[1.35rem]">{t.exampleH2}</h2>
+        <div class="mt-4 bg-ink px-5 py-6 sm:px-7">
+          <p class="text-paper/60 text-[13px] uppercase tracking-caps font-semibold">{t.exampleTrip}</p>
+          <ul class="mt-4 text-[15px] tabular-nums">
+            <li class="flex justify-between border-b border-paper/15 py-2 text-paper">
+              <span>{t.exampleFare}</span><span class="font-bold">{usd(example.fare)}</span>
+            </li>
+            <li class="flex justify-between border-b border-paper/15 py-2 text-paper">
+              <span>{t.exampleFees}</span><span class="font-bold">{usd(example.fees)}</span>
+            </li>
+            <li class="flex justify-between border-b border-paper/15 py-2 text-paper">
+              <span>{t.exampleInsurance}</span><span class="font-bold">{usd(example.insurance)}</span>
+            </li>
+            <li class="flex justify-between py-3 text-[17px]">
+              {/* Cab Yellow as text — legal on dark grounds only */}
+              <span class="font-bold text-cab-yellow">{t.exampleTotal}</span>
+              <span class="font-extrabold text-cab-yellow">{usd(exampleTotal)}</span>
+            </li>
+          </ul>
+        </div>
+        <p class="mt-2.5 text-[13px] text-ink/50">{t.exampleNote}</p>
+      </section>
+    </div>
+
+    <!-- surge — static copy, present in every fetch state -->
+    <section class="mt-12">
+      <h2 class="border-b-2 border-ink pb-2 text-ink font-extrabold tracking-headline text-[1.35rem]">{t.surgeH2}</h2>
+      <p class="mt-3 text-ink/70 text-[15px] sm:text-[16px] leading-relaxed max-w-prose">{t.surgeBody}</p>
+    </section>
+
+    <a
+      href="/fare-estimate"
+      class="mt-12 flex sm:inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-ink px-8 py-4 text-paper font-bold text-[16px] hover:bg-pullman-brown"
+    >
+      {t.estimateLink}
+      <span aria-hidden="true">→</span>
+    </a>
+  </main>
+
+  <footer class="border-t border-ink/10">
+    <div class="mx-auto w-full max-w-2xl px-5 py-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px] text-ink/55">
+      <img src="/prototype/yeride-mark.svg" alt="" class="h-6 w-auto" />
+      <span class="ml-auto">© 2026 YeRide</span>
+    </div>
+  </footer>
+</div>
