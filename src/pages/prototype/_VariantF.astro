@@ -1,0 +1,126 @@
+---
+// PROTOTYPE (wayfinder #33) — Variant F: "The Hail, Stated"
+// The requested synthesis: D's hero (Cab Yellow ground, mark-led, tagline in ink)
+// over E's argument (narrow Ink column, numbered, fork last as quiet links).
+// Two grounds, one transition — yellow to ink — and no paper at all.
+//
+// One join decision worth noting: E opened its column with the tagline as a
+// sentence. Here the hero already carries the tagline, so the column opens on
+// `statementLead` instead — repeating the canonical line twice on one page would
+// spend it cheaply.
+import { copy, type Lang } from './_copy';
+const { lang } = Astro.props as { lang: Lang };
+const t = copy[lang];
+const other = lang === 'en' ? 'es' : 'en';
+
+const items = [
+  { n: '01', offer: t.driverOffer, support: t.driverSupport, cta: t.driverCta, href: '/drivers' },
+  { n: '02', offer: t.riderOffer, support: t.riderSupport, cta: t.riderCta, href: '/riders' },
+];
+---
+
+<div class="font-brand bg-ink min-h-screen flex flex-col">
+  <!-- D's HERO — Cab Yellow ground, the mark leads -->
+  <section class="bg-cab-yellow">
+    <header class="mx-auto w-full max-w-7xl px-6 py-6 flex items-center gap-6">
+      {/* app-icon scheme: the lockup embeds the primary mark, illegal on yellow */}
+      <a href="/" class="shrink-0">
+        <img src="/prototype/yeride-app-icon.svg" alt="YeRide" class="h-10 w-auto" />
+      </a>
+      <nav class="ml-auto flex items-center gap-7 text-[15px] font-semibold text-ink/75">
+        <a href="/fees" class="hover:text-ink">{t.nav.fees}</a>
+        <a href="/fare-estimate" class="hover:text-ink">{t.nav.estimate}</a>
+        <a href="/about" class="hidden sm:inline hover:text-ink">{t.nav.about}</a>
+        <a
+          href={`?variant=F&lang=${other}`}
+          class="rounded-full border border-ink/30 px-3 py-1 text-xs font-bold uppercase tracking-caps text-ink/70 hover:border-ink/60"
+          >{other}</a
+        >
+      </nav>
+    </header>
+
+    <div
+      class="mx-auto max-w-7xl px-6 pb-20 pt-6 md:pb-28 grid md:grid-cols-[auto_1fr] items-center gap-10 md:gap-16"
+    >
+      <img
+        src="/prototype/yeride-app-icon.svg"
+        alt=""
+        class="w-44 md:w-72 lg:w-80 h-auto shrink-0 -ml-4 md:-ml-8"
+      />
+      <div>
+        <h1
+          class="text-ink font-extrabold tracking-headline text-[clamp(2.5rem,6vw,5rem)] leading-[1.0] max-w-3xl"
+        >
+          {t.tagline}
+        </h1>
+        <p class="mt-6 text-ink/75 text-[clamp(1.05rem,1.5vw,1.3rem)] max-w-xl">{t.ratesLine}</p>
+        <a
+          href="/fees"
+          class="mt-9 inline-flex items-center gap-2 rounded-full bg-ink px-8 py-4 text-paper font-bold text-[17px] hover:bg-pullman-brown"
+        >
+          {t.feesCta}
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- E's ARGUMENT — narrow ink column, ordered by reading sequence -->
+  <main class="flex-1 mx-auto w-full max-w-3xl px-6 py-16 md:py-24">
+    <p class="text-paper/60 text-[17px] leading-relaxed">{t.statementLead}</p>
+
+    <ol class="mt-12 border-t border-paper/15">
+      {
+        items.map((it) => (
+          <li class="border-b border-paper/15 py-10 grid grid-cols-[3rem_1fr] gap-6">
+            {/* Cab Yellow as text — dark ground only, brand moment */}
+            <span class="text-cab-yellow font-extrabold text-[20px] leading-none pt-1">{it.n}</span>
+            <div>
+              <h2 class="text-paper font-bold tracking-headline text-[clamp(1.4rem,2.4vw,1.9rem)] leading-[1.15]">
+                {it.offer}
+              </h2>
+              <p class="mt-3 text-paper/65 text-[16px] leading-relaxed">{it.support}</p>
+              <a
+                href={it.href}
+                class="mt-5 inline-flex items-center gap-2 text-paper font-bold text-[15px] underline underline-offset-4 hover:no-underline"
+              >
+                {it.cta}
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </li>
+        ))
+      }
+      <li class="border-b border-paper/15 py-10 grid grid-cols-[3rem_1fr] gap-6">
+        <span class="text-cab-yellow font-extrabold text-[20px] leading-none pt-1">03</span>
+        <div>
+          <h2
+            class="text-paper font-bold tracking-headline text-[clamp(1.4rem,2.4vw,1.9rem)] leading-[1.15]"
+          >
+            {t.feesBanner}
+          </h2>
+          <p class="mt-3 text-paper/65 text-[16px] leading-relaxed">
+            {t.feesSupport}
+          </p>
+          <a
+            href="/fees"
+            class="mt-5 inline-flex items-center gap-2 text-paper font-bold text-[15px] underline underline-offset-4 hover:no-underline"
+          >
+            {t.feesCta}
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </li>
+    </ol>
+  </main>
+
+  <footer class="border-t border-paper/15">
+    <div
+      class="mx-auto max-w-3xl px-6 py-8 flex flex-wrap items-center gap-4 text-[14px] text-paper/55"
+    >
+      <img src="/prototype/yeride-mark-reversed.svg" alt="" class="h-6 w-auto" />
+      <span>{t.footerNote}</span>
+      <span class="ml-auto">© 2026 YeRide</span>
+    </div>
+  </footer>
+</div>

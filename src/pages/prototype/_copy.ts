@@ -37,6 +37,8 @@ export const copy = {
     // /fees fetches the real rate card at runtime. The comp shows the slots.
     rateNote: 'Live rates load from the fee schedule.',
     statementLead: 'What YeRide promises, in full:',
+    // the two facts the fees headline doesn't already say — avoids echoing it
+    feesSupport: 'Card or cash. Estimates are estimates — the meter decides.',
 
     nav: { fees: 'Fees', estimate: 'Fare estimate', about: 'About' },
     footerNote: 'Built in South Florida.',
@@ -68,6 +70,7 @@ export const copy = {
     rateRows: ['Base', 'Por milla', 'Por minuto'],
     rateNote: 'Las tarifas reales cargan del tarifario.',
     statementLead: 'Lo que YeRide promete, completo:',
+    feesSupport: 'Tarjeta o efectivo. Un estimado es un estimado — el taxímetro decide.',
 
     nav: { fees: 'Tarifas', estimate: 'Estimar tarifa', about: 'Nosotros' },
     footerNote: 'Hecho en el Sur de la Florida.',

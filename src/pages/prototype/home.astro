@@ -12,6 +12,7 @@ import VariantB from './_VariantB.astro';
 import VariantC from './_VariantC.astro';
 import VariantD from './_VariantD.astro';
 import VariantE from './_VariantE.astro';
+import VariantF from './_VariantF.astro';
 import Switcher from './_Switcher.astro';
 
 const variants = [
@@ -20,6 +21,7 @@ const variants = [
   { key: 'C', name: 'The Rate Card — light, object-led' },
   { key: 'D', name: 'The Hail — yellow ground, mark-led' },
   { key: 'E', name: 'The Statement — dark, single column' },
+  { key: 'F', name: "The Hail, Stated — D's hero + E's argument" },
 ];
 const langs = ['en', 'es'] as const;
 
@@ -45,7 +47,7 @@ const reveal = variants
       // Runs before paint so there's no flash of the wrong variant.
       (function () {
         var p = new URLSearchParams(location.search);
-        var keys = ['A', 'B', 'C', 'D', 'E'];
+        var keys = ['A', 'B', 'C', 'D', 'E', 'F'];
         var v = (p.get('variant') || 'A').toUpperCase();
         var r = document.documentElement;
         r.dataset.v = keys.indexOf(v) === -1 ? 'A' : v;
@@ -65,6 +67,8 @@ const reveal = variants
     <div data-proto="D-es"><VariantD lang="es" /></div>
     <div data-proto="E-en"><VariantE lang="en" /></div>
     <div data-proto="E-es"><VariantE lang="es" /></div>
+    <div data-proto="F-en"><VariantF lang="en" /></div>
+    <div data-proto="F-es"><VariantF lang="es" /></div>
     <Switcher variants={variants} />
   </body>
 </html>
