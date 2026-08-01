@@ -13,8 +13,9 @@ export interface Props {
   title: string;
   description?: string;
   lang?: "en" | "es";
-  /** Ground the header sits on — pages with a Cab Yellow hero pass "yellow". */
-  headerGround?: "paper" | "yellow";
+  /** Ground the header sits on — pages with a Cab Yellow hero pass "yellow",
+   *  the ink-ground /fees page passes "ink". */
+  headerGround?: "paper" | "yellow" | "ink";
   /** /404 and /redirect are single-file with a client-side language switch
    *  (copy-map §3.10–3.11) — they carry no hreflang alternates. */
   alternates?: boolean;

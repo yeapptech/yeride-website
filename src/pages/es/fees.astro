@@ -1,0 +1,14 @@
+---
+// /es/fees — the ES twin. Routes are mirrored with English slugs (copy-map §0.3).
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import FeeSchedule from "../../components/FeeSchedule.astro";
+---
+
+<BaseLayout
+  title="El tarifario | YeRide"
+  description="Cada cargo que cobra YeRide y cada costo que traslada al costo, con los montos actuales en vivo."
+  lang="es"
+  headerGround="ink"
+>
+  <FeeSchedule lang="es" />
+</BaseLayout>

@@ -3,12 +3,14 @@
 // approved Variant D direction (wayfinder #33).
 import lockup from "@yeapptech/yeride-brand/assets/logo/yeride-lockup.svg";
 import appIcon from "@yeapptech/yeride-brand/assets/logo/yeride-app-icon.svg";
+import markReversed from "@yeapptech/yeride-brand/assets/logo/yeride-mark-reversed.svg";
 
 export interface Props {
   lang?: "en" | "es";
   /** The ground the header sits on. The lockup embeds the primary mark, which
-   *  logo.md forbids on Cab Yellow — yellow grounds use the app-icon scheme. */
-  ground?: "paper" | "yellow";
+   *  logo.md forbids on Cab Yellow — yellow grounds use the app-icon scheme.
+   *  Ink grounds (the /fees page, wayfinder #36) take the reversed mark. */
+  ground?: "paper" | "yellow" | "ink";
   /** Language-toggle target — the same page in the other language. */
   toggleHref: string;
 }
@@ -34,8 +36,19 @@ const t = {
 }[lang];
 
 const esPrefix = lang === "es" ? "/es" : "";
-const mark = ground === "yellow" ? appIcon : lockup;
-const bg = ground === "yellow" ? "bg-cab-yellow" : "bg-paper";
+const mark =
+  ground === "yellow" ? appIcon : ground === "ink" ? markReversed : lockup;
+const bg =
+  ground === "yellow" ? "bg-cab-yellow" : ground === "ink" ? "bg-ink" : "bg-paper";
+// Ink grounds invert the link and toggle tones; paper and yellow both take ink text.
+const dark = ground === "ink";
+const linkTone = dark
+  ? "text-paper/70"
+  : "text-ink/75";
+const linkHover = dark ? "hover:text-paper" : "hover:text-ink";
+const toggleTone = dark
+  ? "border-paper/30 text-paper/70 hover:border-paper/60"
+  : "border-ink/30 text-ink/70 hover:border-ink/60";
 ---
 
 <header class={bg}>
@@ -48,25 +61,31 @@ const bg = ground === "yellow" ? "bg-cab-yellow" : "bg-paper";
     {/* Below sm the links drop; the mark and the toggle always survive —
         ES parity is not a progressive enhancement (copy-map §1.1). */}
     <nav
-      class="ml-auto flex items-center gap-5 text-[15px] font-semibold text-ink/75 sm:gap-7"
+      class:list={[
+        "ml-auto flex items-center gap-5 text-[15px] font-semibold sm:gap-7",
+        linkTone,
+      ]}
     >
-      <a href={`${esPrefix}/drivers`} class="hidden hover:text-ink sm:inline"
+      <a href={`${esPrefix}/drivers`} class:list={["hidden sm:inline", linkHover]}
         >{t.drivers}</a
       >
-      <a href={`${esPrefix}/riders`} class="hidden hover:text-ink sm:inline"
+      <a href={`${esPrefix}/riders`} class:list={["hidden sm:inline", linkHover]}
         >{t.riders}</a
       >
-      <a href={`${esPrefix}/fees`} class="hidden hover:text-ink sm:inline"
+      <a href={`${esPrefix}/fees`} class:list={["hidden sm:inline", linkHover]}
         >{t.fees}</a
       >
       <a
         href={`${esPrefix}/fare-estimate`}
-        class="hidden hover:text-ink md:inline">{t.estimate}</a
+        class:list={["hidden md:inline", linkHover]}>{t.estimate}</a
       >
       <a
         href={toggleHref}
         aria-label={t.toggleAria}
-        class="rounded-full border border-ink/30 px-3 py-2 text-xs font-bold uppercase tracking-caps text-ink/70 hover:border-ink/60 sm:py-1"
+        class:list={[
+          "rounded-full border px-3 py-2 text-xs font-bold uppercase tracking-caps sm:py-1",
+          toggleTone,
+        ]}
         >{t.toggle}</a
       >
     </nav>
