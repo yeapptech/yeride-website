@@ -141,9 +141,21 @@ section had wrong:
    `pre-registration/phone-number-already-in-use` for the second — so the outcome table now
    carries that class. Without it a repeat phone was told the wrong thing about their email.
    Sites match on the `code`, not the status.
-3. **The phone is normalised to E.164 before the POST.** Dedupe is an exact string match and
-   every existing row was written as `+1XXXXXXXXXX`, so "+1 305 555 0100" as typed must go
-   over the wire as `+13055550100`.
+3. **The phone is normalised to E.164 before the POST.** Dedupe is an exact string match on
+   `phoneNumber`, which the controller stores verbatim, so two spellings of one number are
+   two people to it: "+1 305 555 0100" as typed must go over the wire as `+13055550100`.
+
+   *Scope of that claim, corrected 2026-08-02 after review:* rows created **through this
+   site** are `+1XXXXXXXXXX`, because the form it replaced forced `^\+1\d{10}$`. Nothing was
+   read from the database, so rows written by any other client are not covered — if legacy
+   rows are formatted differently, normalising defeats dedupe rather than serving it.
+   Confirming that needs a read of the `whitelist` collection, not of the source.
+
+   A related trap the first implementation fell into: normalising by discarding every
+   non-digit turns a trailing extension into a plausible number. Strip **formatting
+   characters only**, and pin `+1` to exactly 11 digits — the general E.164 range of 10–15
+   accepts both a US number with a digit missing and one with an extension run onto the end,
+   and each writes a second row beside the same person.
 
 > **Flagged, decided against changing (2026-07-31; premise corrected 2026-08-02):** Android
 > is already live, so "pre-register" is a label the product has outgrown. Keeping the
