@@ -354,16 +354,21 @@ const esPrefix = lang === "es" ? "/es" : "";
         return l ? test(l) : false;
       });
 
-    const techTotal = ids((l) => l.family === "tech").reduce((n, c) => n + of(c.id), 0);
-    const riderPass = ids((l) => l.family === "passthrough" && l.payer === "rider");
-    const driverPass = ids((l) => l.family === "passthrough" && l.payer === "driver");
+    // Which side a charge lands on is decided by `payer` alone, never by family
+    // (#47). YeRide's charges come out of the driver's side in both payment
+    // flows, so a family-based split would have put them in the rider's column
+    // and published the wrong economics.
+    const sum = (list: AppCharge[]) => list.reduce((n, c) => n + of(c.id), 0);
+    const riderCharges = ids((l) => l.payer === "rider");
+    const driverCharges = ids((l) => l.payer === "driver");
+    // Charges that exist only on card fares — today there are none, since
+    // Stripe's fee is not a YeRide charge. The cash footnote and the
+    // "card fare" qualifier are meaningless without one, so both are gated.
+    const cardOnly = driverCharges.filter((c) => label(c)?.cardOnly);
 
-    const riderTotal =
-      ex.fare + techTotal + riderPass.reduce((n, c) => n + of(c.id), 0);
-    const driverCard = ex.fare - driverPass.reduce((n, c) => n + of(c.id), 0);
-    const driverCash =
-      ex.fare -
-      driverPass.filter((c) => !label(c)?.cardOnly).reduce((n, c) => n + of(c.id), 0);
+    const riderTotal = ex.fare + sum(riderCharges);
+    const driverCard = ex.fare - sum(driverCharges);
+    const driverCash = ex.fare - sum(driverCharges.filter((c) => !label(c)?.cardOnly));
 
     const service = schedule.rideServices.find((s) => s.id === ex.serviceId);
     const miles = Math.round(metersToMiles(ex.distanceMeters) * 10) / 10;
@@ -381,8 +386,7 @@ const esPrefix = lang === "es" ? "/es" : "";
           <p class="text-xs font-bold uppercase tracking-caps text-cab-yellow">${esc(t.riderColH)}</p>
           <ul class="mt-4 text-[15px]">
             ${ledgerRow(t.exampleFare, usd(ex.fare) ?? GAP)}
-            ${ledgerRow(t.exampleFees, usd(techTotal) ?? GAP)}
-            ${riderPass.map((c) => ledgerRow(chargeName(c), usd(of(c.id)) ?? GAP)).join("")}
+            ${riderCharges.map((c) => ledgerRow(chargeName(c), usd(of(c.id)) ?? GAP)).join("")}
             ${ledgerTotal(t.colTotal, usd(riderTotal) ?? GAP)}
           </ul>
         </div>
@@ -390,12 +394,16 @@ const esPrefix = lang === "es" ? "/es" : "";
           <p class="text-xs font-bold uppercase tracking-caps text-cab-yellow">${esc(t.driverColH)}</p>
           <ul class="mt-4 text-[15px]">
             ${ledgerRow(t.exampleFare, usd(ex.fare) ?? GAP)}
-            ${driverPass.map((c) => ledgerRow(chargeName(c), `−${usd(of(c.id)) ?? GAP}`)).join("")}
-            ${ledgerTotal(t.driverTotalCard, usd(driverCard) ?? GAP)}
+            ${driverCharges.map((c) => ledgerRow(chargeName(c), `−${usd(of(c.id)) ?? GAP}`)).join("")}
+            ${ledgerTotal(cardOnly.length ? t.driverTotalCard : t.colTotal, usd(driverCard) ?? GAP)}
           </ul>
-          <p class="text-[12.5px] text-paper/50">${esc(t.cashNotePre)}<span class="font-bold text-paper/75">${esc(
-            usd(driverCash) ?? GAP,
-          )}</span>${esc(t.cashNotePost)}</p>
+          ${
+            cardOnly.length
+              ? `<p class="text-[12.5px] text-paper/50">${esc(t.cashNotePre)}<span class="font-bold text-paper/75">${esc(
+                  usd(driverCash) ?? GAP,
+                )}</span>${esc(t.cashNotePost)}</p>`
+              : ""
+          }
         </div>
       </div>`;
   }
