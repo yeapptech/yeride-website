@@ -20,7 +20,6 @@ const EXEMPT = new Set(["404", "redirect"]);
 // The list cannot go stale: an entry whose twin now exists, or whose EN page has
 // gone, fails the check.
 const PENDING = {
-  index: "#37 — core audience pages",
   "fare-estimate": "#38 — fare-estimate restyle",
   about: "#39 — utility pages",
   contact: "#39 — utility pages",

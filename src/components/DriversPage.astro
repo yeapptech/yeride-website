@@ -1,0 +1,98 @@
+---
+// /drivers and /es/drivers — copy verbatim from docs/copy-map.md §3.2, on the
+// "The Hail" language (#33): Cab Yellow hero, Ink pillar band, paper landing.
+//
+// Pillars are the spine, in docs/messaging.md order. The Ink band is a stack of
+// identically-shaped pillar sections — H2 plus a support paragraph — so lifting
+// the driver pillar-2 gate is an insert, not a redesign (#43).
+//
+// This one component renders both routes, so the slot below is marked once and
+// is the insertion point on /drivers and /es/drivers alike.
+import { driversCopy } from "../i18n/audienceCopy";
+import type { Lang } from "../i18n/feesCopy";
+import PreRegistrationForm from "./PreRegistrationForm.astro";
+import AvailabilityBlock from "./AvailabilityBlock.astro";
+
+export interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = driversCopy[lang];
+const esPrefix = lang === "es" ? "/es" : "";
+---
+
+<main>
+  {/* YELLOW GROUND — pillar 1 leads the page */}
+  <section class="bg-cab-yellow">
+    <div class="mx-auto w-full max-w-7xl px-5 pb-14 pt-4 sm:px-6 sm:pb-20 md:pb-24 md:pt-8">
+      <p class="text-xs font-bold uppercase tracking-caps text-ink/60">
+        {t.eyebrow}
+      </p>
+      <h1
+        class="mt-3 max-w-4xl font-extrabold tracking-headline text-[2rem] leading-[1.06] text-ink sm:text-[2.75rem] md:text-[clamp(3rem,6vw,4.5rem)] md:leading-[1.0]"
+      >
+        {t.h1}
+      </h1>
+      <p
+        class="mt-4 max-w-2xl text-[16px] leading-relaxed text-ink/75 sm:text-[18px] md:mt-6 md:text-[clamp(1.05rem,1.5vw,1.25rem)]"
+      >
+        {t.support}
+      </p>
+    </div>
+  </section>
+
+  {/* INK BAND — the rest of the pillar stack */}
+  <section class="bg-ink">
+    <div
+      class="mx-auto max-w-7xl divide-y divide-paper/15 px-5 py-4 sm:px-6 md:py-8"
+    >
+      {/* Gated driver pillar 2 is inserted here, between pillar 1 and pillar 3
+          (#43). Nothing occupies the slot at launch — no string, commented out
+          or otherwise — so the copy gate stays absolute. Its authored EN/ES pair
+          lives in the brand repo's docs/messaging.md, Core message set →
+          Drivers → 2. */}
+      <section class="py-10 md:py-14">
+        <h2
+          class="max-w-3xl font-extrabold tracking-headline text-[1.6rem] leading-[1.15] text-paper sm:text-[2rem] md:text-[clamp(2rem,3.2vw,2.5rem)]"
+        >
+          {t.pillar3H2}
+        </h2>
+        <p
+          class="mt-3 max-w-2xl text-[16px] leading-relaxed text-paper/70 sm:text-[17px] md:mt-4"
+        >
+          {t.pillar3Support}
+        </p>
+      </section>
+    </div>
+  </section>
+
+  {/* PAPER LANDING — the fee pointer, then the form */}
+  <section class="bg-paper">
+    <div class="mx-auto max-w-7xl px-5 sm:px-6">
+      <div
+        class="flex flex-col gap-3 border-b border-ink/10 py-8 md:flex-row md:items-baseline md:justify-between md:gap-10 md:py-10"
+      >
+        <h3 class="font-extrabold tracking-headline text-[1.25rem] text-ink sm:text-[1.4rem]">
+          {t.feeH3}
+        </h3>
+        <a
+          href={`${esPrefix}/fees`}
+          class="inline-flex shrink-0 items-center gap-2 text-[17px] font-bold text-ink underline underline-offset-4 hover:no-underline"
+        >
+          {t.feeLink}
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+
+      <div class="max-w-2xl py-10 md:py-14">
+        <PreRegistrationForm
+          lang={lang}
+          role="driver"
+          heading={t.formHeading}
+          sub={t.formSub}
+        />
+        <AvailabilityBlock lang={lang} />
+      </div>
+    </div>
+  </section>
+</main>

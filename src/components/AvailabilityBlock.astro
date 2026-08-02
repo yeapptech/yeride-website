@@ -1,0 +1,41 @@
+---
+// The availability block — copy-map §2.1. Runs directly beneath the
+// pre-registration form on /drivers and /riders: the page's honest statement of
+// what exists today.
+//
+// There is NO App Store badge. There is no App Store listing — the badge that
+// shipped before linked to TestFlight, which is not what an App Store badge
+// means. It stays out until a public listing exists (§2.1), and the asset is
+// deleted so it cannot be re-added by autocomplete.
+import { availabilityCopy } from "../i18n/formCopy";
+import type { Lang } from "../i18n/feesCopy";
+
+export interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = availabilityCopy[lang];
+
+// Google's badge asset only exists here in English; the ES page carries the
+// Spanish alt text and links to the Spanish store listing.
+const playHref = `https://play.google.com/store/apps/details?id=app.yeride&hl=${
+  lang === "es" ? "es_419" : "en_US"
+}`;
+---
+
+<div class="mt-8">
+  <p class="text-[16px] font-bold text-ink">{t.lead}</p>
+  <a href={playHref} class="mt-3 inline-block">
+    <img
+      src="/images/GetItOnGooglePlay_Badge_Web_color_English.png"
+      alt={t.playAlt}
+      class="h-12 w-auto"
+    />
+  </a>
+  <p class="mt-3 text-[15px] text-ink/60">
+    <a
+      href="https://testflight.apple.com/join/99zjYHZ4"
+      class="underline underline-offset-2 hover:text-ink">{t.ios}</a
+    >
+  </p>
+</div>
