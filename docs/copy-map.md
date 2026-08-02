@@ -274,10 +274,19 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 > Neither charge it describes exists. Insurance has not been sourced from a carrier yet
 > (#48). Card processing is not YeRide's to pass through at all: drivers are onboarded as
 > Stripe **standard** Connect accounts on **direct charges**, so Stripe bills the driver's
-> own connected account and the platform never touches it. The family-2 heading, lead,
-> insurance note and card note below are therefore **suspended** — kept for when #48 gives
-> them members again, gated by #41 until then. The lead and the two meta descriptions were
-> corrected in production on 2026-08-01 for the same reason.
+> own connected account and the platform never touches it. The family-2 heading, lead and
+> insurance note below are therefore **suspended** — kept for when #48 gives them members
+> again, gated by #41 until then. The lead and the two meta descriptions were corrected in
+> production on 2026-08-01 for the same reason.
+>
+> **Card processing is now its own section, not a family-2 note.** The old "Card note" row
+> is gone, replaced by the **Stripe H2 / body / link** rows below. Filing it under "passed
+> through at cost" implied YeRide handles the money, which it does not — Stripe bills the
+> driver directly. It sits **in neither family**, after the example and before surge, and is
+> **static**: like surge, it holds in every fetch state, because it never comes from the
+> fetch. It carries **no figure** — YeRide neither sets nor controls Stripe's rate, and with
+> standard Connect accounts it is between the driver and Stripe, so naming one would assert a
+> third party's pricing and break § 0.4. The link does that job. Shipped 2026-08-02.
 >
 > **The ledger's sides were backwards.** This section had the rider paying "metered fare +
 > YeRide tech fees + rider insurance share". In reality **every YeRide charge comes out of
@@ -289,10 +298,16 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 > YeRide's published charges. The site now splits the ledger by `payer` alone, never by
 > family.
 >
-> **Still open:** the driver's total cannot be exact on card fares, because Stripe's fee has
-> no publishable amount — YeRide neither sets it nor controls it, and with standard Connect
-> it can differ per account. That needs a qualitative note, and `getFeeSchedule` still
-> returns `example: null`, so the ledger stays withheld meanwhile.
+> **The driver's total is labelled for what it excludes.** Stripe's fee has no publishable
+> amount, so the driver's column cannot be exact on a card fare — a bare "Total" would
+> overstate take-home. It reads **"Total — before card processing"**, with the Stripe section
+> immediately below answering it. The "Total — card fare" label returns automatically if a
+> card-only charge is ever itemised; the cash note is conditional on the same thing, and
+> renders for nobody today.
+>
+> **Still open:** `getFeeSchedule` returns `example: null`, so the ledger stays withheld in
+> production regardless, and `pickupBandwidthCharge` publishes a gap because its expression
+> is not summarisable. Both are yeapptech/yeride-functions#21.
 
 | Slot | EN | ES |
 |---|---|---|
@@ -311,7 +326,6 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 | Family 2 H2 **(SUSPENDED — #48)** | Passed through at cost — zero markup | Trasladados al costo — sin recargo |
 | Family 2 lead **(SUSPENDED — #48)** | Costs YeRide forwards without touching. | Costos que YeRide traslada sin tocar. |
 | Insurance note **(SUSPENDED — #48)** | The coverage Florida requires during a ride. The rider's share and the driver's share are separate, published lines. | La cobertura que la Florida exige durante el viaje. La parte de quien viaja y la de quien maneja son líneas separadas y publicadas. |
-| Card note **(SUSPENDED — #47)** | The card networks' standard rate, borne by the driver on card fares. Cash fares have none. | La tarifa estándar de las redes de tarjetas, que paga quien maneja en viajes con tarjeta. Los viajes en efectivo no la tienen. |
 | Example H2 | Example at today's rates | Ejemplo con las tarifas de hoy |
 | Example note | Computed from the schedule above, not a quote. | Calculado con el tarifario de arriba; no es una cotización. |
 | Example rider col H3 | What the rider pays | Lo que paga quien viaja |
@@ -319,8 +333,12 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 | Example row: fare | Metered fare | Tarifa del taxímetro |
 | Example row: fees | YeRide tech fees | Cargos de tecnología de YeRide |
 | Example row: rider total | Total | Total |
-| Example row: driver total | Total — card fare | Total — viaje con tarjeta |
-| Example cash note | On a cash fare there’s no card processing — the driver keeps {amount}. | En un viaje en efectivo no hay procesamiento de tarjeta — a quien maneja le quedan {amount}. |
+| Example row: driver total — **default** | Total — before card processing | Total — antes del procesamiento de tarjeta |
+| Example row: driver total — *only if a card-only charge is itemised* | Total — card fare | Total — viaje con tarjeta |
+| Example cash note **(conditional — renders only if a card-only charge is itemised; none is today)** | On a cash fare there’s no card processing — the driver keeps {amount}. | En un viaje en efectivo no hay procesamiento de tarjeta — a quien maneja le quedan {amount}. |
+| Stripe H2 | Card processing is Stripe’s, not YeRide’s | El procesamiento de tarjeta es de Stripe, no de YeRide |
+| Stripe body | On card fares, Stripe charges its processing fee directly to the driver’s own account. YeRide never touches it and doesn’t set it. Cash fares have none. | En los viajes con tarjeta, Stripe le cobra su cargo de procesamiento directamente a la cuenta de quien maneja. YeRide nunca lo toca ni lo fija. Los viajes en efectivo no lo tienen. |
+| Stripe link → `https://stripe.com/pricing` | See Stripe’s pricing | Mira los precios de Stripe |
 | Surge H2 | No surge today | Hoy no hay recargo por demanda |
 | Surge body | There is no demand surcharge right now. If we ever add one, these rules hold: it will be published and capped, shown to you before you request a ride, and 100% of it goes to the driver. YeRide's fees never change with demand. | Ahora mismo no hay recargo por demanda. Si algún día agregamos uno, estas reglas se cumplen: será publicado y con tope, se te muestra antes de pedir el viaje, y el 100% es para quien maneja. Los cargos de YeRide nunca cambian con la demanda. |
 | Fetched stamp | Fetched live · {timestamp} | En vivo · {timestamp} |
