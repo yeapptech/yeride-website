@@ -305,6 +305,12 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 > card-only charge is ever itemised; the cash note is conditional on the same thing, and
 > renders for nobody today.
 >
+> **Three rows below were authored during #40**, not by this map, and have been live since
+> 2026-08-01: **Other-charges H2 / lead**, the neutral panel an unclassifiable charge falls
+> into rather than being guessed into a family; and **Example withheld**, shown instead of a
+> short ledger when any charge is unclassified or has no amount in the example. They are
+> recorded here so the map matches what ships — the map owner may still reword them.
+>
 > **Still open:** `getFeeSchedule` returns `example: null`, so the ledger stays withheld in
 > production regardless, and `pickupBandwidthCharge` publishes a gap because its expression
 > is not summarisable. Both are yeapptech/yeride-functions#21.
@@ -326,8 +332,11 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 | Family 2 H2 **(SUSPENDED — #48)** | Passed through at cost — zero markup | Trasladados al costo — sin recargo |
 | Family 2 lead **(SUSPENDED — #48)** | Costs YeRide forwards without touching. | Costos que YeRide traslada sin tocar. |
 | Insurance note **(SUSPENDED — #48)** | The coverage Florida requires during a ride. The rider's share and the driver's share are separate, published lines. | La cobertura que la Florida exige durante el viaje. La parte de quien viaja y la de quien maneja son líneas separadas y publicadas. |
+| Other-charges H2 | Other charges | Otros cargos |
+| Other-charges lead | Charges the platform publishes that this page does not yet describe. | Cargos que publica la plataforma y que esta página todavía no describe. |
 | Example H2 | Example at today’s rates | Ejemplo con las tarifas de hoy |
 | Example note | Computed from the schedule above, not a quote. | Calculado con el tarifario de arriba; no es una cotización. |
+| Example withheld | The example is unavailable until every published charge is described above. | El ejemplo no está disponible hasta que cada cargo publicado esté descrito arriba. |
 | Example rider col H3 | What the rider pays | Lo que paga quien viaja |
 | Example driver col H3 | What the driver keeps | Lo que le queda a quien maneja |
 | Example row: fare | Metered fare | Tarifa del taxímetro |
