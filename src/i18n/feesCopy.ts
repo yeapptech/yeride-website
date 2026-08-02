@@ -35,6 +35,7 @@ export const feesCopy = {
       "Flat, per-trip, published. This is how YeRide earns — never a percentage of the fare.",
     // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)
     family2H2: "Passed through at cost — zero markup",
+    // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)
     family2Lead: "Costs YeRide forwards without touching.",
     insuranceNote:
       // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)
@@ -105,6 +106,7 @@ export const feesCopy = {
       "Fijos, por viaje y publicados. Así gana YeRide — nunca un porcentaje de la tarifa.",
     // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)
     family2H2: "Trasladados al costo — sin recargo",
+    // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)
     family2Lead: "Costos que YeRide traslada sin tocar.",
     insuranceNote:
       // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)

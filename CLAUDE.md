@@ -18,8 +18,10 @@ npm run preview    # Preview production build locally
 No test runner and no linter are configured. `npm run build` is the only automated verification gate. It runs three things in order, and any one of them fails the build:
 
 1. **`scripts/check-route-parity.mjs`** — every route under `src/pages` has its `/es/` twin. `404` and `redirect` are exempt by name (single file, language switched client-side). Routes whose twin is not built yet sit in a `PENDING` map naming the ticket that retires them; an entry whose twin now exists fails, so the list cannot go stale.
-2. **`scripts/check-copy-gate.mjs`** — gated and never-claimed strings (`docs/copy-map.md` §5) must not reach the site. Comments are stripped before matching, since they never ship. A string that must stay in the source without running is exempted one line at a time with `// copy-gate-allow: <why> (#ticket)` on the matching line or the line above; the pragma must name a ticket, and a pragma that stops matching anything fails the build.
+2. **`scripts/check-copy-gate.mjs`** — gated and never-claimed strings (`docs/copy-map.md` §5, on the unmerged `copy-map/en-es` branch) must not reach the site. Scans `src/` and `public/`. See the script header for the escape hatch and, more importantly, for what the check *cannot* catch — it is a line matcher over source text, so a phrase broken across a tag, an entity or a newline slips it, as does copy arriving from the fee-schedule endpoint at runtime.
 3. **`astro check`** — a type error fails the build.
+
+`.github/workflows/checks.yml` runs items 1–2 on every pull request; `deploy-all.yml` runs the full chain on `main` and gates deployment on it.
 
 ## Environment Variables
 

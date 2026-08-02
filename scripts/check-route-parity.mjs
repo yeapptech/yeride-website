@@ -60,6 +60,11 @@ for (const route of [...es].sort()) {
 }
 
 for (const [route, ticket] of Object.entries(PENDING)) {
+  // Same rule the copy-gate pragma follows: an escape hatch must name the ticket
+  // that closes it, or it has no expiry.
+  if (!/#\d+(?!\w)/.test(ticket)) {
+    errors.push(`PENDING entry "${route}" must name the ticket that retires it, e.g. "#37"`);
+  }
   if (!en.has(route)) {
     errors.push(`PENDING lists "${route}", but src/pages has no such English page — drop the entry`);
   } else if (es.has(route)) {
