@@ -143,20 +143,30 @@ Fee line names arrive from the database as a single `description` string per cha
 keeps an ES lookup keyed by the charge `id`, used by **both** `/fees` and `/fare-estimate`.
 
 ```ts
-// src/i18n/feeLabels.ts
-export const feeLabels: Record<string, { en: string; es: string }> = {
-  'booking-fee':     { en: 'Booking fee',     es: 'Cargo por reserva' },
-  'dispatch-fee':    { en: 'Dispatch fee',    es: 'Cargo por despacho' },
-  'platform-fee':    { en: 'Platform fee',    es: 'Cargo de plataforma' },
-  'trip-insurance':  { en: 'Trip insurance',  es: 'Seguro del viaje' },
-  'card-processing': { en: 'Card processing', es: 'Procesamiento de tarjeta' },
+// src/i18n/feeLabels.ts — ids VERIFIED against production 2026-08-01 (#47)
+export const feeLabels: Record<string, ChargeLabel> = {
+  bookingCharge:          { en: 'Booking charge',              es: 'Cargo por reserva' },
+  dispatchCharge:         { en: 'Dispatch charge',             es: 'Cargo por despacho' },
+  pickupBandwidthCharge:  { en: 'Ride technology — to pickup', es: 'Tecnología del viaje — hasta la recogida' },
+  dropoffBandwidthCharge: { en: 'Ride technology — on trip',   es: 'Tecnología del viaje — en ruta' },
 };
 ```
 
-Charge ids must be read off production before the build ticket lands — the keys above are the
-names `docs/positioning.md` uses, not verified ids. An **unknown id falls back to the backend
-`description` verbatim in both languages**, and the build check (#41) fails on any id the map
-doesn't cover, so a new charge is a visible, fixable miss rather than a silent English leak.
+**Amended 2026-08-02 (#47).** The earlier keys here (`booking-fee`, `platform-fee`,
+`trip-insurance`, `card-processing`) were the names `docs/positioning.md` uses, not real ids.
+Production uses camelCase and a different set entirely, so every charge fell through to the
+fallback and leaked its English `description` onto `/es/fees` until this was corrected.
+
+The two "bandwidth" charges are internal jargon for **the technology YeRide provides the driver
+to run a ride** — directions, maps, tracking, payments — metered per minute across the two legs.
+They are named for what they are; the admin console still calls them bandwidth.
+
+The real map also carries a `family` and a `payer` per charge, because neither is a database
+field and neither can be inferred: see § 3.4 on why `payer` is `driver` for all four.
+
+An **unknown id falls back to the backend `description` verbatim in both languages**, and the
+build check (#41) fails on any id the map doesn't cover, so a new charge is a visible, fixable
+miss rather than a silent English leak.
 
 ---
 
@@ -182,7 +192,7 @@ moved **up into the hero** and `/fees` demoted to the nav and the paper strip.
 |---|---|---|
 | Eyebrow, left (Cab Yellow text — legal on Ink only) | For drivers | Para quien maneja |
 | H2 left **(canonical)** | Keep what you earn. | Lo que ganas es tuyo. |
-| Support left | No commission. Flat, published tech fees — plus insurance and card processing at cost, zero markup. | Sin comisión. Tarifas de tecnología fijas y publicadas — más el seguro y el procesamiento de tarjeta al costo, sin recargo. |
+| Support left | No commission. Flat, published tech fees — never a percentage of the fare. | Sin comisión. Tarifas de tecnología fijas y publicadas — nunca un porcentaje de la tarifa. |
 | Eyebrow, right | For riders | Para quien viaja |
 | H2 right **(canonical)** | Pay what the ride is worth. | Paga lo justo. |
 | Support right | Your fare goes to the person driving — not to a percentage cut. | Tu tarifa es para la persona que maneja — no para la comisión de una app. |
@@ -209,7 +219,7 @@ is deliberately not decided here.
 |---|---|---|
 | Eyebrow | For drivers | Para quien maneja |
 | H1 **(canonical, pillar 1)** | Keep what you earn. | Lo que ganas es tuyo. |
-| Support | YeRide takes no commission. You pay flat, published tech fees — plus insurance and card processing at cost, zero markup. No subscriptions, no hidden fees. | YeRide no cobra comisión. Pagas tarifas de tecnología fijas y publicadas — más el seguro y el procesamiento de tarjeta al costo, sin recargo. Sin suscripciones, sin cargos escondidos. |
+| Support | YeRide takes no commission. You pay flat, published tech fees — never a percentage of the fare. No subscriptions, no hidden fees. | YeRide no cobra comisión. Pagas tarifas de tecnología fijas y publicadas — nunca un porcentaje de la tarifa. Sin suscripciones, sin cargos escondidos. |
 | H2 **(canonical, pillar 3)** | Trying costs nothing. | Probar no cuesta nada. |
 | Support | Run YeRide alongside Uber and Lyft. You were driving anyway. | Usa YeRide junto a Uber y Lyft. Igual ya estabas manejando. |
 | *(gated pillar-2 slot — #43)* | — | — |
@@ -258,10 +268,36 @@ cancellation fee. The example renders as a two-column **rider-pays / driver-keep
 breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per the
 #36 prototype reactions.)*
 
+> **Amended 2026-08-02 (#47) — read this before executing the table below.**
+>
+> **The pass-through family currently has zero members, and its rows must not ship.**
+> Neither charge it describes exists. Insurance has not been sourced from a carrier yet
+> (#48). Card processing is not YeRide's to pass through at all: drivers are onboarded as
+> Stripe **standard** Connect accounts on **direct charges**, so Stripe bills the driver's
+> own connected account and the platform never touches it. The family-2 heading, lead,
+> insurance note and card note below are therefore **suspended** — kept for when #48 gives
+> them members again, gated by #41 until then. The lead and the two meta descriptions were
+> corrected in production on 2026-08-01 for the same reason.
+>
+> **The ledger's sides were backwards.** This section had the rider paying "metered fare +
+> YeRide tech fees + rider insurance share". In reality **every YeRide charge comes out of
+> the driver's side** (`yeride-functions lib/payments.js` L268–310): on card the rider is
+> charged `priceFare` — the metered fare and nothing else — while `appChargesTotal` is taken
+> from the driver's connected account as the application fee; on cash the rider pays the
+> driver directly and YeRide then bills the driver's account for the same total. So the
+> rider's column is **one line, the metered fare**, and the driver's column is the fare minus
+> YeRide's published charges. The site now splits the ledger by `payer` alone, never by
+> family.
+>
+> **Still open:** the driver's total cannot be exact on card fares, because Stripe's fee has
+> no publishable amount — YeRide neither sets it nor controls it, and with standard Connect
+> it can differ per account. That needs a qualitative note, and `getFeeSchedule` still
+> returns `example: null`, so the ledger stays withheld meanwhile.
+
 | Slot | EN | ES |
 |---|---|---|
 | H1 | The fee schedule | El tarifario |
-| Lead | Every fee YeRide charges, and every cost it passes through. Current amounts, fetched live. | Cada cargo que cobra YeRide y cada costo que traslada. Montos actuales, en vivo. |
+| Lead | Every fee YeRide charges. Current amounts, fetched live. | Cada cargo que cobra YeRide. Montos actuales, en vivo. |
 | Area picker label | Service area | Área de servicio |
 | Rate card H2 | The rate card | El tarifario base |
 | Rate row: base | Base | Base |
@@ -272,10 +308,10 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 | Unit note | Metered per kilometer; the per-mile figure is an exact conversion. | Se mide por kilómetro; la cifra por milla es una conversión exacta. |
 | Family 1 H2 | YeRide tech fees | Cargos de tecnología de YeRide |
 | Family 1 lead | Flat, per-trip, published. This is how YeRide earns — never a percentage of the fare. | Fijos, por viaje y publicados. Así gana YeRide — nunca un porcentaje de la tarifa. |
-| Family 2 H2 | Passed through at cost — zero markup | Trasladados al costo — sin recargo |
-| Family 2 lead | Costs YeRide forwards without touching. | Costos que YeRide traslada sin tocar. |
-| Insurance note | The coverage Florida requires during a ride. The rider's share and the driver's share are separate, published lines. | La cobertura que la Florida exige durante el viaje. La parte de quien viaja y la de quien maneja son líneas separadas y publicadas. |
-| Card note | The card networks' standard rate, borne by the driver on card fares. Cash fares have none. | La tarifa estándar de las redes de tarjetas, que paga quien maneja en viajes con tarjeta. Los viajes en efectivo no la tienen. |
+| Family 2 H2 **(SUSPENDED — #48)** | Passed through at cost — zero markup | Trasladados al costo — sin recargo |
+| Family 2 lead **(SUSPENDED — #48)** | Costs YeRide forwards without touching. | Costos que YeRide traslada sin tocar. |
+| Insurance note **(SUSPENDED — #48)** | The coverage Florida requires during a ride. The rider's share and the driver's share are separate, published lines. | La cobertura que la Florida exige durante el viaje. La parte de quien viaja y la de quien maneja son líneas separadas y publicadas. |
+| Card note **(SUSPENDED — #47)** | The card networks' standard rate, borne by the driver on card fares. Cash fares have none. | La tarifa estándar de las redes de tarjetas, que paga quien maneja en viajes con tarjeta. Los viajes en efectivo no la tienen. |
 | Example H2 | Example at today's rates | Ejemplo con las tarifas de hoy |
 | Example note | Computed from the schedule above, not a quote. | Calculado con el tarifario de arriba; no es una cotización. |
 | Example rider col H3 | What the rider pays | Lo que paga quien viaja |
@@ -449,12 +485,12 @@ structured data, and analytics remain out of scope for this ticket.
 |---|---|---|
 | `/` | Your ride, fair and clear. \| YeRide | Rideshare built in South Florida. No commission, flat published fees, and a rate card anyone can read. |
 | `/es/` | Tu viaje, justo y claro. \| YeRide | Transporte compartido hecho en el Sur de la Florida. Sin comisión, tarifas fijas y publicadas, y un tarifario que cualquiera puede leer. |
-| `/drivers` | Keep what you earn. \| YeRide for drivers | No commission — flat, published tech fees plus insurance and card processing at cost. Run YeRide alongside Uber and Lyft. |
-| `/es/drivers` | Lo que ganas es tuyo. \| YeRide | Sin comisión — tarifas de tecnología fijas y publicadas, más seguro y procesamiento de tarjeta al costo. Usa YeRide junto a Uber y Lyft. |
+| `/drivers` | Keep what you earn. \| YeRide for drivers | No commission — YeRide's fees are flat, published, and never a percentage of the fare. Run YeRide alongside Uber and Lyft. |
+| `/es/drivers` | Lo que ganas es tuyo. \| YeRide | Sin comisión — los cargos de YeRide son fijos, publicados y nunca un porcentaje de la tarifa. Usa YeRide junto a Uber y Lyft. |
 | `/riders` | Pay what the ride is worth. \| YeRide for riders | Published rates — base, miles, minutes. The same math every trip, and every fee published. Card or cash. |
 | `/es/riders` | Paga lo justo. \| YeRide | Tarifas publicadas — base, millas, minutos. Las mismas cuentas en cada viaje y cada cargo publicado. Tarjeta o efectivo. |
-| `/fees` | The fee schedule \| YeRide | Every fee YeRide charges and every cost it passes through at cost, with current amounts fetched live. |
-| `/es/fees` | El tarifario \| YeRide | Cada cargo que cobra YeRide y cada costo que traslada al costo, con los montos actuales en vivo. |
+| `/fees` | The fee schedule \| YeRide | Every fee YeRide charges, with current amounts fetched live. |
+| `/es/fees` | El tarifario \| YeRide | Cada cargo que cobra YeRide, con los montos actuales en vivo. |
 | `/fare-estimate` | Estimate a fare \| YeRide | See what a ride would cost at today's published rates, with every fee itemized. Estimates are estimates — the meter decides. |
 | `/es/fare-estimate` | Estimar tarifa \| YeRide | Mira lo que costaría un viaje con las tarifas publicadas de hoy, con cada cargo detallado. Un estimado es un estimado — el taxímetro decide. |
 | `/about` | About YeRide \| YeRide | Why YeRide exists, who built it, and the four things it holds to. |
@@ -480,6 +516,16 @@ The copy-gate lint (#41) fails the build on any of these outside an explicitly a
 
 - `See the math` · `Cuentas claras` · `see the math on every trip`
 - any copy claiming a visible per-trip fee breakdown in the app
+
+**Gated on YeRide having insurance coverage** *(added 2026-08-02, #47; tracked by #48)* —
+there is no insurance today, and card processing is not a YeRide pass-through, so the
+"passed through at cost" family has zero members. These must fail the build until #48 lands:
+
+- `at cost` · `al costo` · `passes through` / `pass-through` · `zero markup` · `sin recargo`
+- `insurance` · `seguro`, wherever it claims YeRide carries or forwards coverage
+
+Stripe's fee **can** still be described honestly — the driver pays it directly from their own
+connected account — but never with a YeRide-published amount, since YeRide does not set it.
 
 **Never claimed** — these never run, gate or no gate:
 
@@ -507,4 +553,5 @@ Rider pillar 2 ("Same math every trip." / "Las mismas cuentas en cada viaje.") i
 6. **Driver pillar-2 slot placement** is [#43](https://github.com/yeapptech/yeride-website/issues/43)'s
    decision, not this map's. § 3.2 marks the slot and stops there.
 7. **Verify `fare` vs `appChargesTotal`** before shipping the "Fees included" heading (§ 3.5).
-8. **Charge ids in § 2.3 are unverified** — read them off production before the build.
+8. ~~**Charge ids in § 2.3 are unverified**~~ — done: read off production 2026-08-01 and
+   corrected in § 2.3 (#47). None of the guessed ids existed.
