@@ -10,11 +10,16 @@ YeRide website — a static marketing, pre-registration, and fare-estimate site 
 
 ```bash
 npm run dev        # Dev server at http://localhost:4321
-npm run build      # astro check (type-check) + astro build → dist/
+npm run checks     # Route parity + copy gate (both fast, no deps)
+npm run build      # npm run checks + astro check (type-check) + astro build → dist/
 npm run preview    # Preview production build locally
 ```
 
-No test runner and no linter are configured. `npm run build` is the only automated verification gate — `astro check` runs first, so a type error fails the build.
+No test runner and no linter are configured. `npm run build` is the only automated verification gate. It runs three things in order, and any one of them fails the build:
+
+1. **`scripts/check-route-parity.mjs`** — every route under `src/pages` has its `/es/` twin. `404` and `redirect` are exempt by name (single file, language switched client-side). Routes whose twin is not built yet sit in a `PENDING` map naming the ticket that retires them; an entry whose twin now exists fails, so the list cannot go stale.
+2. **`scripts/check-copy-gate.mjs`** — gated and never-claimed strings (`docs/copy-map.md` §5) must not reach the site. Comments are stripped before matching, since they never ship. A string that must stay in the source without running is exempted one line at a time with `// copy-gate-allow: <why> (#ticket)` on the matching line or the line above; the pragma must name a ticket, and a pragma that stops matching anything fails the build.
+3. **`astro check`** — a type error fails the build.
 
 ## Environment Variables
 

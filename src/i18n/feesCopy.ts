@@ -33,9 +33,11 @@ export const feesCopy = {
     family1H2: "YeRide tech fees",
     family1Lead:
       "Flat, per-trip, published. This is how YeRide earns — never a percentage of the fare.",
+    // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)
     family2H2: "Passed through at cost — zero markup",
     family2Lead: "Costs YeRide forwards without touching.",
     insuranceNote:
+      // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)
       "The coverage Florida requires during a ride. The rider's share and the driver's share are separate, published lines.",
     cardNote:
       "The card networks' standard rate, borne by the driver on card fares. Cash fares have none.",
@@ -101,9 +103,11 @@ export const feesCopy = {
     family1H2: "Cargos de tecnología de YeRide",
     family1Lead:
       "Fijos, por viaje y publicados. Así gana YeRide — nunca un porcentaje de la tarifa.",
+    // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)
     family2H2: "Trasladados al costo — sin recargo",
     family2Lead: "Costos que YeRide traslada sin tocar.",
     insuranceNote:
+      // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)
       "La cobertura que la Florida exige durante el viaje. La parte de quien viaja y la de quien maneja son líneas separadas y publicadas.",
     cardNote:
       "La tarifa estándar de las redes de tarjetas, que paga quien maneja en viajes con tarjeta. Los viajes en efectivo no la tienen.",

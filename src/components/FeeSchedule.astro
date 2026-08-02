@@ -294,6 +294,7 @@ const esPrefix = lang === "es" ? "/es" : "";
   // There is deliberately no card-processing note: card processing is not a
   // YeRide charge and is disclosed in its own section instead (copy-map §3.4).
   const passthroughNotes: Record<string, string> = {
+    // copy-gate-allow: no charge carries the passthrough family, so this note has nothing to attach to (#48)
     "trip-insurance-driver": t.insuranceNote,
   };
 
