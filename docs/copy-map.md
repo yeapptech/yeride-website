@@ -100,10 +100,6 @@ dropdown is removed. Heading differs by page (§ 3.2, § 3.3); everything below 
 | Email placeholder | you@example.com | tucorreo@ejemplo.com |
 | Phone label | Phone | Teléfono |
 | Phone placeholder | +1 305 555 0100 | +1 305 555 0100 |
-| Password label | Password | Contraseña |
-| Password placeholder | Create a password | Crea una contraseña |
-| Confirm label | Confirm password | Confirma la contraseña |
-| Confirm placeholder | Type it again | Escríbela otra vez |
 | Submit | Pre-register | Pre-regístrate |
 | Submitting | Sending… | Enviando… |
 
@@ -114,8 +110,6 @@ dropdown is removed. Heading differs by page (§ 3.2, § 3.3); everything below 
 | Required field empty | This one's required. | Este campo es obligatorio. |
 | Email malformed | That doesn't look like an email address. | Ese correo no parece válido. |
 | Phone malformed | Include the country code, like +1 305 555 0100. | Incluye el código de país, como +1 305 555 0100. |
-| Password too short | Use at least 8 characters. | Usa al menos 8 caracteres. |
-| Passwords differ | Those two don't match. | Las dos no coinciden. |
 
 **Server outcomes — by failure class. The raw API string is logged, never displayed.**
 
@@ -123,6 +117,7 @@ dropdown is removed. Heading differs by page (§ 3.2, § 3.3); everything below 
 |---|---|---|
 | Success | You're pre-registered. | Ya estás pre-registrado. |
 | Email already registered | That email is already registered. | Ese correo ya está registrado. |
+| Phone already registered | That phone number is already registered. | Ese teléfono ya está registrado. |
 | Rejected input (4xx) | Check the details and try again. | Revisa los datos e intenta de nuevo. |
 | Network / unreachable | We couldn't reach the server. Try again in a moment. | No pudimos conectar. Intenta de nuevo en un momento. |
 | Anything else (5xx) | Something went wrong. Try again. | Algo salió mal. Intenta de nuevo. |
@@ -130,12 +125,33 @@ dropdown is removed. Heading differs by page (§ 3.2, § 3.3); everything below 
 The success state renders the availability block (§ 2.1) beneath the success line, so the
 person is told where the app actually is.
 
-> **Flagged, decided against changing (2026-07-31):** this form POSTs to
-> `${PUBLIC_API_URL}v1/auth/register` and creates a real production account, and Android is
-> already live — so "pre-register" is a label the product has outgrown. Keeping the
+**Amended 2026-08-02 (#37)** — read off the endpoint while building the audience pages.
+`POST ${PUBLIC_API_URL}v1/auth/register` is yeride-admin-api's `auth` controller
+(`functions/src/controllers/auth/auth.controller.ts`), and it settles three things this
+section had wrong:
+
+1. **The password fields are cut.** The controller destructures `firstName`, `lastName`,
+   `email`, `phoneNumber` and `role`, and nothing else — `password` is commented out of its
+   own `RegisterUserData` interface. A password typed here would be sent over the wire and
+   dropped, while telling the person they now hold a credential they do not. Both field rows
+   and both password validation rows are gone. (They were already commented out in the
+   shipped form; this makes that deliberate.)
+2. **A duplicate phone number gets its own line.** The controller dedupes on email *and*
+   phone against the `whitelist` collection, returning 409
+   `pre-registration/phone-number-already-in-use` for the second — so the outcome table now
+   carries that class. Without it a repeat phone was told the wrong thing about their email.
+   Sites match on the `code`, not the status.
+3. **The phone is normalised to E.164 before the POST.** Dedupe is an exact string match and
+   every existing row was written as `+1XXXXXXXXXX`, so "+1 305 555 0100" as typed must go
+   over the wire as `+13055550100`.
+
+> **Flagged, decided against changing (2026-07-31; premise corrected 2026-08-02):** Android
+> is already live, so "pre-register" is a label the product has outgrown. Keeping the
 > pre-registration framing was an explicit call. The copy above therefore never says
 > "early access", "coming soon", or "when we launch": pairing the label with § 2.1 keeps
-> the page truthful even though the label is loose.
+> the page truthful even though the label is loose. The original note said this form
+> "creates a real production account" — it does not. It adds a row to `whitelist` with
+> `registrationCompletedAt: null`, which is pre-registration exactly as labelled.
 
 ### 2.3 Fee label map
 
