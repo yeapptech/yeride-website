@@ -326,7 +326,7 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 | Family 2 H2 **(SUSPENDED — #48)** | Passed through at cost — zero markup | Trasladados al costo — sin recargo |
 | Family 2 lead **(SUSPENDED — #48)** | Costs YeRide forwards without touching. | Costos que YeRide traslada sin tocar. |
 | Insurance note **(SUSPENDED — #48)** | The coverage Florida requires during a ride. The rider's share and the driver's share are separate, published lines. | La cobertura que la Florida exige durante el viaje. La parte de quien viaja y la de quien maneja son líneas separadas y publicadas. |
-| Example H2 | Example at today's rates | Ejemplo con las tarifas de hoy |
+| Example H2 | Example at today’s rates | Ejemplo con las tarifas de hoy |
 | Example note | Computed from the schedule above, not a quote. | Calculado con el tarifario de arriba; no es una cotización. |
 | Example rider col H3 | What the rider pays | Lo que paga quien viaja |
 | Example driver col H3 | What the driver keeps | Lo que le queda a quien maneja |
@@ -340,10 +340,10 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 | Stripe body | On card fares, Stripe charges its processing fee directly to the driver’s own account. YeRide never touches it and doesn’t set it. Cash fares have none. | En los viajes con tarjeta, Stripe le cobra su cargo de procesamiento directamente a la cuenta de quien maneja. YeRide nunca lo toca ni lo fija. Los viajes en efectivo no lo tienen. |
 | Stripe link → `https://stripe.com/pricing` | See Stripe’s pricing | Mira los precios de Stripe |
 | Surge H2 | No surge today | Hoy no hay recargo por demanda |
-| Surge body | There is no demand surcharge right now. If we ever add one, these rules hold: it will be published and capped, shown to you before you request a ride, and 100% of it goes to the driver. YeRide's fees never change with demand. | Ahora mismo no hay recargo por demanda. Si algún día agregamos uno, estas reglas se cumplen: será publicado y con tope, se te muestra antes de pedir el viaje, y el 100% es para quien maneja. Los cargos de YeRide nunca cambian con la demanda. |
+| Surge body | There is no demand surcharge right now. If we ever add one, these rules hold: it will be published and capped, shown to you before you request a ride, and 100% of it goes to the driver. YeRide’s fees never change with demand. | Ahora mismo no hay recargo por demanda. Si algún día agregamos uno, estas reglas se cumplen: será publicado y con tope, se te muestra antes de pedir el viaje, y el 100% es para quien maneja. Los cargos de YeRide nunca cambian con la demanda. |
 | Fetched stamp | Fetched live · {timestamp} | En vivo · {timestamp} |
 | Loading | Loading current rates… | Cargando las tarifas actuales… |
-| Error | We couldn't load the current rates. Refresh, or [contact us](/contact). | No pudimos cargar las tarifas actuales. Recarga la página o [escríbenos](/contact). |
+| Error | We couldn’t load the current rates. Refresh, or [contact us](/contact). | No pudimos cargar las tarifas actuales. Recarga la página o [escríbenos](/contact). |
 | Estimate link → `/fare-estimate` | Estimate a fare | Estima una tarifa |
 
 **Formula-based charges** render as a plain-language rule from the endpoint's human-readable
