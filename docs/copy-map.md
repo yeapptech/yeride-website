@@ -212,23 +212,43 @@ The home page carries **no pre-registration form**. Its job is the fork.
 ### 3.2 `/drivers` and `/es/drivers`
 
 Pillars are the spine, in `docs/messaging.md` order. Driver pillar 2 is **gated and absent**;
-its slot placement belongs to [#43](https://github.com/yeapptech/yeride-website/issues/43) and
-is deliberately not decided here.
+its slot placement was decided in
+[#43](https://github.com/yeapptech/yeride-website/issues/43) and is recorded below.
 
 | Slot | EN | ES |
 |---|---|---|
 | Eyebrow | For drivers | Para quien maneja |
 | H1 **(canonical, pillar 1)** | Keep what you earn. | Lo que ganas es tuyo. |
 | Support | YeRide takes no commission. You pay flat, published tech fees — never a percentage of the fare. No subscriptions, no hidden fees. | YeRide no cobra comisión. Pagas tarifas de tecnología fijas y publicadas — nunca un porcentaje de la tarifa. Sin suscripciones, sin cargos escondidos. |
+| *(gated pillar-2 slot — #43)* | — | — |
 | H2 **(canonical, pillar 3)** | Trying costs nothing. | Probar no cuesta nada. |
 | Support | Run YeRide alongside Uber and Lyft. You were driving anyway. | Usa YeRide junto a Uber y Lyft. Igual ya estabas manejando. |
-| *(gated pillar-2 slot — #43)* | — | — |
 | Fee pointer H3 | Flat, published fees. No commission. | Tarifas fijas y publicadas. Sin comisión. |
 | Fee pointer link → `/fees` | See exactly what you pay | Mira exactamente lo que pagas |
 | Form heading | Pre-register as a driver | Pre-regístrate para manejar |
 | Form sub | Takes a minute. | Toma un minuto. |
 
 Form `role` is pre-set to `driver`. Availability block (§ 2.1) sits beneath the form.
+
+**The gated pillar-2 slot** (#43) sits between pillar 1 and pillar 3 — the canonical
+`docs/messaging.md` order — so the two money-transparency claims group, and "Trying costs
+nothing." stays next to the fee pointer and the form. When the gate lifts it takes the same
+shape as pillar 3: an H2 plus a support paragraph. Its authored EN/ES pair is **not duplicated
+here** — pull it from `docs/messaging.md` § Core message set → Drivers → 2, which is the
+binding source.
+
+At launch **nothing occupies the slot but a plain comment** naming #43, in `/drivers` and
+`/es/drivers` alike. No gated string enters `src/`, so the copy gate (§ 5, #41) stays absolute:
+any hit on "See the math" is a real failure with no allowlist entry. The comment is
+deliberately **not** a `copy-gate-allow` pragma — #41 fails the build on a pragma that matches
+nothing. Because the page is a stack of identically-shaped pillar sections, lifting the gate is
+an insert, not a redesign.
+
+**The home page never carries pillar 2.** § 3.1's Ink band is a symmetric 2-up fork; its job is
+to fork, not to carry a pillar set. **/riders reserves nothing** — rider pillar 2 is ungated
+(§ 5) and runs at launch in its natural position (§ 3.3). The two pages are symmetric in block
+vocabulary — eyebrow, pillars, fee pointer, form, availability — not in section count; at
+launch /riders runs one support couplet more, and that inverts once the driver gate lifts.
 
 **Uber and Lyft are named here and only here** — `docs/positioning.md` licenses driver-facing
 copy to say "run YeRide alongside Uber and Lyft", and says rider copy should not name them.
@@ -597,8 +617,10 @@ Rider pillar 2 ("Same math every trip." / "Las mismas cuentas en cada viaje.") i
 3. **`/es/about` is blocked** on the yeride-brand ES identity paragraph.
 4. **`/privacy-policy` and `/terms`** are blocked on the legal-rewrite ticket.
 5. **The ES Tally form** does not exist yet; `/es/contact` cannot ship without its id.
-6. **Driver pillar-2 slot placement** is [#43](https://github.com/yeapptech/yeride-website/issues/43)'s
-   decision, not this map's. § 3.2 marks the slot and stops there.
+6. ~~**Driver pillar-2 slot placement** is #43's decision, not this map's~~ — decided
+   ([#43](https://github.com/yeapptech/yeride-website/issues/43)) and written into § 3.2:
+   the slot sits between pillar 1 and pillar 3 on `/drivers` only, reserved at launch by a
+   plain comment and nothing else. The home page and `/riders` reserve nothing.
 7. ~~**Verify `fare` vs `appChargesTotal`**~~ — done 2026-08-02 (#47), and the answer killed
    the heading. `appChargesTotal` is **neither included in nor additive to** the rider's
    fare: it is the **driver's** cost in both payment flows. The rider is charged `priceFare`
