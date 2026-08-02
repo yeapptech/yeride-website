@@ -53,22 +53,31 @@ The site talks to two unrelated services; don't conflate them.
 
 `firebase-admin` is in `package.json` but unused in `src/`. Firebase Auth and Firestore are not used — only `firebase/functions`.
 
-### Page structure is inconsistent — check before editing shared UI
+### Page structure — one layout, thin pages
 
-There is no single layout. Each page declares its own `<html>`/`<head>`:
+Every page renders through the single `src/layouts/BaseLayout.astro` (wayfinder #35). **No
+page declares its own `<html>`/`<head>`**, and no page carries inline header or footer
+markup — `Header.astro` and `Footer.astro` have one caller each, `BaseLayout`. A navigation
+or footer change is therefore one edit, in one place.
 
-- `src/pages/404.astro` — the **only** page using `BaseLayout.astro`, which is also the only consumer of `navBar.astro`, `src/data/navData.ts`, and `src/styles/main.css` (Open Props from unpkg). `navData.ts` lists routes (`ride`, `drive`, `register`) that don't exist.
-- `src/pages/index.astro` — fully self-contained, with its own inline header and footer markup (does *not* use the `Header`/`Footer` components).
-- `about`, `contact`, `privacy-policy`, `fare-estimate` — self-contained `<html>` importing the `Header` and `Footer` components.
+Redesigned routes keep the page file thin — `BaseLayout` plus one component that holds the
+whole body (`HomePage`, `DriversPage`, `RidersPage`, `FeeSchedule`) — with the copy in
+`src/i18n/`. Follow that shape when adding a page. The pages still awaiting their redesign
+ticket (`about`, `contact`, `privacy-policy`, `fare-estimate`) sit on `BaseLayout` with
+their pre-redesign bodies inline.
 
-Consequence: a navigation or footer change usually needs edits in **both** `src/components/Header.astro` / `Footer.astro` **and** the inline copies in `index.astro`.
+`navBar.astro`, `src/data/navData.ts`, `src/styles/main.css` (Open Props from unpkg) and the
+`https://cdn.tailwindcss.com` script tags were all removed by #35. Tailwind comes from the
+`@astrojs/tailwind` integration and the brand preset alone — do not re-add a CDN tag.
 
-Also: `index`, `about`, `contact`, and `privacy-policy` load Tailwind from `https://cdn.tailwindcss.com` in `<head>`, *on top of* the `@astrojs/tailwind` build. `fare-estimate.astro` relies on the integration alone. When adding a page, match whichever surrounding page you're copying rather than assuming the integration is enough.
+Line endings are mixed and there is no `.gitattributes`: some older files are CRLF, most
+newer ones LF. Editing a CRLF file with a tool that rewrites it wholesale will convert it
+and bury your real change in a full-file diff.
 
 ### Other integrations
 
 - **Tally.so** — embedded contact form on `/contact` (form ID `mJa5J7`)
-- **Google Fonts** — Inter (400, 600, 700), linked per page
+- **Nunito** — the brand typeface, self-hosted via `@fontsource-variable/nunito` and imported once in `BaseLayout`; exposed as `font-brand`. The old per-page Google Fonts link to Inter is gone (#35)
 - `src/pages/redirect.astro` — bare HTML that bounces to the `yeride://register` deep link
 
 ## Coding Conventions

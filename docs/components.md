@@ -13,20 +13,27 @@ The base layout template for all pages.
 **Props:**
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
-| `title` | `string` | No | Page title |
+| `title` | `string` | yes | `<title>`, per copy-map §4 |
+| `description` | `string` | no | Meta description, per copy-map §4 |
+| `lang` | `"en" \| "es"` | no (`"en"`) | Sets `<html lang>` and the chrome's language |
+| `headerGround` | `"paper" \| "yellow" \| "ink"` | no (`"paper"`) | The ground the header sits on, so it merges with the page's first section |
+| `alternates` | `boolean` | no (`true`) | EN/ES `hreflang` pair + `x-default`. Only `/404` and `/redirect` pass `false` — they are single-file by design (copy-map §3.10–§3.11) |
 
 **Usage:**
 
 ```astro
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import DriversPage from '../components/DriversPage.astro';
 ---
 
-<BaseLayout title="About Us">
-  <main>
-    <h1>About YeRide</h1>
-    <p>Your content here</p>
-  </main>
+<BaseLayout
+  title="Keep what you earn. | YeRide for drivers"
+  description="No commission — YeRide's fees are flat, published, and never a percentage of the fare. Run YeRide alongside Uber and Lyft."
+  lang="en"
+  headerGround="yellow"
+>
+  <DriversPage lang="en" />
 </BaseLayout>
 ```
 
@@ -34,70 +41,43 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 ### Header
 
-The main navigation header with mobile-responsive menu.
+Site header — copy per copy-map §1.1, styling per the approved "Hail" direction (#33).
+Rendered by `BaseLayout`; pages do not import it directly.
 
 **Location:** `src/components/Header.astro`
 
-**Features:**
-- Logo and brand name
-- Desktop navigation links
-- Mobile hamburger menu toggle
-- Smooth scroll to sections
-- Responsive design
+**Props:**
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `lang` | `"en" \| "es"` | no (`"en"`) | Selects the nav copy |
+| `ground` | `"paper" \| "yellow" \| "ink"` | no (`"paper"`) | Picks the legal mark for that ground and inverts link tones on ink. The lockup embeds the primary mark, which `logo.md` forbids on Cab Yellow, so yellow takes the app-icon scheme and ink the reversed mark |
+| `toggleHref` | `string` | **yes** | The same page in the other language |
 
-**Navigation Items:**
-- Home
-- About
-- Contact
-- Pre-Register (CTA button)
-
-**Usage:**
-
-```astro
----
-import Header from '../components/Header.astro';
----
-
-<Header />
-```
+**Navigation items** (order is fixed — audience pages, then the two proof pages, then the
+toggle): Drivers / Maneja, Riders / Viaja, Fees / Tarifas, Fare estimate / Estimar tarifa,
+then the ES⇄EN toggle. Below `sm` the links drop and **the mark and the toggle always
+survive** — ES parity is not a progressive enhancement. There is no hamburger menu.
 
 ### Footer
 
-The site footer with links and social media.
+Site footer — copy per copy-map §1.2. Rendered by `BaseLayout`.
 
 **Location:** `src/components/Footer.astro`
 
-**Features:**
-- Brand information
-- Quick links section
-- Social media links (Twitter, Instagram, Facebook)
-- Copyright notice
+**Props:**
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `lang` | `"en" \| "es"` | no (`"en"`) | Selects the link and line copy |
 
-**Usage:**
-
-```astro
----
-import Footer from '../components/Footer.astro';
----
-
-<Footer />
-```
+**Links:** About, Contact, Privacy Policy, Terms, plus the place, entity and copyright
+lines. **Social is X/Twitter only** — the Facebook and Instagram icons pointed at `#` and
+were removed for good. Do not re-add a social icon without a working URL.
 
 ### navBar
 
-A simple navigation bar component.
-
-**Location:** `src/components/navBar.astro`
-
-**Usage:**
-
-```astro
----
-import NavBar from '../components/navBar.astro';
----
-
-<NavBar />
-```
+**Removed.** `src/components/navBar.astro` and `src/data/navData.ts` were deleted by the
+brand foundation (wayfinder #35) — `navData` listed routes that never existed. `Header` is
+the only navigation component.
 
 ## Form Components
 
@@ -298,11 +278,18 @@ Example pattern:
 
 ### Color Scheme
 
-The primary color palette:
-- **Primary Green:** `#22c55e` (green-500)
-- **Dark Green:** `#16a34a` (green-600)
-- **Background:** `#f9fafb` (gray-50)
-- **Text:** `#111827` (gray-900)
+Four brand colours, and only these. They come from the `@yeapptech/yeride-brand` Tailwind
+preset — **never restate the hex values** (CONSUMING.md; wayfinder #35):
+
+| Token | Class | Notes |
+|---|---|---|
+| Cab Yellow | `cab-yellow` | Hero grounds. Legal as **text** only on dark grounds (#33) |
+| Ink | `ink` | Body text on paper; the dark band's ground |
+| Paper | `paper` | Page ground; text on ink |
+| Pullman Brown | `pullman-brown` | Hover state for ink buttons; validation errors |
+
+The green/grey palette documented here before was pre-brand and no longer exists in the
+build.
 
 ## Adding New Components
 
@@ -324,8 +311,8 @@ interface Props {
 const { variant = 'primary', href } = Astro.props;
 const baseClasses = 'px-6 py-3 rounded-lg font-semibold transition-colors';
 const variantClasses = {
-  primary: 'bg-green-600 text-white hover:bg-green-700',
-  secondary: 'bg-white text-green-600 border-2 border-green-600 hover:bg-green-50',
+  primary: 'bg-ink text-paper hover:bg-pullman-brown',
+  secondary: 'border-2 border-ink text-ink hover:bg-ink hover:text-paper',
 };
 ---
 
