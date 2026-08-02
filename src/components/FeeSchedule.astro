@@ -102,6 +102,27 @@ const esPrefix = lang === "es" ? "/es" : "";
       </section>
     </div>
 
+    {/* Stripe's fee is not a YeRide charge and never comes from the fetch — it is
+        billed by Stripe straight to the driver's connected account. Disclosed
+        because the driver's side of the example is short without it, but kept
+        out of both fee families, and stated without a figure: YeRide does not
+        set that rate. Static, like surge — true in every fetch state. */}
+    <section class="mt-14 max-w-3xl border-t border-paper/15 pt-10">
+      <h2 class="font-extrabold tracking-headline text-[1.35rem] text-paper">
+        {t.stripeH2}
+      </h2>
+      <p class="mt-3 text-[15px] leading-relaxed text-paper/70 sm:text-[16px]">
+        {t.stripeBody}
+      </p>
+      <a
+        href="https://stripe.com/pricing"
+        class="mt-3 inline-flex items-center gap-1.5 text-[15px] font-bold text-cab-yellow underline underline-offset-2"
+      >
+        {t.stripeLink}
+        <span aria-hidden="true">→</span>
+      </a>
+    </section>
+
     {/* surge is static copy — it holds in every fetch state */}
     <section class="mt-14 max-w-3xl border-t border-paper/15 pt-10">
       <h2 class="font-extrabold tracking-headline text-[1.35rem] text-paper">
@@ -395,7 +416,12 @@ const esPrefix = lang === "es" ? "/es" : "";
           <ul class="mt-4 text-[15px]">
             ${ledgerRow(t.exampleFare, usd(ex.fare) ?? GAP)}
             ${driverCharges.map((c) => ledgerRow(chargeName(c), `−${usd(of(c.id)) ?? GAP}`)).join("")}
-            ${ledgerTotal(cardOnly.length ? t.driverTotalCard : t.colTotal, usd(driverCard) ?? GAP)}
+            ${ledgerTotal(
+              // With no card-only charge itemised, Stripe's fee is still coming
+              // off a card fare — so a bare "Total" would overstate take-home.
+              cardOnly.length ? t.driverTotalCard : t.driverTotalBeforeCard,
+              usd(driverCard) ?? GAP,
+            )}
           </ul>
           ${
             cardOnly.length

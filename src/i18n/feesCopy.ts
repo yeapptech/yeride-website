@@ -51,11 +51,22 @@ export const feesCopy = {
     exampleFees: "YeRide tech fees",
     colTotal: "Total",
     driverTotalCard: "Total — card fare",
+    // Stripe's fee is real, driver-borne and never itemised here, so the driver's
+    // total would otherwise overstate take-home on a card fare (#47).
+    driverTotalBeforeCard: "Total — before card processing",
     cashNotePre: "On a cash fare there’s no card processing — the driver keeps ",
     cashNotePost: ".",
     // addition — withheld ledger
     exampleUnavailable:
       "The example is unavailable until every published charge is described above.",
+    // Named for what it is, and attributed (map owner, 2026-08-02). No figure:
+    // YeRide neither sets nor controls Stripe's rate, and with standard Connect
+    // accounts it is between the driver and Stripe — publishing one would assert
+    // a third party's pricing and break copy-map §0.4.
+    stripeH2: "Card processing is Stripe's, not YeRide's",
+    stripeBody:
+      "On card fares, Stripe charges its processing fee directly to the driver's own account. YeRide never touches it and doesn't set it. Cash fares have none.",
+    stripeLink: "See Stripe's pricing",
     surgeH2: "No surge today",
     surgeBody:
       "There is no demand surcharge right now. If we ever add one, these rules hold: it will be published and capped, shown to you before you request a ride, and 100% of it goes to the driver. YeRide’s fees never change with demand.",
@@ -107,11 +118,16 @@ export const feesCopy = {
     exampleFees: "Cargos de tecnología de YeRide",
     colTotal: "Total",
     driverTotalCard: "Total — viaje con tarjeta",
+    driverTotalBeforeCard: "Total — antes del procesamiento de tarjeta",
     cashNotePre:
       "En un viaje en efectivo no hay procesamiento de tarjeta — a quien maneja le quedan ",
     cashNotePost: ".",
     exampleUnavailable:
       "El ejemplo no está disponible hasta que cada cargo publicado esté descrito arriba.",
+    stripeH2: "El procesamiento de tarjeta es de Stripe, no de YeRide",
+    stripeBody:
+      "En los viajes con tarjeta, Stripe le cobra su cargo de procesamiento directamente a la cuenta de quien maneja. YeRide nunca lo toca ni lo fija. Los viajes en efectivo no lo tienen.",
+    stripeLink: "Mira los precios de Stripe",
     surgeH2: "Hoy no hay recargo por demanda",
     surgeBody:
       "Ahora mismo no hay recargo por demanda. Si algún día agregamos uno, estas reglas se cumplen: será publicado y con tope, se te muestra antes de pedir el viaje, y el 100% es para quien maneja. Los cargos de YeRide nunca cambian con la demanda.",
