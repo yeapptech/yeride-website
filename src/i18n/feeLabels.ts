@@ -10,8 +10,12 @@
 // so an id this map doesn't cover is never guessed into a family (see /fees).
 //
 // VERIFIED against production 2026-08-01 (#47) — these are the ids
-// `getFeeSchedule` actually returns, not the names positioning.md guessed. The
-// build check (#41) fails on any id the endpoint returns that this map misses.
+// `getFeeSchedule` actually returns, not the names positioning.md guessed.
+// Nothing checks that automatically yet: the check that fails on an id the
+// endpoint returns and this map misses needs the live endpoint, which does not
+// exist (yeride-functions#21), so it is filed as #41's leftover in #56. Until it
+// lands, an id added upstream leaks its English description onto /es/fees and
+// only a human will notice.
 //
 // `payer` is "driver" for all four, and that is not a guess: YeRide's charges
 // come out of the driver's side in both payment flows (`yeride-functions
