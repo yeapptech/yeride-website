@@ -368,9 +368,30 @@ hard-coded number, and it must be labelled as an example on the same screen as t
 
 ### 3.5 `/fare-estimate` and `/es/fare-estimate`
 
-Keeps the Firebase callable `estimateFares` and the Google Maps loader. The itemized
-`appCharges` the backend already returns are now **rendered**, in the neutral in-product tone
-`docs/messaging.md` prescribes for fees: numbers, named lines, no persuasion.
+Keeps the Firebase callable `estimateFares` and the Google Maps loader.
+
+> **Amended 2026-08-02 (#47) — the fee block is cut. Read this before building #38.**
+>
+> This section used to say the itemized `appCharges` the backend returns are **rendered**
+> here. They must not be. **The rider does not pay them.**
+>
+> § 6 note 7 asked whether `fare` already includes `appChargesTotal`, or whether the total is
+> additive. The answer is **neither**: `appChargesTotal` is not the rider's money in either
+> payment flow (`yeride-functions lib/payments.js` L268–310). On card the rider is charged
+> `priceFare` — the metered fare, nothing added — and `appChargesTotal` is taken from the
+> **driver's** connected account as the application fee. On cash the rider pays the driver
+> directly and YeRide then bills the **driver's** account for the same total.
+>
+> So what `/fare-estimate` shows a rider today — the fare alone — is already **correct and
+> complete**. Rendering a breakdown of YeRide's charges beside it would tell a rider they pay
+> something they do not: the same inversion § 3.4's ledger had, in rider-facing form.
+>
+> **Therefore: drop the "Fee block heading" row below.** Keep the limit note and the `/fees`
+> link — that is where the charges belong, on the page that explains whose they are. If a
+> rider-facing view of the driver's side is ever wanted, that is a new decision, not this row.
+
+The page's tone stays as `docs/messaging.md` prescribes for fees: numbers, named lines, no
+persuasion.
 
 | Slot | EN | ES |
 |---|---|---|
@@ -388,21 +409,20 @@ Keeps the Firebase callable `estimateFares` and the Google Maps loader. The item
 | Results H2 | Available services | Servicios disponibles |
 | Fare caption | estimated fare | tarifa estimada |
 | Seats | {n} seats | {n} asientos |
-| Fee block heading | Fees included | Cargos incluidos |
+| ~~Fee block heading~~ **(CUT — the rider does not pay these; see the amendment above)** | ~~Fees included~~ | ~~Cargos incluidos~~ |
 | Limit note | Estimates are estimates — the meter decides. | Un estimado es un estimado — el taxímetro decide. |
 | Fee link → `/fees` | See the full fee schedule | Ver el tarifario completo |
 | No route error | We couldn't find a route between those two places. | No encontramos una ruta entre esos dos lugares. |
 | Service error | We couldn't get an estimate right now. Try again in a moment. | No pudimos calcular el estimado ahora. Intenta de nuevo en un momento. |
 | Outside area | We're not in that area yet. | Todavía no estamos en esa zona. |
 
-Fee lines use the § 2.3 label map. The **gated headline copy does not run here** — no
-"See the math", no "Cuentas claras", no claim that YeRide shows the math on every trip. The
-page shows lines; it makes no claim about them.
+The **gated headline copy does not run here** — no "See the math", no "Cuentas claras", no
+claim that YeRide shows the math on every trip. The page shows a fare; it makes no claim
+about fees, and now links to `/fees` for them.
 
-**Build note, not a copy decision:** confirm whether `fare` already includes `appChargesTotal`
-before shipping the "Fees included" heading. If the fee total is *additive* rather than
-included, the heading must read "Fees" / "Cargos" and the total line must be shown. The label
-above assumes inclusive; verify against `estimateFares` and correct if wrong.
+**The § 2.3 label map is therefore not used on this page** — only `/fees` renders charge
+lines. Note that #41's fee-label check should still cover every id the endpoint returns,
+because `/fees` renders them.
 
 Also drop the unused `firebase-admin` dependency (already in ticket #38).
 
@@ -579,6 +599,9 @@ Rider pillar 2 ("Same math every trip." / "Las mismas cuentas en cada viaje.") i
 5. **The ES Tally form** does not exist yet; `/es/contact` cannot ship without its id.
 6. **Driver pillar-2 slot placement** is [#43](https://github.com/yeapptech/yeride-website/issues/43)'s
    decision, not this map's. § 3.2 marks the slot and stops there.
-7. **Verify `fare` vs `appChargesTotal`** before shipping the "Fees included" heading (§ 3.5).
+7. ~~**Verify `fare` vs `appChargesTotal`**~~ — done 2026-08-02 (#47), and the answer killed
+   the heading. `appChargesTotal` is **neither included in nor additive to** the rider's
+   fare: it is the **driver's** cost in both payment flows. The rider is charged `priceFare`
+   alone. "Fees included" is cut and the fee block with it — see § 3.5.
 8. ~~**Charge ids in § 2.3 are unverified**~~ — done: read off production 2026-08-01 and
    corrected in § 2.3 (#47). None of the guessed ids existed.
