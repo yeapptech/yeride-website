@@ -63,10 +63,10 @@ export const feesCopy = {
     // YeRide neither sets nor controls Stripe's rate, and with standard Connect
     // accounts it is between the driver and Stripe — publishing one would assert
     // a third party's pricing and break copy-map §0.4.
-    stripeH2: "Card processing is Stripe's, not YeRide's",
+    stripeH2: "Card processing is Stripe’s, not YeRide’s",
     stripeBody:
-      "On card fares, Stripe charges its processing fee directly to the driver's own account. YeRide never touches it and doesn't set it. Cash fares have none.",
-    stripeLink: "See Stripe's pricing",
+      "On card fares, Stripe charges its processing fee directly to the driver’s own account. YeRide never touches it and doesn’t set it. Cash fares have none.",
+    stripeLink: "See Stripe’s pricing",
     surgeH2: "No surge today",
     surgeBody:
       "There is no demand surcharge right now. If we ever add one, these rules hold: it will be published and capped, shown to you before you request a ride, and 100% of it goes to the driver. YeRide’s fees never change with demand.",
