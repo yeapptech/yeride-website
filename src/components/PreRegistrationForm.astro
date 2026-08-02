@@ -132,7 +132,11 @@ const inputClass =
 
   {/* The success state. The availability block (§2.1) is the page's next
       element, so it stays on screen beneath this line rather than being
-      duplicated inside the form. */}
+      duplicated inside the form.
+
+      Unlike the alert above, this one IS revealed from `hidden` — announcement
+      here comes from moving focus to it, not from a live region, so it does not
+      need to pre-exist in the accessibility tree. */}
   <p
     data-prereg-success
     hidden
@@ -164,25 +168,40 @@ const inputClass =
       form.querySelector<HTMLElement>(`[data-error-for="${name}"]`);
 
     const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    /** Whatever they type, the wire format is E.164 — the endpoint dedupes on
-     *  an exact string match, and every existing row was written as +1XXXXXXXXXX.
+
+    /** Whatever they type, the wire format is E.164 — the endpoint dedupes on an
+     *  exact string match, so two spellings of one number are two people to it.
      *
-     *  Only formatting characters are stripped, never letters or stray digits.
-     *  Discarding every non-digit was worse than useless here: it turned
-     *  "+1-305-555-0100 ext 2" into the valid-looking +130555501002 — a number
-     *  that does not exist, and a second whitelist row for someone already
-     *  stored as +13055550100, which is the exact duplicate the endpoint's
-     *  dedupe exists to prevent. */
-    const e164 = (raw: string) => raw.trim().replace(/[\s().\-‐-―]/g, "");
-    // E.164: "+", a country code that cannot start with 0, then up to 15 digits
-    // in total. "+001 305…" is a dialling prefix, not a country code.
+     *  Strips formatting only (spaces incl. NBSP, brackets, dots, and the ASCII
+     *  and Unicode dashes), never letters or digits. A bare 10-digit number gets
+     *  the +1 the old form used to force, so a phone autofilled as
+     *  "(305) 555-0100" still normalises instead of landing on a red error. */
+    const e164 = (raw: string) => {
+      const stripped = raw.trim().replace(/[\s ().\-‐-―]/g, "");
+      return /^\d{10}$/.test(stripped) ? `+1${stripped}` : stripped;
+    };
+
+    /** E.164 shape: "+", a country code that cannot start with 0, 10–15 digits
+     *  total — so "+001 305…", a dialling prefix, is not a country code.
+     *
+     *  NANP (+1) is pinned to exactly 11 digits, and that is the whole point
+     *  rather than a nicety. The general 10–15 range accepts BOTH a US number
+     *  with a digit dropped and a US number with an extension run onto the end:
+     *  "+1 305 555 0100 2" reads as valid, and writes a second row beside the
+     *  same person's +13055550100. Stripping only formatting characters does not
+     *  catch that on its own — the stray character is a digit. */
     const PHONE = /^\+[1-9]\d{9,14}$/;
+    const NANP = /^\+1\d{10}$/;
+    const validPhone = (raw: string) => {
+      const n = e164(raw);
+      return n.startsWith("+1") ? NANP.test(n) : PHONE.test(n);
+    };
 
     /** Per-field validation, copy-map §2.2. Returns the message, or null. */
     function validate(name: string, value: string): string | null {
       if (!value.trim()) return t.required;
       if (name === "email" && !EMAIL.test(value.trim())) return t.badEmail;
-      if (name === "phoneNumber" && !PHONE.test(e164(value))) return t.badPhone;
+      if (name === "phoneNumber" && !validPhone(value)) return t.badPhone;
       return null;
     }
 
