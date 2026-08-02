@@ -103,63 +103,99 @@ import NavBar from '../components/navBar.astro';
 
 ### PreRegistrationForm
 
-An interactive form for user pre-registration.
+The pre-registration form, embedded on `/drivers` and `/riders` and their `/es/` twins
+(wayfinder #37). Copy is `docs/copy-map.md` §2.2.
 
-**Location:** `src/components/PreRegistrationForm.astro`
+**Props**
 
-**Features:**
-- First name and last name fields
-- Email validation
-- Phone number formatting (US +1 format)
-- Role selection (Rider/Driver)
-- Form validation
-- Loading state indicator
-- Success/error messages
-- API submission
+| Prop | Type | Required | Notes |
+|---|---|---|---|
+| `lang` | `"en" \| "es"` | yes | Selects the copy set from `src/i18n/formCopy.ts` |
+| `role` | `"driver" \| "rider"` | yes | Pre-set by the page — there is no role dropdown |
+| `heading` | `string` | yes | Form heading, per page (§3.2, §3.3) |
+| `sub` | `string` | yes | Line beneath the heading |
 
-**Form Fields:**
+**Form fields**
+
 | Field | Type | Validation |
-|-------|------|------------|
-| First Name | text | Required |
-| Last Name | text | Required |
-| Email | email | Required, valid email format |
-| Phone Number | tel | Required, US format (+1 XXX XXX XXXX) |
-| Role | select | Required (rider/driver) |
+|---|---|---|
+| First name | text | Required |
+| Last name | text | Required |
+| Email | email | Required, `local@domain.tld` shape |
+| Phone | tel | Required, E.164 after formatting characters are stripped: `+`, a country code not starting with 0, 10–15 digits total |
+| `role` | hidden | Set by the `role` prop |
 
-**API Submission:**
+**There are no password fields.** The endpoint accepts five fields and `password` is not
+one of them, so collecting a password would send it over the wire to be discarded. See the
+comment block in `src/i18n/formCopy.ts` and the amendment to copy-map §2.2.
 
-The form submits to `${PUBLIC_API_URL}v1/auth/register` with the following payload:
+**API submission**
+
+POSTs to `${PUBLIC_API_URL}v1/auth/register` (yeride-admin-api), which writes a `whitelist`
+row — it does not create an account:
 
 ```json
 {
   "data": {
-    "firstName": "John",
-    "lastName": "Doe",
-    "email": "john@example.com",
-    "phoneNumber": "+1234567890",
-    "role": "rider"
+    "firstName": "Ana",
+    "lastName": "Perez",
+    "email": "ana@example.com",
+    "phoneNumber": "+13055550100",
+    "role": "driver"
   }
 }
 ```
 
-**Usage:**
+The phone goes over the wire as E.164 because the endpoint dedupes on an exact string
+match. Outcomes are keyed off the response `code`, not the status: it returns 409 for a
+duplicate email *and* a duplicate phone, so the status alone cannot tell them apart. The
+raw API error string is logged, never displayed.
+
+**Usage**
 
 ```astro
----
-import PreRegistrationForm from '../components/PreRegistrationForm.astro';
----
-
-<section id="pre-register">
-  <PreRegistrationForm />
-</section>
+<PreRegistrationForm lang="en" role="driver" heading="Pre-register as a driver" sub="Takes a minute." />
+<AvailabilityBlock lang="en" />
 ```
 
-**Styling:**
+`AvailabilityBlock` belongs directly beneath it (§2.1) — the form's success state replaces
+the fields with the success line and leaves that block on screen.
 
-The form uses Tailwind CSS classes for styling. Key classes:
-- `bg-white rounded-lg shadow-lg` - Form container
-- `focus:ring-2 focus:ring-green-500` - Input focus states
-- `bg-green-600 hover:bg-green-700` - Submit button
+## Page Components
+
+Each renders one route's whole body and takes `lang` alone, resolving its copy from
+`src/i18n/`. The route files under `src/pages/` stay thin: `BaseLayout` plus the component.
+
+### HomePage
+
+`/` and `/es/` (wayfinder #37) — the Variant D "Hail" language (#33) with copy-map §3.1's
+restructure: the audience fork sits in the Cab Yellow hero, the Ink band is buttonless with
+each half linking as a whole block, and the paper strip carries the facts and the `/fees`
+link. Carries no pre-registration form.
+
+### DriversPage
+
+`/drivers` and `/es/drivers` — copy-map §3.2. Pillars are the spine. The **gated driver
+pillar-2 slot** sits between pillar 1 and pillar 3, marked by a plain comment naming #43 and
+holding nothing else; do not put a string there, commented out or otherwise, until the gate
+lifts.
+
+### RidersPage
+
+`/riders` and `/es/riders` — copy-map §3.3. Reserves nothing: rider pillar 2 is ungated and
+runs. "Card or cash." renders as a support line, never a section headline.
+
+### AvailabilityBlock
+
+What exists today (copy-map §2.1): live on Android with the Play badge, iOS labelled as a
+TestFlight beta. **There is no App Store badge** and must not be one until a public App
+Store listing exists.
+
+**Props**
+
+| Prop | Type | Required | Notes |
+|---|---|---|---|
+| `lang` | `"en" \| "es"` | yes | Selects the copy set from `src/i18n/formCopy.ts` |
 
 ## Fee Components
 
@@ -211,28 +247,10 @@ copy, EN/ES).
 
 ### Homepage (index.astro)
 
-The homepage contains several inline sections:
-
-**Hero Section**
-- Main headline and tagline
-- Call-to-action buttons
-- Background gradient
-
-**Features Section**
-- Icon-based feature cards
-- Three-column grid layout
-
-**For Riders / For Drivers**
-- Two-column comparison layout
-- Benefit lists for each user type
-
-**Pre-Registration Section**
-- Embedded PreRegistrationForm component
-- Background styling
-
-**App Download Section**
-- App Store and Google Play badges
-- Links to app stores
+Nothing page-specific any more: `index.astro` is a thin `BaseLayout` + `HomePage` wrapper
+(wayfinder #37), like every other redesigned route. The gradient hero, feature cards,
+two-column rider/driver comparison, embedded form and App Store badge documented here
+before are all gone.
 
 ### Contact Page (contact.astro)
 

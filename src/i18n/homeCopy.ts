@@ -1,14 +1,12 @@
-// / and /es/ copy — VERBATIM from docs/copy-map.md §3.1, titles from §4
-// (wayfinder #34). Do not reword, re-case, or re-punctuate.
+// / and /es/ copy — VERBATIM from docs/copy-map.md §3.1 (wayfinder #34).
+// Do not reword, re-case, or re-punctuate. §4's title and meta description sit
+// on the page files, as they do for /fees.
 //
 // The H1s and the two Ink-band H2s are canonical `docs/messaging.md` lines.
 import type { Lang } from "./feesCopy";
 
 export const homeCopy = {
   en: {
-    title: "Your ride, fair and clear. | YeRide",
-    description:
-      "Rideshare built in South Florida. No commission, flat published fees, and a rate card anyone can read.",
     h1: "Your ride, fair and clear.",
     sub: "Published rates — base, miles, minutes. The fare follows the ride.",
     driverCta: "Drive with YeRide",
@@ -26,9 +24,6 @@ export const homeCopy = {
     feesLink: "See the fee schedule",
   },
   es: {
-    title: "Tu viaje, justo y claro. | YeRide",
-    description:
-      "Transporte compartido hecho en el Sur de la Florida. Sin comisión, tarifas fijas y publicadas, y un tarifario que cualquiera puede leer.",
     h1: "Tu viaje, justo y claro.",
     sub: "Tarifas publicadas — base, millas, minutos. El precio sigue al viaje.",
     driverCta: "Maneja con YeRide",

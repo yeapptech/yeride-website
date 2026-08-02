@@ -70,8 +70,10 @@ const inputClass =
     <p class="mt-1.5 text-[15px] text-ink/60">{sub}</p>
   </div>
 
-  <form data-prereg novalidate class="mt-6" data-role={role}>
-    {/* The role is the page, not a choice — copy-map §2.2. */}
+  <form data-prereg novalidate class="mt-6">
+    {/* The role is the page, not a choice — copy-map §2.2. This input is the
+        single source of it; the submit handler reads the field like any other
+        rather than keeping a second copy on a data attribute. */}
     <input type="hidden" name="role" value={role} />
 
     <div class="grid gap-4 sm:grid-cols-2">
@@ -114,12 +116,16 @@ const inputClass =
     </button>
 
     {/* Server outcomes (§2.2) land here, one class at a time. The raw API
-        string is logged, never shown. */}
+        string is logged, never shown.
+
+        Deliberately NOT hidden when empty: a live region has to be in the
+        accessibility tree before its text changes, or the change is not
+        announced. Writing into a display:none node and then revealing it is
+        the common way to ship an alert that never speaks. */}
     <p
       data-form-message
-      hidden
       role="alert"
-      class="mt-4 text-[15px] font-semibold text-pullman-brown"
+      class="mt-4 text-[15px] font-semibold text-pullman-brown empty:mt-0"
     >
     </p>
   </form>
@@ -159,18 +165,24 @@ const inputClass =
 
     const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     /** Whatever they type, the wire format is E.164 — the endpoint dedupes on
-     *  an exact string match, and every existing row was written as +1XXXXXXXXXX. */
-    const e164 = (raw: string) => {
-      const digits = raw.replace(/\D/g, "");
-      return raw.trim().startsWith("+") ? `+${digits}` : digits;
-    };
+     *  an exact string match, and every existing row was written as +1XXXXXXXXXX.
+     *
+     *  Only formatting characters are stripped, never letters or stray digits.
+     *  Discarding every non-digit was worse than useless here: it turned
+     *  "+1-305-555-0100 ext 2" into the valid-looking +130555501002 — a number
+     *  that does not exist, and a second whitelist row for someone already
+     *  stored as +13055550100, which is the exact duplicate the endpoint's
+     *  dedupe exists to prevent. */
+    const e164 = (raw: string) => raw.trim().replace(/[\s().\-‐-―]/g, "");
+    // E.164: "+", a country code that cannot start with 0, then up to 15 digits
+    // in total. "+001 305…" is a dialling prefix, not a country code.
+    const PHONE = /^\+[1-9]\d{9,14}$/;
 
     /** Per-field validation, copy-map §2.2. Returns the message, or null. */
     function validate(name: string, value: string): string | null {
       if (!value.trim()) return t.required;
       if (name === "email" && !EMAIL.test(value.trim())) return t.badEmail;
-      if (name === "phoneNumber" && !/^\+\d{10,15}$/.test(e164(value)))
-        return t.badPhone;
+      if (name === "phoneNumber" && !PHONE.test(e164(value))) return t.badPhone;
       return null;
     }
 
@@ -198,9 +210,10 @@ const inputClass =
       });
     }
 
+    // The node stays in the tree; only its text changes, so the live region
+    // actually announces.
     function setMessage(text: string | null) {
       message!.textContent = text ?? "";
-      message!.hidden = !text;
     }
 
     /** Which §2.2 outcome class a response falls into. */
@@ -255,7 +268,7 @@ const inputClass =
         lastName: field("lastName")!.value.trim(),
         email: field("email")!.value.trim(),
         phoneNumber: e164(field("phoneNumber")!.value),
-        role: form!.dataset.role,
+        role: field("role")!.value,
       };
 
       try {

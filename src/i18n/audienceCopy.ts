@@ -1,5 +1,6 @@
-// /drivers and /riders copy — VERBATIM from docs/copy-map.md §3.2 and §3.3,
-// titles from §4 (wayfinder #34). Do not reword, re-case, or re-punctuate.
+// /drivers and /riders copy — VERBATIM from docs/copy-map.md §3.2 and §3.3
+// (wayfinder #34). Do not reword, re-case, or re-punctuate. §4's title and meta
+// description sit on the page files, as they do for /fees.
 //
 // H1s and H2s marked canonical in the copy map are `docs/messaging.md` pillar
 // lines. Driver pillar 2 is gated (§5) and deliberately has NO key here — the
@@ -9,9 +10,6 @@ import type { Lang } from "./feesCopy";
 
 export const driversCopy = {
   en: {
-    title: "Keep what you earn. | YeRide for drivers",
-    description:
-      "No commission — YeRide's fees are flat, published, and never a percentage of the fare. Run YeRide alongside Uber and Lyft.",
     eyebrow: "For drivers",
     h1: "Keep what you earn.",
     support:
@@ -25,9 +23,6 @@ export const driversCopy = {
     formSub: "Takes a minute.",
   },
   es: {
-    title: "Lo que ganas es tuyo. | YeRide",
-    description:
-      "Sin comisión — los cargos de YeRide son fijos, publicados y nunca un porcentaje de la tarifa. Usa YeRide junto a Uber y Lyft.",
     eyebrow: "Para quien maneja",
     h1: "Lo que ganas es tuyo.",
     support:
@@ -44,9 +39,6 @@ export const driversCopy = {
 
 export const ridersCopy = {
   en: {
-    title: "Pay what the ride is worth. | YeRide for riders",
-    description:
-      "Published rates — base, miles, minutes. The same math every trip, and every fee published. Card or cash.",
     eyebrow: "For riders",
     h1: "Pay what the ride is worth.",
     support:
@@ -65,9 +57,6 @@ export const ridersCopy = {
     formSub: "Takes a minute.",
   },
   es: {
-    title: "Paga lo justo. | YeRide",
-    description:
-      "Tarifas publicadas — base, millas, minutos. Las mismas cuentas en cada viaje y cada cargo publicado. Tarjeta o efectivo.",
     eyebrow: "Para quien viaja",
     h1: "Paga lo justo.",
     support:
