@@ -161,6 +161,52 @@ The form uses Tailwind CSS classes for styling. Key classes:
 - `focus:ring-2 focus:ring-green-500` - Input focus states
 - `bg-green-600 hover:bg-green-700` - Submit button
 
+## Fee Components
+
+### FeeSchedule
+
+The whole body of `/fees` and `/es/fees` (wayfinder #40), on the locked "Posted Card"
+layout (#36).
+
+**Props**
+
+| Prop | Type | Required | Notes |
+|---|---|---|---|
+| `lang` | `"en" \| "es"` | yes | Selects the copy set from `src/i18n/feesCopy.ts` |
+
+**Usage**
+
+```astro
+<BaseLayout title="The fee schedule | YeRide" lang="en" headerGround="ink">
+  <FeeSchedule lang="en" />
+</BaseLayout>
+```
+
+**Why it carries a client script.** Every amount is fetched at runtime from
+`getFeeSchedule` — no fee figure may be hard-coded (copy map §0.4) — so the rate card,
+the charge panels and the example are built by the script from the response. Only the
+headings, leads, the Stripe section and surge are static, because those are claims that
+hold in every fetch state. The endpoint URL comes from `PUBLIC_FEE_SCHEDULE_URL`.
+
+**Three refusals it enforces.** These are the reason the component is shaped this way,
+and none of them should be relaxed without reading #47:
+
+1. A missing rate, or a rule the endpoint can't summarise, renders as an explicit gap
+   (`—`) — **never `$0.00`**, which would publish a wrong price as if it were real.
+2. A charge id `src/i18n/feeLabels.ts` doesn't cover is **never guessed into a fee
+   family**; it renders in a neutral panel, keeps the backend `description` verbatim in
+   both languages, and carries no family's notes.
+3. The example ledger claims the money reconciles across both columns, so it is
+   **withheld entirely** — never shown short — if any charge is unclassified *or* is
+   missing an amount in `example.appCharges`.
+
+The ledger splits by `payer`, never by family: YeRide's charges come out of the
+driver's side in both payment flows.
+
+**Related:** `src/lib/feeSchedule.ts` (endpoint contract, fetch, formatting),
+`src/i18n/feeLabels.ts` (charge labels + family/payer), `src/i18n/feesCopy.ts` (page
+copy, EN/ES).
+
 ## Page-Specific Components
 
 ### Homepage (index.astro)

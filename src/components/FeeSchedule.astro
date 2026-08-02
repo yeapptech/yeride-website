@@ -286,9 +286,15 @@ const esPrefix = lang === "es" ? "/es" : "";
 
   // ---- the fee families ---------------------------------------------------
 
-  const chargeNotes: Record<string, string> = {
+  // Notes belong to a family, not to a bare id — attaching them by id alone let
+  // an UNCLASSIFIED charge that happened to share the id print a family-2 claim
+  // from inside the neutral "Other charges" panel. They now live on the panel
+  // that owns them, so an unclassified charge can never carry one.
+  //
+  // There is deliberately no card-processing note: card processing is not a
+  // YeRide charge and is disclosed in its own section instead (copy-map §3.4).
+  const passthroughNotes: Record<string, string> = {
     "trip-insurance-driver": t.insuranceNote,
-    "card-processing": t.cardNote,
   };
 
   const label = (c: AppCharge): ChargeLabel | undefined => feeLabels[c.id];
@@ -297,23 +303,32 @@ const esPrefix = lang === "es" ? "/es" : "";
   const chargeName = (c: AppCharge) => label(c)?.[lang] ?? c.description;
 
   function renderFamilies(charges: AppCharge[]): string {
-    const panels: { h2: string; lead: string; charges: AppCharge[] }[] = [
+    const panels: {
+      h2: string;
+      lead: string;
+      charges: AppCharge[];
+      notes: Record<string, string>;
+    }[] = [
       {
         h2: t.family1H2,
         lead: t.family1Lead,
         charges: charges.filter((c) => label(c)?.family === "tech"),
+        notes: {},
       },
       {
         h2: t.family2H2,
         lead: t.family2Lead,
         charges: charges.filter((c) => label(c)?.family === "passthrough"),
+        notes: passthroughNotes,
       },
       {
         // Filing an unclassified charge into either family would be a claim
-        // about YeRide's economics that nothing supports — it gets its own panel.
+        // about YeRide's economics that nothing supports — it gets its own panel,
+        // and no family's notes.
         h2: t.otherFamilyH2,
         lead: t.otherFamilyLead,
         charges: charges.filter((c) => !label(c)),
+        notes: {},
       },
     ];
 
@@ -331,8 +346,8 @@ const esPrefix = lang === "es" ? "/es" : "";
                   <span class="text-right font-bold tabular-nums text-ink">${esc(ruleText(c.rule))}</span>
                 </div>
                 ${
-                  chargeNotes[c.id]
-                    ? `<p class="mt-1.5 text-[12.5px] text-ink/50">${esc(chargeNotes[c.id])}</p>`
+                  p.notes[c.id]
+                    ? `<p class="mt-1.5 text-[12.5px] text-ink/50">${esc(p.notes[c.id])}</p>`
                     : ""
                 }
               </li>`,
@@ -363,12 +378,20 @@ const esPrefix = lang === "es" ? "/es" : "";
     // unclassified charge would land on neither side, so the ledger is withheld
     // rather than shown short.
     const classified = schedule.appCharges.every((c) => label(c));
-    if (!ex || !classified) {
+    const amounts = new Map(ex?.appCharges.map((c) => [c.id, c.amount]) ?? []);
+    // A charge the endpoint priced in the schedule but omitted from the example
+    // would otherwise coalesce to 0 — printing "−$0.00" and overstating what the
+    // driver keeps. That is exactly the $0.00-masking-a-gap failure the rate-card
+    // research warned about, so it withholds the ledger like any other gap.
+    const priced = schedule.appCharges.every((c) => {
+      const a = amounts.get(c.id);
+      return typeof a === "number" && Number.isFinite(a);
+    });
+    if (!ex || !classified || !priced) {
       return `<p class="mt-3 max-w-xl text-[14px] text-paper/60">${esc(t.exampleUnavailable)}</p>`;
     }
 
-    const amounts = new Map(ex.appCharges.map((c) => [c.id, c.amount]));
-    const of = (id: string) => amounts.get(id) ?? 0;
+    const of = (id: string) => amounts.get(id) as number;
     const ids = (test: (l: ChargeLabel) => boolean) =>
       schedule.appCharges.filter((c) => {
         const l = label(c);
