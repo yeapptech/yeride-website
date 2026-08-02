@@ -15,7 +15,11 @@ export type Lang = "en" | "es";
 export const feesCopy = {
   en: {
     h1: "The fee schedule",
-    lead: "Every fee YeRide charges, and every cost it passes through. Current amounts, fetched live.",
+    // The pass-through clause was cut on 2026-08-01 (#47): insurance does not
+    // exist yet (#48) and card processing is not YeRide's to pass through —
+    // Stripe bills the driver's own connected account. Restore it when the
+    // pass-through family has members again.
+    lead: "Every fee YeRide charges. Current amounts, fetched live.",
     areaLabel: "Service area",
     rateCardH2: "The rate card",
     rateRows: {
@@ -72,7 +76,7 @@ export const feesCopy = {
   },
   es: {
     h1: "El tarifario",
-    lead: "Cada cargo que cobra YeRide y cada costo que traslada. Montos actuales, en vivo.",
+    lead: "Cada cargo que cobra YeRide. Montos actuales, en vivo.",
     areaLabel: "Área de servicio",
     rateCardH2: "El tarifario base",
     rateRows: {
