@@ -48,7 +48,7 @@ Adding a new env var requires editing `.github/workflows/deploy-all.yml` (the "C
 
 The site talks to two unrelated services; don't conflate them.
 
-1. **Pre-registration** (`src/components/PreRegistrationForm.astro`) — plain `fetch` POST to `${PUBLIC_API_URL}v1/auth/register`. The form logic lives in one large `is:inline` script that receives the URL via `define:vars`, so it is *not* bundled and cannot use imports.
+1. **Pre-registration** (`src/components/PreRegistrationForm.astro`) — plain `fetch` POST to `${PUBLIC_API_URL}v1/auth/register`, which is *yeride-admin-api*, not yeride-functions. It writes a `whitelist` row; it does not create an account. The form logic is a **bundled** `<script>` that imports its copy from `src/i18n/formCopy.ts` and reads `import.meta.env.PUBLIC_API_URL` directly (wayfinder #37 replaced the old `is:inline` + `define:vars` script). Because that value is **inlined at build time**, a missing `PUBLIC_API_URL` silently strips the whole submit path from the bundle — see #59.
 2. **Fare estimates** (`src/pages/fare-estimate.astro` + `src/lib/fareEstimate.ts`) — Firebase **callable function** `estimateFares`, hardcoded to region `us-east1` in `src/lib/firebase.ts`. Service area defaults to `us-fl-south-florida`. The page script loads Google Maps libraries (`maps`, `places`, `marker`, `routes`) via `@googlemaps/js-api-loader`, resolves pickup/dropoff, computes distance + duration, then calls `getEstimates()`.
 
 `firebase-admin` is in `package.json` but unused in `src/`. Firebase Auth and Firestore are not used — only `firebase/functions`.

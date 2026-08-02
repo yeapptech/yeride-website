@@ -1,397 +1,297 @@
 ---
-// PreRegistrationForm.astro
+// Pre-registration form — copy-map §2.2. One component, embedded on /drivers
+// and /riders, with `role` PRE-SET by page: the dropdown is gone, so the page
+// you are on is the role you register for.
+//
+// See src/i18n/formCopy.ts for the two deviations from §2.2 (no password
+// fields; a duplicate phone number gets its own line) and why the endpoint
+// forces both.
+import { formCopy } from "../i18n/formCopy";
+import type { Lang } from "../i18n/feesCopy";
+
+export interface Props {
+  lang: Lang;
+  role: "driver" | "rider";
+  heading: string;
+  sub: string;
+}
+const { lang, role, heading, sub } = Astro.props;
+const t = formCopy[lang];
+
+const fields = [
+  {
+    name: "firstName",
+    type: "text",
+    autocomplete: "given-name",
+    label: t.firstNameLabel,
+    placeholder: t.firstNamePlaceholder,
+    half: true,
+  },
+  {
+    name: "lastName",
+    type: "text",
+    autocomplete: "family-name",
+    label: t.lastNameLabel,
+    placeholder: t.lastNamePlaceholder,
+    half: true,
+  },
+  {
+    name: "email",
+    type: "email",
+    autocomplete: "email",
+    label: t.emailLabel,
+    placeholder: t.emailPlaceholder,
+    half: false,
+  },
+  {
+    name: "phoneNumber",
+    type: "tel",
+    autocomplete: "tel",
+    label: t.phoneLabel,
+    placeholder: t.phonePlaceholder,
+    half: false,
+  },
+] as const;
+
+const inputClass =
+  "mt-1.5 block w-full rounded-xl border border-ink/20 bg-white px-4 py-3 text-[16px] text-ink placeholder:text-ink/35 focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink";
 ---
 
-<div class="bg-white/95 backdrop-blur rounded-lg shadow-lg">
-  <div class="p-8">
-    <form id="pre-registration-form" class="space-y-6">
-      <div class="grid md:grid-cols-2 gap-4">
-        <div>
-          <label for="firstName" class="text-gray-700 font-medium block mb-1">
-            First Name
-          </label>
-          <input
-            id="firstName"
-            name="firstName"
-            type="text"
-            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="Enter your first name"
-            required
-          />
-        </div>
-        <div>
-          <label for="lastName" class="text-gray-700 font-medium block mb-1">
-            Last Name
-          </label>
-          <input
-            id="lastName"
-            name="lastName"
-            type="text"
-            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="Enter your last name"
-            required
-          />
-        </div>
-      </div>
-
-      <div>
-        <label
-          for="email"
-          class="text-gray-700 font-medium block mb-1"
-        >
-          Email Address
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          placeholder="Enter your email address"
-          required
-        />
-      </div>
-
-      <!-- <div class="grid md:grid-cols-2 gap-4">
-        <div>
-          <label
-            for="password"
-            class="text-gray-700 font-medium block mb-1"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="Create a password"
-            required
-          />
-        </div>
-        <div>
-          <label
-            for="confirmPassword"
-            class="text-gray-700 font-medium block mb-1"
-          >
-            Confirm Password
-          </label>
-          <input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="Confirm your password"
-            required
-          />
-        </div>
-      </div> -->
-      <div class="grid md:grid-cols-2 gap-4">
-        <div>
-          <label for="phoneNumber" class="text-gray-700 font-medium block mb-1">
-            Phone Number
-          </label>
-          <input
-            id="phoneNumber"
-            name="phoneNumber"
-            type="tel"
-            class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="+12345678900"
-            value="+1"
-            pattern="^\+1\d{10}$"
-            required
-            data-prefix="+1"
-          />
-        </div>
-        <div>
-          <label class="text-gray-700 font-medium block mb-1">
-            I want to join as
-          </label>
-          <div class="relative">
-            <select
-              id="role"
-              name="role"
-              required
-              class="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm appearance-none pr-8"
-            >
-              <option value="" disabled selected>Select your role</option>
-              <option value="rider">Rider</option>
-              <option value="driver">Driver</option>
-            </select>
-            <div
-              class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
-            >
-              <svg
-                class="fill-current h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                ><path
-                  d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9z"
-                ></path></svg
-              >
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button
-        type="submit"
-        id="submit-button"
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-semibold rounded-md shadow-md transition duration-300
-                disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
-        disabled
-      >
-        Submit
-      </button>
-      <div
-        id="loading-indicator"
-        class="hidden text-center text-blue-700 mt-4"
-      >
-        <svg
-          class="animate-spin h-5 w-5 mr-3 inline-block"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"></circle>
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        Sending...
-      </div>
-      <div id="form-message" class="hidden text-center mt-4"></div>
-    </form>
+<section
+  id="pre-register"
+  class="rounded-2xl border border-ink/15 bg-white/60 px-5 py-7 sm:px-8 sm:py-9"
+>
+  {/* Both lines instruct an action that has already happened once the success
+      state renders, so they go with the form. */}
+  <div data-prereg-intro>
+    <h2 class="font-extrabold tracking-headline text-[1.5rem] leading-tight text-ink">
+      {heading}
+    </h2>
+    <p class="mt-1.5 text-[15px] text-ink/60">{sub}</p>
   </div>
-</div>
 
-<script is:inline define:vars={{ API_URL: import.meta.env.PUBLIC_API_URL }}>
-  const preRegistrationForm = document.getElementById("pre-registration-form");
-  const submitButton = document.getElementById("submit-button");
-  const loadingIndicator = document.getElementById("loading-indicator");
-  const formMessage = document.getElementById("form-message");
-  const phoneNumberInput = document.getElementById("phoneNumber");
+  <form data-prereg novalidate class="mt-6">
+    {/* The role is the page, not a choice — copy-map §2.2. This input is the
+        single source of it; the submit handler reads the field like any other
+        rather than keeping a second copy on a data attribute. */}
+    <input type="hidden" name="role" value={role} />
 
-  function validateForm() {
-    if (!preRegistrationForm) return false;
-
-    let allFieldsValid = true;
-    const requiredInputs = preRegistrationForm.querySelectorAll("[required]");
-    console.debug("Validating form fields:", requiredInputs);
-
-    requiredInputs.forEach((input) => {
-      console.debug("Validating input:", input.id, "Value:", input.value);
-      if (input.id === "phoneNumber") {
-        const prefix = input.dataset.prefix || "";
-        const expectedLength = prefix.length + 10;
-
-        if (
-          !input.value.startsWith(prefix) ||
-          input.value.length !== expectedLength ||
-          !/^\+\d{11}$/.test(input.value)
-        ) {
-          allFieldsValid = false;
-        }
-      } else if (!input.checkValidity()) {
-        allFieldsValid = false;
+    <div class="grid gap-4 sm:grid-cols-2">
+      {
+        fields.map((f) => (
+          <div class:list={[!f.half && "sm:col-span-2"]}>
+            <label
+              for={`prereg-${f.name}`}
+              class="text-[14px] font-bold text-ink"
+            >
+              {f.label}
+            </label>
+            <input
+              id={`prereg-${f.name}`}
+              name={f.name}
+              type={f.type}
+              autocomplete={f.autocomplete}
+              placeholder={f.placeholder}
+              aria-describedby={`prereg-${f.name}-error`}
+              class={inputClass}
+            />
+            <p
+              id={`prereg-${f.name}-error`}
+              data-error-for={f.name}
+              hidden
+              class="mt-1.5 text-[13.5px] font-semibold text-pullman-brown"
+            >
+            </p>
+          </div>
+        ))
       }
-    });
+    </div>
 
-    // const passwordInput = document.getElementById("password");
-    // const confirmPasswordInput = document.getElementById("confirmPassword");
-    // if (
-    //   passwordInput &&
-    //   confirmPasswordInput &&
-    //   passwordInput.value !== confirmPasswordInput.value
-    // ) {
-    //   allFieldsValid = false;
-    //   const errorMessage = "Error: Passwords do not match.";
-    //   formMessage.textContent = `Error: ${errorMessage}`;
-    //   formMessage.classList.remove("hidden");
-    //   formMessage.classList.add("text-red-600");
-    // } else {
-    //   formMessage.textContent = "";
-    //   formMessage.classList.add("hidden");
-    //   formMessage.classList.remove("text-green-600", "text-red-600");
-    // }
+    <button
+      type="submit"
+      data-submit
+      class="mt-6 flex w-full items-center justify-center rounded-full bg-ink px-8 py-4 text-[16px] font-bold text-paper hover:bg-pullman-brown disabled:opacity-60 sm:w-auto"
+    >
+      {t.submit}
+    </button>
 
-    const roleSelect = document.getElementById("role");
-    if (roleSelect && roleSelect.value === "") {
-      allFieldsValid = false;
+    {/* Server outcomes (§2.2) land here, one class at a time. The raw API
+        string is logged, never shown.
+
+        Deliberately NOT hidden when empty: a live region has to be in the
+        accessibility tree before its text changes, or the change is not
+        announced. Writing into a display:none node and then revealing it is
+        the common way to ship an alert that never speaks. */}
+    <p
+      data-form-message
+      role="alert"
+      class="mt-4 text-[15px] font-semibold text-pullman-brown empty:mt-0"
+    >
+    </p>
+  </form>
+
+  {/* The success state. The availability block (§2.1) is the page's next
+      element, so it stays on screen beneath this line rather than being
+      duplicated inside the form. */}
+  <p
+    data-prereg-success
+    hidden
+    role="status"
+    tabindex="-1"
+    class="text-[1.25rem] font-extrabold tracking-headline text-ink focus:outline-none"
+  >
+    {t.success}
+  </p>
+</section>
+
+<script>
+  import { formCopy } from "../i18n/formCopy";
+  import type { Lang } from "../i18n/feesCopy";
+
+  const lang = (document.documentElement.lang === "es" ? "es" : "en") as Lang;
+  const t = formCopy[lang];
+
+  const form = document.querySelector<HTMLFormElement>("[data-prereg]");
+  const intro = document.querySelector<HTMLElement>("[data-prereg-intro]");
+  const submit = document.querySelector<HTMLButtonElement>("[data-submit]");
+  const message = document.querySelector<HTMLParagraphElement>("[data-form-message]");
+  const success = document.querySelector<HTMLElement>("[data-prereg-success]");
+
+  if (form && submit && message && success) {
+    const field = (name: string) =>
+      form.querySelector<HTMLInputElement>(`[name="${name}"]`);
+    const errorSlot = (name: string) =>
+      form.querySelector<HTMLElement>(`[data-error-for="${name}"]`);
+
+    const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    /** Whatever they type, the wire format is E.164 — the endpoint dedupes on
+     *  an exact string match, and every existing row was written as +1XXXXXXXXXX.
+     *
+     *  Only formatting characters are stripped, never letters or stray digits.
+     *  Discarding every non-digit was worse than useless here: it turned
+     *  "+1-305-555-0100 ext 2" into the valid-looking +130555501002 — a number
+     *  that does not exist, and a second whitelist row for someone already
+     *  stored as +13055550100, which is the exact duplicate the endpoint's
+     *  dedupe exists to prevent. */
+    const e164 = (raw: string) => raw.trim().replace(/[\s().\-‐-―]/g, "");
+    // E.164: "+", a country code that cannot start with 0, then up to 15 digits
+    // in total. "+001 305…" is a dialling prefix, not a country code.
+    const PHONE = /^\+[1-9]\d{9,14}$/;
+
+    /** Per-field validation, copy-map §2.2. Returns the message, or null. */
+    function validate(name: string, value: string): string | null {
+      if (!value.trim()) return t.required;
+      if (name === "email" && !EMAIL.test(value.trim())) return t.badEmail;
+      if (name === "phoneNumber" && !PHONE.test(e164(value))) return t.badPhone;
+      return null;
     }
 
-    if (submitButton) {
-      submitButton.disabled = !allFieldsValid;
-    }
-    console.debug("Form validation result:", allFieldsValid);
-    return allFieldsValid;
-  }
-
-  if (phoneNumberInput) {
-    const prefix = phoneNumberInput.dataset.prefix || ""; // Obtener el prefijo del atributo data-prefix
-    const maxDigits = 10; // Número máximo de dígitos después del prefijo
-
-    if (!phoneNumberInput.value.startsWith(prefix)) {
-      phoneNumberInput.value = prefix;
+    function showFieldError(name: string, text: string | null) {
+      const input = field(name);
+      const slot = errorSlot(name);
+      if (!input || !slot) return;
+      slot.textContent = text ?? "";
+      slot.hidden = !text;
+      input.setAttribute("aria-invalid", text ? "true" : "false");
+      input.classList.toggle("border-pullman-brown", Boolean(text));
     }
 
-    phoneNumberInput.addEventListener("keydown", (e) => {
-      const currentValue = phoneNumberInput.value;
-      const digitsPart = currentValue.substring(prefix.length);
+    const names = ["firstName", "lastName", "email", "phoneNumber"];
 
-      // Prevenir borrar el prefijo
-      if (
-        e.key === "Backspace" &&
-        phoneNumberInput.selectionStart <= prefix.length
-      ) {
-        e.preventDefault();
-        return;
-      }
-
-      // Prevenir escribir más de 10 dígitos
-      if (
-        digitsPart.length >= maxDigits &&
-        /\d/.test(e.key) &&
-        !e.ctrlKey &&
-        !e.altKey &&
-        !e.metaKey &&
-        e.key !== "Backspace" &&
-        e.key !== "Delete" &&
-        e.key !== "ArrowLeft" &&
-        e.key !== "ArrowRight" &&
-        e.key !== "Tab"
-      ) {
-        e.preventDefault();
-      }
-    });
-
-    phoneNumberInput.addEventListener("input", () => {
-      let value = phoneNumberInput.value;
-
-      if (!value.startsWith(prefix)) {
-        value = prefix;
-      }
-
-      // Eliminar caracteres no numéricos después del prefijo
-      const digitsOnly = value.substring(prefix.length).replace(/\D/g, "");
-      value = prefix + digitsOnly;
-
-      // Limitar a 10 dígitos después del prefijo
-      if (digitsOnly.length > maxDigits) {
-        value = prefix + digitsOnly.substring(0, maxDigits);
-      }
-
-      phoneNumberInput.value = value;
-      validateForm();
-    });
-
-    phoneNumberInput.addEventListener("focus", () => {
-      if (!phoneNumberInput.value.startsWith(prefix)) {
-        phoneNumberInput.value = prefix;
-      }
-      // Mover el cursor al final del prefijo si está al principio
-      if (phoneNumberInput.selectionStart < prefix.length) {
-        phoneNumberInput.setSelectionRange(prefix.length, prefix.length);
-      }
-    });
-
-    // Ajustar el cursor si el usuario hace clic antes del prefijo
-    phoneNumberInput.addEventListener("click", () => {
-      if (phoneNumberInput.selectionStart < prefix.length) {
-        phoneNumberInput.setSelectionRange(prefix.length, prefix.length);
-      }
-    });
-  }
-
-  if (preRegistrationForm && submitButton && loadingIndicator && formMessage) {
-    preRegistrationForm.addEventListener("input", validateForm);
-    const roleSelect = document.getElementById("role");
-    if (roleSelect) {
-      roleSelect.addEventListener("change", validateForm);
-    }
-
-    preRegistrationForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      formMessage.textContent = "";
-      formMessage.classList.add("hidden");
-      formMessage.classList.remove("text-green-600", "text-red-600");
-
-      submitButton.disabled = true;
-      submitButton.classList.add("opacity-50", "cursor-not-allowed");
-      loadingIndicator.classList.remove("hidden");
-
-      const formData = new FormData(preRegistrationForm);
-      const data = {};
-      formData.forEach((value, key) => {
-        data[key] = value.toString();
+    // Errors appear on blur only once the person has been told about them —
+    // no page-load wall of red on empty fields.
+    let submitted = false;
+    for (const name of names) {
+      field(name)?.addEventListener("blur", () => {
+        if (submitted) showFieldError(name, validate(name, field(name)!.value));
       });
+      field(name)?.addEventListener("input", () => {
+        if (submitted) showFieldError(name, validate(name, field(name)!.value));
+      });
+    }
 
-      // if (
-      //   data["password"] !== undefined &&
-      //   data["confirmPassword"] !== undefined &&
-      //   data["password"] !== data["confirmPassword"]
-      // ) {
-      //   formMessage.textContent = "Error: Passwords do not match.";
-      //   formMessage.classList.remove("hidden");
-      //   formMessage.classList.add("text-red-600");
-      //   submitButton.disabled = false;
-      //   submitButton.classList.remove("opacity-50", "cursor-not-allowed");
-      //   loadingIndicator.classList.add("hidden");
-      //   return;
-      // }
+    // The node stays in the tree; only its text changes, so the live region
+    // actually announces.
+    function setMessage(text: string | null) {
+      message!.textContent = text ?? "";
+    }
 
-      if (!API_URL) {
-        console.error("PUBLIC_API_URL no está definida");
-        formMessage.textContent =
-          "Error: Configuración del servidor no disponible.";
-        formMessage.classList.remove("hidden");
-        formMessage.classList.add("text-red-600");
-        submitButton.disabled = false;
-        submitButton.classList.remove("opacity-50", "cursor-not-allowed");
-        loadingIndicator.classList.add("hidden");
+    /** Which §2.2 outcome class a response falls into. */
+    async function outcome(response: Response): Promise<string> {
+      let code = "";
+      let raw = "";
+      try {
+        const body = await response.json();
+        code = typeof body?.code === "string" ? body.code : "";
+        raw = typeof body?.error === "string" ? body.error : "";
+      } catch {
+        /* a body that will not parse tells us nothing the status does not */
+      }
+      // The raw API string is logged, never displayed (§2.2).
+      console.error("[pre-registration] rejected", response.status, code, raw);
+
+      if (code.includes("email-already-in-use")) return t.emailTaken;
+      if (code.includes("phone-number-already-in-use")) return t.phoneTaken;
+      if (response.status >= 500) return t.server;
+      if (response.status >= 400) return t.rejected;
+      return t.server;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      submitted = true;
+      setMessage(null);
+
+      let firstBad: string | null = null;
+      for (const name of names) {
+        const error = validate(name, field(name)!.value);
+        showFieldError(name, error);
+        if (error && !firstBad) firstBad = name;
+      }
+      if (firstBad) {
+        field(firstBad)!.focus();
         return;
       }
+
+      const apiUrl = import.meta.env.PUBLIC_API_URL;
+      if (!apiUrl) {
+        console.error("[pre-registration] PUBLIC_API_URL is not set");
+        setMessage(t.server);
+        return;
+      }
+
+      submit!.disabled = true;
+      submit!.textContent = t.submitting;
+
+      const data = {
+        firstName: field("firstName")!.value.trim(),
+        lastName: field("lastName")!.value.trim(),
+        email: field("email")!.value.trim(),
+        phoneNumber: e164(field("phoneNumber")!.value),
+        role: field("role")!.value,
+      };
 
       try {
-        const response = await fetch(`${API_URL}v1/auth/register`, {
+        const response = await fetch(`${apiUrl}v1/auth/register`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ data: data }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data }),
         });
 
-        const result = await response.json();
-
         if (response.ok) {
-          formMessage.textContent = "Pre-registration successful! Thank you.";
-          formMessage.classList.remove("hidden");
-          formMessage.classList.add("text-green-600");
-          preRegistrationForm.reset();
-        } else {
-          console.debug("Error response:", result);
-          const errorMessage =
-            result.error || "An error occurred during pre-registration.";
-          formMessage.textContent = `Error: ${errorMessage}`;
-          formMessage.classList.remove("hidden");
-          formMessage.classList.add("text-red-600");
+          form!.hidden = true;
+          if (intro) intro.hidden = true;
+          success!.hidden = false;
+          success!.focus?.();
+          return;
         }
+        setMessage(await outcome(response));
       } catch (error) {
-        console.error("Error submitting form:", error);
-        formMessage.textContent =
-          "Error: Could not connect to the server. Please try again later.";
-        formMessage.classList.remove("hidden");
-        formMessage.classList.add("text-red-600");
+        console.error("[pre-registration] could not reach the server", error);
+        setMessage(t.network);
       } finally {
-        submitButton.disabled = false;
-        submitButton.classList.remove("opacity-50", "cursor-not-allowed");
-        loadingIndicator.classList.add("hidden");
+        submit!.disabled = false;
+        submit!.textContent = t.submit;
       }
     });
   }
