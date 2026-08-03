@@ -51,18 +51,30 @@
 // WHAT IT CANNOT DO: it checks that a value EXISTS, never that it works. A
 // wrong key, a revoked key, or a URL pointing at the wrong environment all pass
 // here and fail in the browser.
+//
+// MAINTENANCE: the three arguments to loadEnv below are hardcoded to match what
+// Astro passes. They agree today because astro.config.mjs sets none of `root`,
+// `vite.envDir` or `vite.envPrefix`, and `npm run build` passes no --mode. If
+// any of those four ever changes, change this call with it — otherwise the
+// check starts reading a different environment than the build does, silently.
 
 let loadEnv;
 try {
   ({ loadEnv } = await import("vite"));
+  // Resolving is not the same as getting a usable export: a Vite that no longer
+  // ships loadEnv would sail through the destructure and die later as a bare
+  // "loadEnv is not a function", losing the explanation below.
+  if (typeof loadEnv !== "function") throw new Error("vite exports no loadEnv()");
 } catch (err) {
   // Fail closed, and name the cause: without Vite this cannot answer the
   // question at all, and "could not check" must never read as "checked, fine".
+  // `err` is whatever was thrown — not necessarily an Error — so it is coerced
+  // rather than dereferenced, or the catch itself would throw.
   console.error(`✗ env — could not load Vite, so nothing was checked`);
   console.error(`  This reads the environment through Astro's own Vite (see the header).`);
   console.error(`  Run \`npm ci\` first; if that is done, the install layout is not one`);
   console.error(`  that hoists Vite to the project root, which this script requires.`);
-  console.error(`  ${err.message}`);
+  console.error(`  ${err?.message ?? err}`);
   process.exit(1);
 }
 
@@ -74,6 +86,17 @@ const env = loadEnv("production", process.cwd(), "PUBLIC_");
 // All three Firebase values feed one `initializeApp` call, so any one of them
 // missing has the same single consequence.
 const NO_CALLABLE = "the estimateFares callable cannot be reached, so no fare is ever quoted";
+
+// None of the six is ever meant to contain whitespace, and an invisible
+// character pasted into the GitHub Secrets UI survives into the bundle intact:
+// `fetch` on a URL with a leading NBSP throws before it reaches the network, so
+// the form dies with a green build — the failure this file exists to stop. The
+// trailing-slash rule below only ever guarded the END of the value; this guards
+// all of it. `\s` covers the Unicode spaces and U+FEFF but not the zero-width
+// characters, so those are named explicitly.
+// Written as escapes on purpose: a literal invisible character in this source
+// would be unreviewable, and unverifiable by anyone reading the diff.
+const BLANKS = /[\s\u180e\u200b\u200c\u200d\u2060]/u;
 
 const REQUIRED = [
   {
@@ -88,9 +111,7 @@ const REQUIRED = [
     // Returns nothing when the value is fine, a {problem, breaks} pair when not.
     shape: (v) =>
       v.endsWith("/") ? undefined : {
-        problem:
-          "must end with a trailing slash, and nothing after it — not even a space —\n" +
-          "      because the form appends `v1/auth/register` to it",
+        problem: "must end with a trailing slash, because the form appends `v1/auth/register` to it",
         breaks:
           "the fetch ships, but `v1/auth/register` is concatenated straight onto this\n" +
           "      value, so it builds a URL that never reaches the register endpoint",
@@ -123,6 +144,16 @@ for (const { name, breaks, shape } of REQUIRED) {
   // trimmed slash test and then build a URL with a space in the middle of it.
   if (!value.trim()) {
     errors.push(`${name} is missing or empty\n      ${breaks}`);
+    continue;
+  }
+  // Its own cause, so its own consequence: the value is present and ships as
+  // written — nothing is eliminated, it is simply not the value that was meant.
+  if (BLANKS.test(value)) {
+    errors.push(
+      `${name} contains a space or an invisible character\n` +
+        `      it is inlined exactly as written, so the value the browser uses is not the\n` +
+        `      one you set — a URL with a leading invisible character will not even parse`,
+    );
     continue;
   }
   const bad = shape?.(value);

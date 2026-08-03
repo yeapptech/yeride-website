@@ -36,6 +36,10 @@ www.yeride.com
    |--------|-------------|---------|
    | `PUBLIC_API_URL` | Backend API URL | `https://api.yeride.com/` |
 
+   All six `PUBLIC_*` secrets are required, not just this one — the build fails
+   on a missing or empty one (`scripts/check-env.mjs`). The full list is in
+   CLAUDE.md, and `deploy-all.yml`'s "Create env file" step must write each one.
+
 ### Custom Domain
 
 The site uses a custom domain configured via:
@@ -129,8 +133,9 @@ jobs:
 # Install dependencies
 npm ci
 
-# Create environment file
+# Create environment file — all six PUBLIC_* variables, see CLAUDE.md
 echo "PUBLIC_API_URL=https://api.yeride.com/" > .env
+# ...and the other five; npm run build fails if any is missing or empty
 
 # Build the site
 npm run build
