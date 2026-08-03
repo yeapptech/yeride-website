@@ -36,6 +36,14 @@ jobs:
           echo "PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.PUBLIC_FIREBASE_PROJECT_ID }}" >> .env
           echo "PUBLIC_FEE_SCHEDULE_URL=${{ secrets.PUBLIC_FEE_SCHEDULE_URL }}" >> .env
 
+      # Fee-label coverage (#56). Needs the network, so it is not part of
+      # `npm run build` — see the script header. Fails the deploy on a charge or
+      # area id the site cannot name; skips, loudly, if the endpoint is down.
+      - name: Fee-label coverage
+        env:
+          PUBLIC_FEE_SCHEDULE_URL: ${{ secrets.PUBLIC_FEE_SCHEDULE_URL }}
+        run: node scripts/check-fee-labels.mjs
+
       - name: Install dependencies
         # NPM_TOKEN: org read-only classic PAT with read:packages — the
         # committed .npmrc routes @yeapptech/* through GitHub Packages

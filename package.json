@@ -6,6 +6,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "checks": "node scripts/check-route-parity.mjs && node scripts/check-copy-gate.mjs",
+    "check:fee-labels": "node scripts/check-fee-labels.mjs",
     "build": "npm run checks && astro check && astro build",
     "preview": "astro preview",
     "astro": "astro"

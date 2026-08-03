@@ -23,6 +23,10 @@ No test runner and no linter are configured. `npm run build` is the only automat
 
 `.github/workflows/checks.yml` runs items 1–2 on every pull request; `deploy-all.yml` runs the full chain on `main` and gates deployment on it.
 
+One further gate runs **outside `npm run build`**, because it needs the network:
+
+- **`scripts/check-fee-labels.mjs`** — every charge id and service area `getFeeSchedule` publishes has a site-authored EN/ES label in `src/i18n/feeLabels.ts`. It asks the live endpoint (all areas, not just the default), so it cannot live in `npm run checks` without coupling every local build and every PR to a third party's uptime. It runs on deploy (`deploy-all.yml`, before the build) and daily on a schedule (`fee-label-drift.yml`, which opens an issue on drift, since drift arrives from the admin console between deploys). It **fails on drift and skips when it cannot ask** — a missing `PUBLIC_FEE_SCHEDULE_URL` or an unreachable endpoint prints a `SKIPPED` line and exits 0. Run it by hand with `node scripts/check-fee-labels.mjs [url]`.
+
 ## Environment Variables
 
 All six are `PUBLIC_` (client-side) and are injected in CI from GitHub Secrets. Create a `.env` for local development:
