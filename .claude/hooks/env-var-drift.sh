@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # PostToolUse hook: catch PUBLIC_ env vars that the deploy workflow never writes.
 #
-# Adding a client env var is a three-place change: .env, the "Create env file"
-# step in deploy-all.yml, and a GitHub Secret. Miss the workflow and the var is
-# an empty string in production with no build error — silent breakage.
+# Adding a client env var is a four-place change: .env, the "Create env file"
+# step in deploy-all.yml, a GitHub Secret, and REQUIRED in scripts/check-env.mjs
+# if the var is required. Miss the workflow and the var is an empty string in
+# production; since #59 that fails the build rather than shipping silently, but
+# only for vars listed in REQUIRED — this hook catches the rest.
 set -uo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

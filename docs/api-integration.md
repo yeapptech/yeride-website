@@ -34,6 +34,9 @@ For production (GitHub Actions), set the `PUBLIC_API_URL` secret in the reposito
 1. Go to **Settings** → **Secrets and variables** → **Actions**
 2. Add `PUBLIC_API_URL` as a repository secret
 
+`PUBLIC_API_URL` is one of six required `PUBLIC_*` secrets; the build fails on any
+missing or empty one (`scripts/check-env.mjs`). The full list is in CLAUDE.md.
+
 ## API Endpoints
 
 ### User Registration

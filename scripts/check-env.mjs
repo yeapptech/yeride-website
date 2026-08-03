@@ -87,16 +87,24 @@ const env = loadEnv("production", process.cwd(), "PUBLIC_");
 // missing has the same single consequence.
 const NO_CALLABLE = "the estimateFares callable cannot be reached, so no fare is ever quoted";
 
-// None of the six is ever meant to contain whitespace, and an invisible
-// character pasted into the GitHub Secrets UI survives into the bundle intact:
-// `fetch` on a URL with a leading NBSP throws before it reaches the network, so
-// the form dies with a green build — the failure this file exists to stop. The
-// trailing-slash rule below only ever guarded the END of the value; this guards
-// all of it. `\s` covers the Unicode spaces and U+FEFF but not the zero-width
-// characters, so those are named explicitly.
-// Written as escapes on purpose: a literal invisible character in this source
-// would be unreviewable, and unverifiable by anyone reading the diff.
-const BLANKS = /[\s\u180e\u200b\u200c\u200d\u2060]/u;
+// Every one of the six is a URL, a hostname, a project id or an API key, so
+// every legitimate value is printable ASCII with no spaces in it.
+//
+// This is a POSITIVE rule, and that is the whole point. The version before it
+// listed the invisible characters to reject, and a list like that cannot be
+// finished: it stopped at U+200D, so U+200E and U+200F — the next two code
+// points, and the artifacts a Windows or web paste most often carries — went
+// straight through, along with U+00AD, the variation selectors and some four
+// thousand others. Each of them survives dotenv (`.trim()` removes U+00A0 and
+// a plain space, but nothing in category Cf), reaches the bundle intact, and
+// makes `fetch` throw before it touches the network: green build, dead form.
+// #57's review made the same finding about a homoglyph check "scoped to the
+// example, not the class". A whitelist has no tail left to miss.
+//
+// The cost is a false failure on a legitimately non-ASCII value. None of the
+// six can have one, and the failure would be loud and one line to fix, which is
+// the right direction for a gate to be wrong in.
+const PRINTABLE = /^[\x21-\x7e]+$/;
 
 const REQUIRED = [
   {
@@ -135,24 +143,30 @@ const REQUIRED = [
 ];
 
 const errors = [];
+// The footer explains the missing-secret case, so it is only printed when that
+// is actually what happened. Printed unconditionally it told a reader whose URL
+// merely lacked a slash that a secret had gone missing — the wrong cause named,
+// which is the fault this file has now been re-opened for twice.
+let anyEmpty = false;
 
 for (const { name, breaks, shape } of REQUIRED) {
   const value = env[name] ?? "";
-  // Emptiness is judged trimmed — a whitespace-only value is an empty one. The
-  // SHAPE is judged raw, because that is what gets inlined: dotenv keeps
-  // whitespace inside quotes, so `"https://api.yeride.com/ "` would pass a
-  // trimmed slash test and then build a URL with a space in the middle of it.
+  // Emptiness is judged trimmed, so a whitespace-only value counts as empty and
+  // gets the message that fits it. Everything the trim would have hidden is
+  // then caught by PRINTABLE below, on the RAW value, because the raw value is
+  // what gets inlined.
   if (!value.trim()) {
     errors.push(`${name} is missing or empty\n      ${breaks}`);
+    anyEmpty = true;
     continue;
   }
   // Its own cause, so its own consequence: the value is present and ships as
-  // written — nothing is eliminated, it is simply not the value that was meant.
-  if (BLANKS.test(value)) {
+  // written — nothing is eliminated, it simply is not the value that was meant.
+  if (!PRINTABLE.test(value)) {
     errors.push(
-      `${name} contains a space or an invisible character\n` +
-        `      it is inlined exactly as written, so the value the browser uses is not the\n` +
-        `      one you set — a URL with a leading invisible character will not even parse`,
+      `${name} contains a space or a character that is not printable ASCII\n` +
+        `      it is inlined exactly as written, so what the browser gets is not what you\n` +
+        `      set — and an invisible character anywhere in a URL stops it parsing at all`,
     );
     continue;
   }
@@ -165,8 +179,11 @@ if (errors.length) {
   for (const e of errors) console.error(`  ${e}`);
   console.error(`\n  Locally these come from .env — see CLAUDE.md for the full list.`);
   console.error(`  On deploy they come from GitHub Secrets, written to .env by`);
-  console.error(`  deploy-all.yml's "Create env file" step. A secret that has been renamed`);
-  console.error(`  or never created interpolates to an empty string, which is this failure.`);
+  console.error(`  deploy-all.yml's "Create env file" step.`);
+  if (anyEmpty) {
+    console.error(`  A secret that has been renamed or never created interpolates to an empty`);
+    console.error(`  string, which is what "missing or empty" above means on a deploy.`);
+  }
   process.exit(1);
 }
 

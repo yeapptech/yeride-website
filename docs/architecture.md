@@ -157,6 +157,8 @@ Public environment variables are prefixed with `PUBLIC_`:
 |----------|---------|
 | `PUBLIC_API_URL` | Base URL for API requests |
 
+All six are required; `npm run build` fails on a missing one. The full list is in CLAUDE.md.
+
 ## Build Process
 
 1. **Type Checking** - TypeScript validation via `astro check`
