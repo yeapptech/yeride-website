@@ -1,0 +1,15 @@
+---
+// /es/fare-estimate — the ES twin. Routes are mirrored with English slugs
+// (copy-map §0.3).
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import FareEstimatePage from "../../components/FareEstimatePage.astro";
+---
+
+<BaseLayout
+  title="Estimar tarifa | YeRide"
+  description="Mira lo que costaría un viaje con las tarifas publicadas de hoy. Un estimado es un estimado — el taxímetro decide."
+  lang="es"
+  headerGround="yellow"
+>
+  <FareEstimatePage lang="es" />
+</BaseLayout>

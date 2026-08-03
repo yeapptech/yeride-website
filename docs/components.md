@@ -223,6 +223,53 @@ driver's side in both payment flows.
 `src/i18n/feeLabels.ts` (charge labels + family/payer), `src/i18n/feesCopy.ts` (page
 copy, EN/ES).
 
+### FareEstimatePage
+
+The whole body of `/fare-estimate` and `/es/fare-estimate` (wayfinder #38), on the
+"Hail" language: Cab Yellow ground for the ask and the form, paper for the map and the
+numbers, an Ink close linking `/fees`. Replaced `FareEstimateForm` and
+`FareResultsCard`, both deleted.
+
+**Props**
+
+| Prop | Type | Required | Notes |
+|---|---|---|---|
+| `lang` | `"en" \| "es"` | yes | Selects the copy set from `src/i18n/fareEstimateCopy.ts` |
+
+**Usage**
+
+```astro
+<BaseLayout title="Estimate a fare | YeRide" lang="en" headerGround="yellow">
+  <FareEstimatePage lang="en" />
+</BaseLayout>
+```
+
+**Why it carries a client script.** The whole page is interactive: the Google Maps
+loader supplies autocomplete, the map and Directions, and the fares come from the
+Firebase callable `estimateFares` at submit time. `setOptions({ language })` is passed
+the page's language, or the ES page gets English place names and an English "18 mins".
+
+**Four refusals it enforces.** Read #38 before relaxing any of them:
+
+1. **It shows the fare and nothing else about money.** `estimateFares` also returns
+   `appCharges`/`appChargesTotal`, and `ServiceEstimate` deliberately does not declare
+   them, so no page can render them by accident. They are the *driver's* cost in both
+   payment flows — itemising them beside a rider's fare would claim the rider pays
+   money they do not (copy map §3.5, amended under #47).
+2. **A fare that is not a positive finite number renders as a gap (`—`) — never
+   `$0.00`.** This is reachable: `calculateFare` coalesces all four rates to `0`, so a
+   `rideServices` document with holes quotes zero, and a published zero says the ride is
+   free. Same rule as `FeeSchedule`, same reason.
+3. **A quote belongs to the route it was asked for.** A counter retires every in-flight
+   quote when either end changes or the form is submitted again, so a reply about an
+   abandoned journey can never be rendered under a map showing a different one.
+4. **§3.5's "Outside area" line is not shipped.** The page asks for
+   `us-fl-south-florida` on every call and cannot know where the rider is, so it has no
+   condition that makes the sentence true — see #62.
+
+**Related:** `src/lib/fareEstimate.ts` (callable contract), `src/lib/firebase.ts`
+(callable region), `src/i18n/fareEstimateCopy.ts` (page copy, EN/ES).
+
 ## Page-Specific Components
 
 ### Homepage (index.astro)

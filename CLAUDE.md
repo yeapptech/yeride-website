@@ -49,9 +49,11 @@ Adding a new env var requires editing `.github/workflows/deploy-all.yml` (the "C
 The site talks to two unrelated services; don't conflate them.
 
 1. **Pre-registration** (`src/components/PreRegistrationForm.astro`) — plain `fetch` POST to `${PUBLIC_API_URL}v1/auth/register`, which is *yeride-admin-api*, not yeride-functions. It writes a `whitelist` row; it does not create an account. The form logic is a **bundled** `<script>` that imports its copy from `src/i18n/formCopy.ts` and reads `import.meta.env.PUBLIC_API_URL` directly (wayfinder #37 replaced the old `is:inline` + `define:vars` script). Because that value is **inlined at build time**, a missing `PUBLIC_API_URL` silently strips the whole submit path from the bundle — see #59.
-2. **Fare estimates** (`src/pages/fare-estimate.astro` + `src/lib/fareEstimate.ts`) — Firebase **callable function** `estimateFares`, hardcoded to region `us-east1` in `src/lib/firebase.ts`. Service area defaults to `us-fl-south-florida`. The page script loads Google Maps libraries (`maps`, `places`, `marker`, `routes`) via `@googlemaps/js-api-loader`, resolves pickup/dropoff, computes distance + duration, then calls `getEstimates()`.
+2. **Fare estimates** (`src/components/FareEstimatePage.astro` + `src/lib/fareEstimate.ts`) — Firebase **callable function** `estimateFares`, hardcoded to region `us-east1` in `src/lib/firebase.ts`. Service area defaults to `us-fl-south-florida`. The component script loads Google Maps libraries (`maps`, `places`, `marker`, `routes`) via `@googlemaps/js-api-loader`, resolves pickup/dropoff, computes distance + duration, then calls `getEstimates()`.
 
-`firebase-admin` is in `package.json` but unused in `src/`. Firebase Auth and Firestore are not used — only `firebase/functions`.
+   `estimateFares` also returns `appCharges`/`appChargesTotal`, and `ServiceEstimate` **deliberately does not declare them** (wayfinder #38) — they are the *driver's* cost in both payment flows, never the rider's, so a rider-facing page must not render them. The reasoning is written into `src/lib/fareEstimate.ts`; read it before adding the fields back.
+
+Firebase Auth and Firestore are not used — only `firebase/functions`.
 
 ### Page structure — one layout, thin pages
 
@@ -61,10 +63,10 @@ markup — `Header.astro` and `Footer.astro` have one caller each, `BaseLayout`.
 or footer change is therefore one edit, in one place.
 
 Redesigned routes keep the page file thin — `BaseLayout` plus one component that holds the
-whole body (`HomePage`, `DriversPage`, `RidersPage`, `FeeSchedule`) — with the copy in
-`src/i18n/`. Follow that shape when adding a page. The pages still awaiting their redesign
-ticket (`about`, `contact`, `privacy-policy`, `fare-estimate`) sit on `BaseLayout` with
-their pre-redesign bodies inline.
+whole body (`HomePage`, `DriversPage`, `RidersPage`, `FeeSchedule`, `FareEstimatePage`) — with
+the copy in `src/i18n/`. Follow that shape when adding a page. The pages still awaiting
+their redesign ticket (`about`, `contact`, `privacy-policy`) sit on `BaseLayout` with their
+pre-redesign bodies inline.
 
 `navBar.astro`, `src/data/navData.ts`, `src/styles/main.css` (Open Props from unpkg) and the
 `https://cdn.tailwindcss.com` script tags were all removed by #35. Tailwind comes from the

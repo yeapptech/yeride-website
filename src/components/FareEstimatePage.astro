@@ -1,0 +1,508 @@
+---
+// /fare-estimate and /es/fare-estimate — the brand restyle (wayfinder #38),
+// copy verbatim from docs/copy-map.md §3.5 via src/i18n/fareEstimateCopy.ts.
+//
+// "The Hail" language (#33), in the order the page is used: Cab Yellow ground
+// for the ask and the form, inversion to paper for the map and the numbers,
+// an Ink close pointing at /fees. No wordmark on yellow — only the app-icon
+// scheme is legal there — so the hero leads with the H1 and nothing else.
+//
+// THE PAGE SHOWS THE FARE AND NOTHING ELSE ABOUT MONEY. `estimateFares` also
+// returns `appCharges`/`appChargesTotal`; those are the DRIVER's cost, never
+// the rider's (see src/i18n/fareEstimateCopy.ts and src/lib/fareEstimate.ts),
+// so they are not declared on the type and cannot be rendered here by
+// accident. /fees is where the charges are explained.
+//
+// The stack is unchanged: Firebase callable `estimateFares` + the Google Maps
+// loader (maps, places, marker, routes).
+import { fareEstimateCopy } from "../i18n/fareEstimateCopy";
+import type { Lang } from "../i18n/feesCopy";
+
+export interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = fareEstimateCopy[lang];
+const esPrefix = lang === "es" ? "/es" : "";
+---
+
+<main>
+  {/* YELLOW GROUND — the ask, then the form */}
+  <section class="bg-cab-yellow">
+    <div
+      class="mx-auto w-full max-w-7xl px-5 pb-12 pt-4 sm:px-6 sm:pb-16 md:pb-20 md:pt-8"
+    >
+      <h1
+        class="max-w-4xl font-extrabold tracking-headline text-[2rem] leading-[1.06] text-ink sm:text-[2.75rem] md:text-[clamp(3rem,6vw,4.5rem)] md:leading-[1.0]"
+      >
+        {t.h1}
+      </h1>
+      <p
+        class="mt-4 max-w-2xl text-[16px] leading-relaxed text-ink/75 sm:text-[18px] md:mt-6 md:text-[clamp(1.05rem,1.5vw,1.25rem)]"
+      >
+        {t.lead}
+      </p>
+
+      <form
+        data-estimate-form
+        class="mt-8 max-w-2xl rounded-2xl bg-paper px-5 py-6 shadow-2xl sm:px-7 sm:py-7"
+      >
+        <div class="space-y-4">
+          <div>
+            {/*
+              `for` is not used: the field is a `gmp-place-autocomplete` custom
+              element, which is not a labelable element, so an association here
+              would be silently dead. The field's accessible name comes from its
+              placeholder instead — see `dressAutocomplete` below.
+            */}
+            <p class="text-[14px] font-bold text-ink">{t.pickupLabel}</p>
+            <div data-autocomplete="pickup" class="mt-1.5"></div>
+          </div>
+          <div>
+            <p class="text-[14px] font-bold text-ink">{t.dropoffLabel}</p>
+            <div data-autocomplete="dropoff" class="mt-1.5"></div>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          data-submit
+          disabled
+          class="mt-6 flex w-full items-center justify-center rounded-full bg-ink px-8 py-4 text-[16px] font-bold text-paper hover:bg-pullman-brown disabled:opacity-60 sm:w-auto"
+        >
+          {t.submit}
+        </button>
+
+        <p data-loading hidden class="mt-4 text-[15px] font-semibold text-ink/60">
+          {t.calculating}
+        </p>
+
+        {/*
+          Deliberately NOT hidden when empty, matching PreRegistrationForm: a
+          live region has to be in the accessibility tree before it is written
+          to, or the announcement never happens.
+        */}
+        <p
+          data-error
+          role="alert"
+          class="mt-4 text-[15px] font-semibold text-pullman-brown empty:mt-0"
+        >
+        </p>
+      </form>
+    </div>
+  </section>
+
+  {/* PAPER LANDING — the map, then the numbers */}
+  <section class="bg-paper">
+    <div class="mx-auto w-full max-w-7xl px-5 py-12 sm:px-6 md:py-16">
+      <div
+        data-map
+        class="h-[300px] w-full rounded-2xl border border-ink/10 bg-ink/5 md:h-[420px]"
+      >
+      </div>
+
+      {/*
+        The limit note stands in every state, not only alongside a result: it is
+        what this page is for, and a rider reading an error or waiting on a
+        quote is owed it as much as one reading a number.
+      */}
+      <p class="mt-6 max-w-xl text-[15px] text-ink/60">{t.limitNote}</p>
+
+      <div data-results hidden>
+        <section class="mt-10">
+          <h2
+            class="font-extrabold tracking-headline text-[1.35rem] text-ink sm:text-[1.6rem]"
+          >
+            {t.routeH2}
+          </h2>
+          <dl class="mt-4 flex flex-wrap gap-x-12 gap-y-4">
+            <div>
+              <dt class="text-xs font-bold uppercase tracking-caps text-ink/50">
+                {t.distance}
+              </dt>
+              <dd
+                data-route-distance
+                class="mt-1 text-[20px] font-extrabold tabular-nums text-ink"
+              >
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs font-bold uppercase tracking-caps text-ink/50">
+                {t.duration}
+              </dt>
+              <dd
+                data-route-duration
+                class="mt-1 text-[20px] font-extrabold tabular-nums text-ink"
+              >
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="mt-12">
+          <h2
+            class="font-extrabold tracking-headline text-[1.35rem] text-ink sm:text-[1.6rem]"
+          >
+            {t.resultsH2}
+          </h2>
+          <ul data-estimates class="mt-6 grid gap-4 sm:grid-cols-2"></ul>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  {/* INK CLOSE — the charges are not on this page; this is where they live */}
+  <section class="bg-ink">
+    <div class="mx-auto w-full max-w-7xl px-5 py-12 sm:px-6">
+      <a
+        href={`${esPrefix}/fees`}
+        class="inline-flex items-center gap-2 text-[18px] font-bold text-cab-yellow underline underline-offset-4 sm:text-[20px]"
+      >
+        {t.feeLink}
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+</main>
+
+<script>
+  import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
+  import { getEstimates, type ServiceEstimate } from "../lib/fareEstimate";
+  import { fareEstimateCopy } from "../i18n/fareEstimateCopy";
+  import type { Lang } from "../i18n/feesCopy";
+
+  const lang = (document.documentElement.lang === "es" ? "es" : "en") as Lang;
+  const t = fareEstimateCopy[lang];
+
+  const SOUTH_FLORIDA_CENTER = { lat: 25.7617, lng: -80.1918 };
+  /** A rate the source does not carry is a gap, matching /fees (#40). */
+  const GAP = "—";
+
+  function el<T extends Element>(sel: string): T | null {
+    return document.querySelector<T>(sel);
+  }
+
+  const form = el<HTMLFormElement>("[data-estimate-form]")!;
+  const submit = el<HTMLButtonElement>("[data-submit]")!;
+  const loading = el<HTMLElement>("[data-loading]")!;
+  const errorSlot = el<HTMLElement>("[data-error]")!;
+  const mapSlot = el<HTMLElement>("[data-map]")!;
+  const results = el<HTMLElement>("[data-results]")!;
+  const routeDistance = el<HTMLElement>("[data-route-distance]")!;
+  const routeDuration = el<HTMLElement>("[data-route-duration]")!;
+  const estimatesList = el<HTMLElement>("[data-estimates]")!;
+
+  let map: google.maps.Map;
+  let pickup: google.maps.LatLng | null = null;
+  let dropoff: google.maps.LatLng | null = null;
+  let pickupMarker: google.maps.marker.AdvancedMarkerElement | null = null;
+  let dropoffMarker: google.maps.marker.AdvancedMarkerElement | null = null;
+  let route: google.maps.DirectionsRenderer | null = null;
+  let busy = false;
+  /**
+   * A quote belongs to the route it was asked for, and to no other. Changing
+   * either end, or asking again, retires every quote already in flight: the
+   * reply that arrives afterwards is about a journey the rider has left behind,
+   * and rendering it puts one route on the map and another route's fares under
+   * it. The counter is the whole mechanism — bump to retire, compare to render.
+   */
+  let quote = 0;
+
+  const esc = (s: string) =>
+    s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+  /**
+   * A fare that is not a positive finite number is a GAP — never "$0.00".
+   *
+   * This is reachable, not defensive: `calculateFare` sums baseFare, per-km and
+   * per-minute and floors the result at minimumFare, and `estimateFares`
+   * coalesces ALL FOUR of those rates to 0 when the `rideServices` document
+   * lacks them. Those documents are hand-typed in the yeride-admin console with
+   * no validation, so a rate card with holes quotes exactly 0 — and a published
+   * $0.00 is a claim that the ride is free, which is the one thing a page about
+   * honest numbers must never say (#40's rule, on /fees).
+   */
+  function fareText(fare: number | null): string {
+    return priced(fare) ? `$${fare.toFixed(2)}` : GAP;
+  }
+
+  function priced(fare: number | null): fare is number {
+    return typeof fare === "number" && Number.isFinite(fare) && fare > 0;
+  }
+
+  function showError(message: string) {
+    errorSlot.textContent = message;
+  }
+
+  function clearError() {
+    errorSlot.textContent = "";
+  }
+
+  /** The button is takeable only when there is a whole route and no quote out. */
+  function syncSubmit() {
+    submit.disabled = busy || !pickup || !dropoff;
+  }
+
+  function setLoading(next: boolean) {
+    busy = next;
+    loading.hidden = !next;
+    syncSubmit();
+  }
+
+  function clearResults() {
+    results.hidden = true;
+    estimatesList.innerHTML = "";
+  }
+
+  function pin(letter: string): HTMLElement {
+    const node = document.createElement("div");
+    node.className =
+      "flex h-7 w-7 items-center justify-center rounded-full border-2 border-paper bg-ink text-[13px] font-extrabold text-paper shadow-md";
+    node.textContent = letter;
+    return node;
+  }
+
+  function clearMarkers() {
+    for (const marker of [pickupMarker, dropoffMarker]) {
+      if (marker) marker.map = null;
+    }
+    pickupMarker = null;
+    dropoffMarker = null;
+  }
+
+  function clearRoute() {
+    if (route) route.setMap(null);
+    route = null;
+  }
+
+  function fitToMarkers() {
+    const bounds = new google.maps.LatLngBounds();
+    for (const marker of [pickupMarker, dropoffMarker]) {
+      if (marker?.position) bounds.extend(marker.position as google.maps.LatLng);
+    }
+    if (bounds.isEmpty()) return;
+
+    map.fitBounds(bounds);
+    const listener = google.maps.event.addListener(map, "idle", () => {
+      if (map.getZoom()! > 15) map.setZoom(15);
+      google.maps.event.removeListener(listener);
+    });
+  }
+
+  function renderEstimates(estimates: ServiceEstimate[]) {
+    estimatesList.innerHTML = [...estimates]
+      // Cheapest first, as the page has always ordered them — but a gap is not
+      // a cheap fare, so gaps sort last instead of to the top. Subtracting a
+      // null fare would return NaN and leave the whole list unordered.
+      .sort((a, b) => {
+        if (priced(a.fare) && priced(b.fare)) return a.fare - b.fare;
+        return priced(a.fare) ? -1 : priced(b.fare) ? 1 : 0;
+      })
+      .map((estimate) => {
+        const seats =
+          typeof estimate.seat === "number"
+            ? t.seats.replace("{n}", String(estimate.seat))
+            : null;
+
+        return `<li class="rounded-2xl border border-ink/15 bg-white px-5 py-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-[17px] font-extrabold text-ink">${esc(estimate.name)}</p>
+              ${seats ? `<p class="mt-0.5 text-[13px] font-semibold text-ink/50">${esc(seats)}</p>` : ""}
+              ${estimate.description ? `<p class="mt-1.5 max-w-xs text-[14px] text-ink/60">${esc(estimate.description)}</p>` : ""}
+            </div>
+            <div class="shrink-0 text-right">
+              <p class="text-[24px] font-extrabold tabular-nums text-ink">${fareText(estimate.fare)}</p>
+              <p class="text-[12px] text-ink/50">${esc(t.fareCaption)}</p>
+            </div>
+          </div>
+        </li>`;
+      })
+      .join("");
+  }
+
+  /**
+   * Give the autocomplete its §3.5 placeholder, and stop it rendering dark.
+   *
+   * `gmp-place-autocomplete` is a CLOSED custom element — checked in the
+   * browser: no light-DOM children, no reachable `shadowRoot`. Nothing inside
+   * it can be selected, so reaching in for the `<input>` cannot work, and a
+   * `<label for>` cannot bind to it either (a custom element is not labelable).
+   * Its `placeholder` PROPERTY is the way in: real at runtime, absent from
+   * @types/google.maps, hence the cast. It doubles as the field's accessible
+   * name, which is the only one available here.
+   *
+   * `color-scheme` is one of the few things that inherits *through* a shadow
+   * boundary. Without it the component follows the OS into dark mode and puts
+   * a black field in the middle of the paper card.
+   */
+  function dressAutocomplete(element: HTMLElement, placeholder: string) {
+    (element as any).placeholder = placeholder;
+    element.style.colorScheme = "light";
+  }
+
+  async function init() {
+    setOptions({
+      key: import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY,
+      // Without this the ES page returns English place names and English
+      // "18 mins" from Directions.
+      language: lang,
+      region: "US",
+    });
+
+    const [mapsLib, placesLib, markerLib, routesLib] = await Promise.all([
+      importLibrary("maps"),
+      importLibrary("places"),
+      importLibrary("marker"),
+      importLibrary("routes"),
+    ]);
+
+    const { Map } = mapsLib;
+    const PlaceAutocompleteElement = (placesLib as any)
+      .PlaceAutocompleteElement as typeof google.maps.places.PlaceAutocompleteElement;
+    const { AdvancedMarkerElement } = markerLib;
+    const { DirectionsService, DirectionsRenderer } = routesLib;
+
+    map = new Map(mapSlot, {
+      center: SOUTH_FLORIDA_CENTER,
+      zoom: 12,
+      mapId: "FARE_ESTIMATE_MAP",
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    });
+
+    const fields = ["location", "displayName", "formattedAddress"];
+
+    function mountAutocomplete(
+      end: { slot: "pickup" | "dropoff"; placeholder: string },
+      set: (location: google.maps.LatLng) => void,
+    ) {
+      const slot = el<HTMLElement>(`[data-autocomplete="${end.slot}"]`)!;
+      const element = new PlaceAutocompleteElement({} as any);
+      element.id = `${end.slot}-autocomplete`;
+      slot.appendChild(element);
+      dressAutocomplete(element, end.placeholder);
+
+      element.addEventListener("gmp-select", async (event: any) => {
+        try {
+          const place = event.placePrediction.toPlace();
+          await place.fetchFields({ fields });
+          if (!place.location) return;
+
+          clearError();
+          // Everything quoted so far was quoted for the old route.
+          quote++;
+          clearRoute();
+          clearResults();
+          set(place.location);
+          fitToMarkers();
+        } catch (err) {
+          // Silence here is a form that looks fine and cannot be submitted.
+          console.error("[fare-estimate] place lookup failed", err);
+          showError(t.serviceError);
+        } finally {
+          syncSubmit();
+        }
+      });
+    }
+
+    mountAutocomplete(
+      { slot: "pickup", placeholder: t.pickupPlaceholder },
+      (location) => {
+        pickup = location;
+        if (pickupMarker) pickupMarker.map = null;
+        pickupMarker = new AdvancedMarkerElement({
+          position: pickup,
+          map,
+          content: pin("A"),
+        });
+      },
+    );
+
+    mountAutocomplete(
+      { slot: "dropoff", placeholder: t.dropoffPlaceholder },
+      (location) => {
+        dropoff = location;
+        if (dropoffMarker) dropoffMarker.map = null;
+        dropoffMarker = new AdvancedMarkerElement({
+          position: dropoff,
+          map,
+          content: pin("B"),
+        });
+      },
+    );
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      // The button is disabled until both ends are set; this is the narrowing.
+      if (!pickup || !dropoff || busy) return;
+
+      const ticket = ++quote;
+      clearError();
+      clearResults();
+      setLoading(true);
+
+      try {
+        const directions = await new DirectionsService().route({
+          origin: pickup,
+          destination: dropoff,
+          travelMode: google.maps.TravelMode.DRIVING,
+        });
+        if (ticket !== quote) return;
+
+        clearMarkers();
+        clearRoute();
+        route = new DirectionsRenderer({ map });
+        route.setDirections(directions);
+
+        const leg = directions.routes[0].legs[0];
+        const estimate = await getEstimates(
+          leg.distance!.value,
+          Math.ceil(leg.duration!.value / 60),
+        );
+        if (ticket !== quote) return;
+
+        // `estimateFares` throws `not-found` on an area with no services, so
+        // this is the contract changing under us rather than a rider fact.
+        if (estimate.estimates.length === 0) {
+          showError(t.serviceError);
+          return;
+        }
+
+        routeDistance.textContent = leg.distance!.text;
+        routeDuration.textContent = leg.duration!.text;
+        renderEstimates(estimate.estimates);
+        results.hidden = false;
+      } catch (err: any) {
+        if (ticket === quote) showError(errorCopy(err));
+      } finally {
+        setLoading(false);
+      }
+    });
+  }
+
+  function errorCopy(err: any): string {
+    // DirectionsService rejects with the status in the message.
+    if (/ZERO_RESULTS|NOT_FOUND/.test(String(err?.message))) return t.noRouteError;
+    // NOTE: §3.5's "Outside area" line is deliberately unreachable and is not
+    // shipped. This page asks `estimateFares` for `us-fl-south-florida` on
+    // every call and has no way to know where the rider is, so a rider in
+    // Chicago is quoted South Florida rates and `functions/not-found` means
+    // "South Florida has no services configured" — a fault, not a geography.
+    // Saying "We're not in that area yet" there would be false. Filed as #62.
+    console.error("[fare-estimate]", err);
+    return t.serviceError;
+  }
+
+  init().catch((err) => {
+    // Maps never loaded, so no estimate can be made — which is what the
+    // service-error line says, and all it says.
+    console.error("[fare-estimate] Google Maps failed to load", err);
+    showError(t.serviceError);
+  });
+</script>
