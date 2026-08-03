@@ -37,7 +37,13 @@ const en = {
   feeLink: "See the full fee schedule",
   noRouteError: "We couldn't find a route between those two places.",
   serviceError: "We couldn't get an estimate right now. Try again in a moment.",
-  outsideArea: "We're not in that area yet.",
+  // §3.5's third error row, "Outside area" / "We're not in that area yet.", is
+  // NOT here. The page asks `estimateFares` for `us-fl-south-florida` on every
+  // call and has no way to know where the rider is, so nothing it can observe
+  // means "you are outside our area" — `functions/not-found` means South
+  // Florida itself has no services configured. Shipping the string would put a
+  // sentence on screen the site cannot know to be true. Filed as #62; it
+  // returns when the site can answer the question the copy asks.
 };
 
 export const fareEstimateCopy: Record<Lang, typeof en> = {
@@ -61,6 +67,5 @@ export const fareEstimateCopy: Record<Lang, typeof en> = {
     feeLink: "Ver el tarifario completo",
     noRouteError: "No encontramos una ruta entre esos dos lugares.",
     serviceError: "No pudimos calcular el estimado ahora. Intenta de nuevo en un momento.",
-    outsideArea: "Todavía no estamos en esa zona.",
   },
 };

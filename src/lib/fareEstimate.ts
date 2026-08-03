@@ -9,8 +9,14 @@ export interface ServiceEstimate {
   /**
    * The metered fare, and the rider's whole number: on card the rider is
    * charged exactly this, on cash they hand exactly this to the driver.
+   *
+   * Nullable because the wire says so, not defensively: the callable's JSON
+   * serialises a non-finite fare as `null` (yeride-functions#28 — `Infinity`
+   * passes that handler's validation), and `calculateFare` returns 0 outright
+   * when a `rideServices` document is missing its rates. Neither is a price,
+   * so both render as a gap — never $0.00.
    */
-  fare: number;
+  fare: number | null;
 
   // `estimateFares` also returns `appCharges` and `appChargesTotal`. They are
   // NOT declared here, and that is the point — a rider-facing type that

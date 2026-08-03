@@ -10,7 +10,7 @@
 // THE PAGE SHOWS THE FARE AND NOTHING ELSE ABOUT MONEY. `estimateFares` also
 // returns `appCharges`/`appChargesTotal`; those are the DRIVER's cost, never
 // the rider's (see src/i18n/fareEstimateCopy.ts and src/lib/fareEstimate.ts),
-// so they are not fetched into the type and cannot be rendered here by
+// so they are not declared on the type and cannot be rendered here by
 // accident. /fees is where the charges are explained.
 //
 // The stack is unchanged: Firebase callable `estimateFares` + the Google Maps
@@ -49,17 +49,17 @@ const esPrefix = lang === "es" ? "/es" : "";
       >
         <div class="space-y-4">
           <div>
-            <label
-              for="pickup-autocomplete"
-              class="text-[14px] font-bold text-ink">{t.pickupLabel}</label
-            >
+            {/*
+              `for` is not used: the field is a `gmp-place-autocomplete` custom
+              element, which is not a labelable element, so an association here
+              would be silently dead. The accessible name is set on the input
+              the component owns — see `describeInput` below.
+            */}
+            <p class="text-[14px] font-bold text-ink">{t.pickupLabel}</p>
             <div data-autocomplete="pickup" class="mt-1.5"></div>
           </div>
           <div>
-            <label
-              for="dropoff-autocomplete"
-              class="text-[14px] font-bold text-ink">{t.dropoffLabel}</label
-            >
+            <p class="text-[14px] font-bold text-ink">{t.dropoffLabel}</p>
             <div data-autocomplete="dropoff" class="mt-1.5"></div>
           </div>
         </div>
@@ -101,8 +101,15 @@ const esPrefix = lang === "es" ? "/es" : "";
       >
       </div>
 
+      {/*
+        The limit note stands in every state, not only alongside a result: it is
+        what this page is for, and a rider reading an error or waiting on a
+        quote is owed it as much as one reading a number.
+      */}
+      <p class="mt-6 max-w-xl text-[15px] text-ink/60">{t.limitNote}</p>
+
       <div data-results hidden>
-        <section class="mt-12">
+        <section class="mt-10">
           <h2
             class="font-extrabold tracking-headline text-[1.35rem] text-ink sm:text-[1.6rem]"
           >
@@ -138,12 +145,6 @@ const esPrefix = lang === "es" ? "/es" : "";
           >
             {t.resultsH2}
           </h2>
-          {/*
-            The limit note lives inside the results block on purpose: it
-            qualifies the numbers, so it appears exactly where and when they
-            do, above them, and never on an empty page with nothing to qualify.
-          */}
-          <p class="mt-2 max-w-xl text-[15px] text-ink/60">{t.limitNote}</p>
           <ul data-estimates class="mt-6 grid gap-4 sm:grid-cols-2"></ul>
         </section>
       </div>
@@ -167,9 +168,6 @@ const esPrefix = lang === "es" ? "/es" : "";
 <script>
   import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
   import { getEstimates, type ServiceEstimate } from "../lib/fareEstimate";
-  // The one money formatter on the site, and the rule it encodes is this
-  // page's too: a figure that is not a finite number is a gap, never $0.00.
-  import { usd } from "../lib/feeSchedule";
   import { fareEstimateCopy } from "../i18n/fareEstimateCopy";
   import type { Lang } from "../i18n/feesCopy";
 
@@ -177,7 +175,7 @@ const esPrefix = lang === "es" ? "/es" : "";
   const t = fareEstimateCopy[lang];
 
   const SOUTH_FLORIDA_CENTER = { lat: 25.7617, lng: -80.1918 };
-  /** A missing rate is a gap in the source, matching /fees (#40). */
+  /** A rate the source does not carry is a gap, matching /fees (#40). */
   const GAP = "—";
 
   function el<T extends Element>(sel: string): T | null {
@@ -200,6 +198,15 @@ const esPrefix = lang === "es" ? "/es" : "";
   let pickupMarker: google.maps.marker.AdvancedMarkerElement | null = null;
   let dropoffMarker: google.maps.marker.AdvancedMarkerElement | null = null;
   let route: google.maps.DirectionsRenderer | null = null;
+  let busy = false;
+  /**
+   * A quote belongs to the route it was asked for, and to no other. Changing
+   * either end, or asking again, retires every quote already in flight: the
+   * reply that arrives afterwards is about a journey the rider has left behind,
+   * and rendering it puts one route on the map and another route's fares under
+   * it. The counter is the whole mechanism — bump to retire, compare to render.
+   */
+  let quote = 0;
 
   const esc = (s: string) =>
     s
@@ -207,6 +214,25 @@ const esPrefix = lang === "es" ? "/es" : "";
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+
+  /**
+   * A fare that is not a positive finite number is a GAP — never "$0.00".
+   *
+   * This is reachable, not defensive: `calculateFare` sums baseFare, per-km and
+   * per-minute and floors the result at minimumFare, and `estimateFares`
+   * coalesces ALL FOUR of those rates to 0 when the `rideServices` document
+   * lacks them. Those documents are hand-typed in the yeride-admin console with
+   * no validation, so a rate card with holes quotes exactly 0 — and a published
+   * $0.00 is a claim that the ride is free, which is the one thing a page about
+   * honest numbers must never say (#40's rule, on /fees).
+   */
+  function fareText(fare: number | null): string {
+    return priced(fare) ? `$${fare.toFixed(2)}` : GAP;
+  }
+
+  function priced(fare: number | null): fare is number {
+    return typeof fare === "number" && Number.isFinite(fare) && fare > 0;
+  }
 
   function showError(message: string) {
     errorSlot.textContent = message;
@@ -216,12 +242,17 @@ const esPrefix = lang === "es" ? "/es" : "";
     errorSlot.textContent = "";
   }
 
-  function setLoading(busy: boolean) {
-    loading.hidden = !busy;
+  /** The button is takeable only when there is a whole route and no quote out. */
+  function syncSubmit() {
     submit.disabled = busy || !pickup || !dropoff;
   }
 
-  /** A result belongs to the route it was quoted for, and to no other. */
+  function setLoading(next: boolean) {
+    busy = next;
+    loading.hidden = !next;
+    syncSubmit();
+  }
+
   function clearResults() {
     results.hidden = true;
     estimatesList.innerHTML = "";
@@ -264,7 +295,13 @@ const esPrefix = lang === "es" ? "/es" : "";
 
   function renderEstimates(estimates: ServiceEstimate[]) {
     estimatesList.innerHTML = [...estimates]
-      .sort((a, b) => a.fare - b.fare)
+      // Cheapest first, as the page has always ordered them — but a gap is not
+      // a cheap fare, so gaps sort last instead of to the top. Subtracting a
+      // null fare would return NaN and leave the whole list unordered.
+      .sort((a, b) => {
+        if (priced(a.fare) && priced(b.fare)) return a.fare - b.fare;
+        return priced(a.fare) ? -1 : priced(b.fare) ? 1 : 0;
+      })
       .map((estimate) => {
         const seats =
           typeof estimate.seat === "number"
@@ -279,7 +316,7 @@ const esPrefix = lang === "es" ? "/es" : "";
               ${estimate.description ? `<p class="mt-1.5 max-w-xs text-[14px] text-ink/60">${esc(estimate.description)}</p>` : ""}
             </div>
             <div class="shrink-0 text-right">
-              <p class="text-[24px] font-extrabold tabular-nums text-ink">${esc(usd(estimate.fare) ?? GAP)}</p>
+              <p class="text-[24px] font-extrabold tabular-nums text-ink">${fareText(estimate.fare)}</p>
               <p class="text-[12px] text-ink/50">${esc(t.fareCaption)}</p>
             </div>
           </div>
@@ -288,19 +325,30 @@ const esPrefix = lang === "es" ? "/es" : "";
       .join("");
   }
 
-  /** Label the autocomplete's own input — the visible <label> cannot reach it. */
-  function label(node: HTMLElement, text: string, placeholder: string) {
+  /**
+   * Give the autocomplete's own input its name and placeholder.
+   *
+   * The `gmp-place-autocomplete` custom element is not labelable, so the
+   * visible label above it cannot be associated with `for`, and the input is
+   * the component's, not ours. If the component ever stops exposing it in the
+   * light DOM this returns having done nothing, and the field keeps the
+   * component's own default name — degraded, not broken.
+   */
+  function describeInput(node: HTMLElement, name: string, placeholder: string) {
     const input = node.querySelector("input");
-    if (!input) return;
+    if (!input) {
+      console.warn("[fare-estimate] autocomplete input not reachable:", name);
+      return;
+    }
     input.placeholder = placeholder;
-    input.setAttribute("aria-label", text);
+    input.setAttribute("aria-label", name);
   }
 
   async function init() {
     setOptions({
       key: import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY,
       // Without this the ES page returns English place names and English
-      // "5.2 mi" / "18 mins" from Directions.
+      // "18 mins" from Directions.
       language: lang,
       region: "US",
     });
@@ -330,58 +378,82 @@ const esPrefix = lang === "es" ? "/es" : "";
     const fields = ["location", "displayName", "formattedAddress"];
 
     function mountAutocomplete(
-      which: "pickup" | "dropoff",
-      onPick: (location: google.maps.LatLng) => void,
+      end: {
+        slot: "pickup" | "dropoff";
+        name: string;
+        placeholder: string;
+      },
+      set: (location: google.maps.LatLng) => void,
     ) {
-      const slot = el<HTMLElement>(`[data-autocomplete="${which}"]`)!;
+      const slot = el<HTMLElement>(`[data-autocomplete="${end.slot}"]`)!;
       const element = new PlaceAutocompleteElement({} as any);
-      element.id = `${which}-autocomplete`;
+      element.id = `${end.slot}-autocomplete`;
       slot.appendChild(element);
-      label(
-        element,
-        which === "pickup" ? t.pickupLabel : t.dropoffLabel,
-        which === "pickup" ? t.pickupPlaceholder : t.dropoffPlaceholder,
-      );
+      describeInput(element, end.name, end.placeholder);
 
       element.addEventListener("gmp-select", async (event: any) => {
-        const place = event.placePrediction.toPlace();
-        await place.fetchFields({ fields });
-        if (place.location) onPick(place.location);
-        submit.disabled = !pickup || !dropoff;
+        try {
+          const place = event.placePrediction.toPlace();
+          await place.fetchFields({ fields });
+          if (!place.location) return;
+
+          clearError();
+          // Everything quoted so far was quoted for the old route.
+          quote++;
+          clearRoute();
+          clearResults();
+          set(place.location);
+          fitToMarkers();
+        } catch (err) {
+          // Silence here is a form that looks fine and cannot be submitted.
+          console.error("[fare-estimate] place lookup failed", err);
+          showError(t.serviceError);
+        } finally {
+          syncSubmit();
+        }
       });
     }
 
-    mountAutocomplete("pickup", (location) => {
-      pickup = location;
-      clearRoute();
-      clearResults();
-      if (pickupMarker) pickupMarker.map = null;
-      pickupMarker = new AdvancedMarkerElement({
-        position: pickup,
-        map,
-        content: pin("A"),
-      });
-      fitToMarkers();
-    });
+    mountAutocomplete(
+      {
+        slot: "pickup",
+        name: t.pickupLabel,
+        placeholder: t.pickupPlaceholder,
+      },
+      (location) => {
+        pickup = location;
+        if (pickupMarker) pickupMarker.map = null;
+        pickupMarker = new AdvancedMarkerElement({
+          position: pickup,
+          map,
+          content: pin("A"),
+        });
+      },
+    );
 
-    mountAutocomplete("dropoff", (location) => {
-      dropoff = location;
-      clearRoute();
-      clearResults();
-      if (dropoffMarker) dropoffMarker.map = null;
-      dropoffMarker = new AdvancedMarkerElement({
-        position: dropoff,
-        map,
-        content: pin("B"),
-      });
-      fitToMarkers();
-    });
+    mountAutocomplete(
+      {
+        slot: "dropoff",
+        name: t.dropoffLabel,
+        placeholder: t.dropoffPlaceholder,
+      },
+      (location) => {
+        dropoff = location;
+        if (dropoffMarker) dropoffMarker.map = null;
+        dropoffMarker = new AdvancedMarkerElement({
+          position: dropoff,
+          map,
+          content: pin("B"),
+        });
+      },
+    );
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      // The button is disabled until both are set; this is the type narrowing.
-      if (!pickup || !dropoff) return;
+      // The button is disabled until both ends are set; this is the narrowing.
+      if (!pickup || !dropoff || busy) return;
 
+      const ticket = ++quote;
       clearError();
       clearResults();
       setLoading(true);
@@ -392,6 +464,7 @@ const esPrefix = lang === "es" ? "/es" : "";
           destination: dropoff,
           travelMode: google.maps.TravelMode.DRIVING,
         });
+        if (ticket !== quote) return;
 
         clearMarkers();
         clearRoute();
@@ -403,9 +476,12 @@ const esPrefix = lang === "es" ? "/es" : "";
           leg.distance!.value,
           Math.ceil(leg.duration!.value / 60),
         );
+        if (ticket !== quote) return;
 
+        // `estimateFares` throws `not-found` on an area with no services, so
+        // this is the contract changing under us rather than a rider fact.
         if (estimate.estimates.length === 0) {
-          showError(t.outsideArea);
+          showError(t.serviceError);
           return;
         }
 
@@ -414,7 +490,7 @@ const esPrefix = lang === "es" ? "/es" : "";
         renderEstimates(estimate.estimates);
         results.hidden = false;
       } catch (err: any) {
-        showError(errorCopy(err));
+        if (ticket === quote) showError(errorCopy(err));
       } finally {
         setLoading(false);
       }
@@ -422,11 +498,14 @@ const esPrefix = lang === "es" ? "/es" : "";
   }
 
   function errorCopy(err: any): string {
-    // `not-found` is what estimateFares throws for a service area with no
-    // services — the rider is outside the map, not looking at a broken site.
-    if (err?.code === "functions/not-found") return t.outsideArea;
     // DirectionsService rejects with the status in the message.
     if (/ZERO_RESULTS|NOT_FOUND/.test(String(err?.message))) return t.noRouteError;
+    // NOTE: §3.5's "Outside area" line is deliberately unreachable and is not
+    // shipped. This page asks `estimateFares` for `us-fl-south-florida` on
+    // every call and has no way to know where the rider is, so a rider in
+    // Chicago is quoted South Florida rates and `functions/not-found` means
+    // "South Florida has no services configured" — a fault, not a geography.
+    // Saying "We're not in that area yet" there would be false. Filed as #62.
     console.error("[fare-estimate]", err);
     return t.serviceError;
   }
