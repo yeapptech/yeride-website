@@ -527,7 +527,16 @@ persuasion.
 | Fee link → `/fees` | See the full fee schedule | Ver el tarifario completo |
 | No route error | We couldn't find a route between those two places. | No encontramos una ruta entre esos dos lugares. |
 | Service error | We couldn't get an estimate right now. Try again in a moment. | No pudimos calcular el estimado ahora. Intenta de nuevo en un momento. |
-| Outside area | We're not in that area yet. | Todavía no estamos en esa zona. |
+| Outside area **(NOT SHIPPED — no honest trigger; see below and #62)** | We're not in that area yet. | Todavía no estamos en esa zona. |
+
+**The "Outside area" row is not shipped** (#38, → [#62](https://github.com/yeapptech/yeride-website/issues/62)).
+The page asks `estimateFares` for `us-fl-south-florida` on every call and has no way to
+know where the rider is, so no condition it can observe means "you are outside our area":
+`functions/not-found` means *South Florida* has no services configured, which is a fault,
+and mapping the line to it would tell every rider on the site they are somewhere YeRide
+does not serve, during an outage. The row returns when the site can answer the question
+the copy asks. (The same gap means a rider anywhere on earth is quoted South Florida
+rates — that is #62's real subject; the unshipped string is how it surfaced.)
 
 The **gated headline copy does not run here** — no "See the math", no "Cuentas claras", no
 claim that YeRide shows the math on every trip. The page shows a fare; it makes no claim
