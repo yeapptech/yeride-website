@@ -1,7 +1,7 @@
-// Fee-label coverage — every charge id and every service area `getFeeSchedule`
-// publishes has site-authored EN/ES copy, or the deploy fails.
+// Fee-label coverage — every charge id, every service area and every ride tier
+// `getFeeSchedule` publishes has site-authored EN/ES copy, or the deploy fails.
 // Wayfinder #56; the rule is docs/copy-map.md §6.2, extended to service areas
-// by #47.
+// by #47 and to ride tiers by #65.
 //
 // Unlike the other two gates this one is NOT offline and NOT dumb: it asks the
 // endpoint what it is publishing right now. That is the whole point — the ids
@@ -141,6 +141,7 @@ if (!endpoint) {
 const source = readFileSync(LABELS, "utf8");
 const knownCharges = objectKeys(source, "feeLabels");
 const knownAreas = objectKeys(source, "serviceAreaNames");
+const knownServices = objectKeys(source, "serviceLabels");
 
 let index;
 try {
@@ -154,6 +155,7 @@ try {
 // offers all of them, so the site has to be able to name all of them.
 const areas = Array.isArray(index.areas) && index.areas.length ? index.areas : [index.area];
 const charges = new Map(); // id -> { description, areas: [] }
+const services = new Map(); // id -> { name, areas: [] }
 const unreachable = [];
 
 for (const area of areas) {
@@ -172,11 +174,31 @@ for (const area of areas) {
     if (!charges.has(c.id)) charges.set(c.id, { description: c.description, areas: [] });
     charges.get(c.id).areas.push(area.id);
   }
+  // Ride tiers are a per-area subcollection like charges, so the same
+  // every-area rule applies: an area can offer a tier no other area does
+  // (stage's Detroit publishes only `comfort`). Checking one area would miss it.
+  //
+  // `getFeeSchedule` is the only endpoint asked, and that also covers
+  // /fare-estimate — the second page #65 found the leak on — because both read
+  // the SAME subcollection UNFILTERED, so their id sets agree: yeride-functions
+  // `lib/fee-schedule.js` `toRideService` maps every `rideServices` doc, and
+  // `handlers/estimate-fares.js` L358 does
+  // `serviceAreaRef.collection("rideServices").get()`.
+  //
+  // The IDS, though — not the prose. `getFeeSchedule` publishes no
+  // `description` field at all, so nothing here can compare the tier blurb
+  // /fare-estimate renders against the operator's current wording. A NEW tier
+  // fails below and its entry carries both fields; a REWORDED blurb is invisible.
+  for (const s of schedule.rideServices ?? []) {
+    if (!services.has(s.id)) services.set(s.id, { name: s.name, areas: [] });
+    services.get(s.id).areas.push(area.id);
+  }
 }
 
 const errors = [];
 const missingCharges = [];
 const missingAreas = [];
+const missingServices = [];
 
 for (const [id, { description, areas: seenIn }] of charges) {
   if (knownCharges.has(id)) continue;
@@ -186,6 +208,17 @@ for (const [id, { description, areas: seenIn }] of charges) {
       `      the endpoint calls it "${description}", which is what /es/fees would print — in English\n` +
       `      and because an unclassified charge lands on neither side of the ledger, /fees withholds\n` +
       `      its example entirely until this is fixed`,
+  );
+}
+
+for (const [id, { name, areas: seenIn }] of services) {
+  if (knownServices.has(id)) continue;
+  missingServices.push(id);
+  errors.push(
+    `service id "${id}" is published in ${seenIn.join(", ")} and ${LABELS} does not cover it\n` +
+      `      the endpoint calls it "${name}", which is what both languages would print — English\n` +
+      `      in the rate card's name column on /es/fees, and as the tier heading on\n` +
+      `      /es/fare-estimate, whose blurb has no fallback copy at all`,
   );
 }
 
@@ -221,8 +254,10 @@ if (defaultAreaUnserved) {
 }
 
 const stale = [...knownCharges].filter((id) => !charges.has(id));
+const staleServices = [...knownServices].filter((id) => !services.has(id));
 const scope =
-  `${charges.size} charge id${charges.size === 1 ? "" : "s"} across ` +
+  `${charges.size} charge id${charges.size === 1 ? "" : "s"}, ` +
+  `${services.size} service id${services.size === 1 ? "" : "s"} across ` +
   `${areas.length - unreachable.length}/${areas.length} area${areas.length === 1 ? "" : "s"}`;
 
 if (errors.length) {
@@ -231,8 +266,8 @@ if (errors.length) {
   // Each hint names the cause it actually belongs to. An unconditional hint is
   // a wrong cause named for every other failure — the fault this repo has
   // re-opened tickets over (#47, #57, #59).
-  if (missingCharges.length || missingAreas.length) {
-    console.error(`\n  Both maps are in ${LABELS}.`);
+  if (missingCharges.length || missingAreas.length || missingServices.length) {
+    console.error(`\n  All three maps are in ${LABELS}.`);
   }
   if (missingCharges.length) {
     console.error(`  A charge needs an EN and an ES label, a "family" and a "payer". Neither family`);
@@ -242,6 +277,11 @@ if (errors.length) {
   }
   if (missingAreas.length) {
     console.error(`  An area needs a display name in both languages — it is brand copy, not data (#47).`);
+  }
+  if (missingServices.length) {
+    console.error(`  A ride tier needs an EN and an ES name and blurb. The tiers are copy, not brand`);
+    console.error(`  names (#65): the brand package names no tier anywhere, so there is nothing to`);
+    console.error(`  keep in English. EN is authored too — it is what the app shows a rider.`);
   }
   if (defaultAreaUnserved) {
     console.error(`  The area /fare-estimate prices for is ${SERVICE_AREA}, and it is not a label —`);
@@ -257,3 +297,5 @@ for (const u of unreachable) console.log(`  area not checked: ${u}`);
 // Not a failure: an unused label renders nothing, and prod and stage legitimately
 // publish different areas, so the same source would fight itself between them.
 for (const id of stale) console.log(`  unused label: "${id}" — no area publishes it any more`);
+for (const id of staleServices)
+  console.log(`  unused service label: "${id}" — no area publishes it any more`);
