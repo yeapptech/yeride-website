@@ -523,8 +523,8 @@ persuasion.
 | Fare caption | estimated fare | tarifa estimada |
 | Seats | {n} seats | {n} asientos |
 | ~~Fee block heading~~ **(CUT — the rider does not pay these; see the amendment above)** | ~~Fees included~~ | ~~Cargos incluidos~~ |
-| Service area label **(added #62)** | Service area | Zona de servicio |
-| Service area note **(added #62)** | Every estimate here is at this area's rates, even for a route outside it. | Todo estimado aquí usa las tarifas de esta zona, incluso para una ruta fuera de ella. |
+| Priced-for label **(added #62)** | Priced for | Precio calculado para |
+| Priced-for note **(added #62)** | Every estimate here uses this area's rates, even for a route outside it — a price is not a promise that YeRide operates there. | Todo estimado aquí usa las tarifas de esta área, incluso para una ruta fuera de ella — un precio no significa que YeRide opere allí. |
 | Limit note | Estimates are estimates — the meter decides. | Un estimado es un estimado — el taxímetro decide. |
 | Fee link → `/fees` | See the full fee schedule | Ver el tarifario completo |
 | No route error | We couldn't find a route between those two places. | No encontramos una ruta entre esos dos lugares. |
@@ -540,7 +540,7 @@ does not serve, during an outage. The row returns when the site can answer the q
 the copy asks. (The same gap means a rider anywhere on earth is quoted South Florida
 rates — that is #62's real subject; the unshipped string is how it surfaced.)
 
-> **Amended 2026-08-03 (#62) — the two "Service area" rows above are new, and they are
+> **Amended 2026-08-03 (#62) — the two "Priced-for" rows above are new, and they are
 > what the page says instead.**
 >
 > #62 found that a service area is a **circle** and always has been: every
@@ -559,13 +559,36 @@ rates — that is #62's real subject; the unshipped string is how it surfaced.)
 > **Neither string may govern the area name.** It is interpolated from the same bilingual
 > map `/fees` uses, and Spanish would need "de/del/de la" chosen by name — "en {area}" is
 > ungrammatical for "Sur de la Florida". Hence a colon in the label and "this area" /
-> "esta zona" in the note: correct for any area name the map ever holds. For the same
+> "esta área" in the note: correct for any area name the map ever holds. For the same
 > reason neither string may claim **how many** areas there are; a count would be a fact
 > nothing on the site checks.
 >
 > This is a floor, not the fix. Resolving the area from the rider's pickup, and with it
 > shipping the "Outside area" row above, is
 > [#73](https://github.com/yeapptech/yeride-website/issues/73).
+
+> **Corrected 2026-08-03, same day, by independent review — the first version of these
+> two rows said "Service area" and did not mention availability. Both were wrong.**
+>
+> **The label is "Priced for", not "Service area".** "Service area" is this document's
+> **coverage** vocabulary — § 3.4 line 427 labels `/fees`' picker `Service area` /
+> `Área de servicio`, and § 3.7/§ 3.8 use it the same way in both legal documents. On a
+> page that has just drawn the rider's own route, "Service area: South Florida" reads as
+> *your ride is handled under our South Florida service area* — restating, in the site's
+> own words, the exact implicature this ticket exists to remove. It also gave the Spanish
+> site **two nouns for one concept** one click apart, since the page's own closing link
+> goes to `/es/fees` and its picker says "Área de servicio". "Priced for" makes the
+> pricing claim and no coverage claim, and cannot collide with § 3.4 because it is naming
+> a different thing. Where the note does refer to the area it now says **"esta área"**,
+> matching § 3.4 and both legal documents.
+>
+> **The note now carries availability.** The first version — *"Every estimate here is at
+> this area's rates, even for a route outside it."* — named the rate card but told a
+> rider nothing about whether YeRide runs where they are, and read closer to a *promise*
+> that out-of-area routes get priced than to a warning. Naming the area a price came from
+> is not an availability statement. The clause **"a price is not a promise that YeRide
+> operates there"** is, and it stays true however many areas exist — unlike naming the
+> served set, which the no-count rule above forbids for good reason.
 
 The **gated headline copy does not run here** — no "See the math", no "Cuentas claras", no
 claim that YeRide shows the math on every trip. The page shows a fare; it makes no claim
