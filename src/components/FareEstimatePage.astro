@@ -362,12 +362,21 @@ if (!areaName) {
             ? t.seats.replace("{n}", String(estimate.seat))
             : null;
 
+        // Gate on the RESOLVED blurb, not on the fetched one. Gating on
+        // `estimate.description` would let an empty backend field suppress copy
+        // this site authored and owns — the fetched string is the fallback for
+        // an uncovered tier (#65), never the switch that decides whether
+        // authored copy renders. It still collapses to nothing when there is
+        // genuinely nothing to say: an uncovered tier whose `description` is
+        // empty resolves to empty and prints no paragraph.
+        const blurb = serviceDescription(estimate.serviceId, estimate.description, lang);
+
         return `<li class="rounded-2xl border border-ink/15 bg-white px-5 py-5">
           <div class="flex items-start justify-between gap-4">
             <div>
               <p class="text-[17px] font-extrabold text-ink">${esc(serviceName(estimate.serviceId, estimate.name, lang))}</p>
               ${seats ? `<p class="mt-0.5 text-[13px] font-semibold text-ink/50">${esc(seats)}</p>` : ""}
-              ${estimate.description ? `<p class="mt-1.5 max-w-xs text-[14px] text-ink/60">${esc(serviceDescription(estimate.serviceId, estimate.description, lang))}</p>` : ""}
+              ${blurb ? `<p class="mt-1.5 max-w-xs text-[14px] text-ink/60">${esc(blurb)}</p>` : ""}
             </div>
             <div class="shrink-0 text-right">
               <p class="text-[24px] font-extrabold tabular-nums text-ink">${fareText(estimate.fare)}</p>

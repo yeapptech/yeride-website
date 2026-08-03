@@ -141,7 +141,7 @@ if (!endpoint) {
 const source = readFileSync(LABELS, "utf8");
 const knownCharges = objectKeys(source, "feeLabels");
 const knownAreas = objectKeys(source, "serviceAreaNames");
-const knownServices = objectKeys(source, "serviceNames");
+const knownServices = objectKeys(source, "serviceLabels");
 
 let index;
 try {
@@ -178,10 +178,17 @@ for (const area of areas) {
   // every-area rule applies: an area can offer a tier no other area does
   // (stage's Detroit publishes only `comfort`). Checking one area would miss it.
   //
-  // `getFeeSchedule` is the only endpoint asked, but the ids it publishes are
-  // read from the same `serviceAreas/{id}/rideServices` documents that
-  // `estimateFares` reads, so covering these covers /fare-estimate's tier names
-  // too — the second page #65 found the leak on.
+  // `getFeeSchedule` is the only endpoint asked, and that also covers
+  // /fare-estimate — the second page #65 found the leak on — because both read
+  // the SAME subcollection UNFILTERED, so their id sets agree: yeride-functions
+  // `lib/fee-schedule.js` `toRideService` maps every `rideServices` doc, and
+  // `handlers/estimate-fares.js` L358 does
+  // `serviceAreaRef.collection("rideServices").get()`.
+  //
+  // The IDS, though — not the prose. `getFeeSchedule` publishes no
+  // `description` field at all, so nothing here can compare the tier blurb
+  // /fare-estimate renders against the operator's current wording. A NEW tier
+  // fails below and its entry carries both fields; a REWORDED blurb is invisible.
   for (const s of schedule.rideServices ?? []) {
     if (!services.has(s.id)) services.set(s.id, { name: s.name, areas: [] });
     services.get(s.id).areas.push(area.id);
@@ -209,8 +216,9 @@ for (const [id, { name, areas: seenIn }] of services) {
   missingServices.push(id);
   errors.push(
     `service id "${id}" is published in ${seenIn.join(", ")} and ${LABELS} does not cover it\n` +
-      `      the endpoint calls it "${name}", which is what /es/fees and /es/fare-estimate would\n` +
-      `      print — in English, in the rate card's own name column`,
+      `      the endpoint calls it "${name}", which is what both languages would print — English\n` +
+      `      in the rate card's name column on /es/fees, and as the tier heading on\n` +
+      `      /es/fare-estimate, whose blurb has no fallback copy at all`,
   );
 }
 

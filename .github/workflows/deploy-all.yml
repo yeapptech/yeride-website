@@ -37,8 +37,9 @@ jobs:
           echo "PUBLIC_FEE_SCHEDULE_URL=${{ secrets.PUBLIC_FEE_SCHEDULE_URL }}" >> .env
 
       # Fee-label coverage (#56). Needs the network, so it is not part of
-      # `npm run build` — see the script header. Fails the deploy on a charge or
-      # area id the site cannot name; skips, loudly, if the endpoint is down.
+      # `npm run build` — see the script header. Fails the deploy on a charge,
+      # area or ride tier id the site cannot name (tiers added by #65); skips,
+      # loudly, if the endpoint is down.
       - name: Fee-label coverage
         env:
           PUBLIC_FEE_SCHEDULE_URL: ${{ secrets.PUBLIC_FEE_SCHEDULE_URL }}

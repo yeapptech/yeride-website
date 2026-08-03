@@ -226,7 +226,7 @@ the map doesn't cover, which `scripts/check-fee-labels.mjs` fails the deploy on.
 authored too, so it stays identical to what the app shows a rider.
 
 **Related:** `src/lib/feeSchedule.ts` (endpoint contract, fetch, formatting),
-`src/i18n/feeLabels.ts` (charge labels + family/payer, area names, ride tier names),
+`src/i18n/feeLabels.ts` (charge labels + family/payer, area names, ride tier labels),
 `src/i18n/feesCopy.ts` (page copy, EN/ES).
 
 ### FareEstimatePage
@@ -346,14 +346,19 @@ That cost is the point: adding one is a decision.
 Each result's **tier name and blurb are site copy in both languages** (#65), read from
 `serviceName()` / `serviceDescription()` by `serviceId`. Before that the callable's
 English `name` and `description` were printed verbatim, so `/es/fare-estimate` said
-"Standard sedans with more legroom" under a Spanish heading. The fetched strings survive
-only as the fallback for a tier id the map doesn't cover.
+"Standard sedans with more legroom" under a Spanish heading. A fetched string is now
+used only when the map has no entry for that tier id.
+
+Both paragraphs are gated on the **resolved** string, never on the fetched one. Gating
+the blurb on `estimate.description` — which the first pass did — lets an empty backend
+field suppress copy the site authored and owns, which is the inverse of the rule: the
+fetched value is the fallback, not the switch.
 
 **Related:** `src/lib/fareEstimate.ts` (callable contract), `src/lib/serviceArea.ts`
 (the area the page prices), `src/lib/firebase.ts` (callable region),
 `src/i18n/fareEstimateCopy.ts` (page copy, EN/ES), `src/i18n/feeLabels.ts`
 (`serviceAreaNames`, read in the frontmatter for the area's bilingual name; ride tier
-names, read in the result list).
+labels, read in the result list).
 
 ## Page-Specific Components
 

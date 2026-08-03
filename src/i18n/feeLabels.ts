@@ -1,7 +1,17 @@
-// ES labels for backend charge ids, keyed by id (copy-map §2.3), plus the
-// editorial classification /fees needs. Charge lines arrive from the database as
-// a single English `description`; Spanish is authored here, not translated by the
-// backend.
+// Site-authored EN/ES display copy for the ids the backend publishes, keyed by
+// id (copy-map §2.3). Three maps, each with its own block comment below:
+// `feeLabels` (charge ids, plus the editorial classification /fees needs),
+// `serviceAreaNames` (#47) and `serviceLabels` (ride tiers, #65). The file is
+// named for the first of them; `/fare-estimate` imports the last two and renders
+// no charge lines at all.
+//
+// The common rule: a display string arriving from the database arrives in ONE
+// language, so rendering it verbatim ships English to /es/. Both languages are
+// authored here instead — including EN, so the pair cannot drift — and
+// `scripts/check-fee-labels.mjs` fails the deploy on an id no map covers.
+//
+// CHARGES. Charge lines arrive from the database as a single English
+// `description`; Spanish is authored here, not translated by the backend.
 //
 // Beyond the label, each entry says which of the two `docs/positioning.md`
 // families the charge belongs to and whose side of the example ledger it lands
@@ -109,39 +119,57 @@ export function serviceAreaName(id: string, identifier: string, lang: Lang): str
 // charge — the backend's `name` and `description` are never rendered.
 //
 // THE TIERS ARE COPY, NOT BRAND NAMES (#65, decided with the map owner
-// 2026-08-03). The reading that they are proper nouns is defensible — Uber
-// keeps "Comfort" in Spanish-language markets — but nothing here backed it:
-// `@yeapptech/yeride-brand` names no tier anywhere (messaging, positioning,
-// brand-system, identity, logo), so there is no brand asset to protect, and
-// copy-map §3.4 authors every other cell of the rate card in both languages.
-// The tier column was a gap in that method, not an exception to it.
+// 2026-08-03). The proper-noun reading is defensible — some rideshare brands do
+// keep tier names untranslated in Spanish-language markets — but nothing in
+// reach of this repo backed it. The full reasoning, with the evidence, is in
+// copy-map §2.3 "Ride tier names — copy, not brand names"; the load-bearing
+// facts, so a reader here can re-check rather than take it on faith:
+//
+//   - the brand DOCS name no tier anywhere. They live in the yeride-brand REPO
+//     (docs/messaging.md, positioning.md, brand-system.md, identity.md,
+//     logo.md), not in the installed package, which ships only tokens and
+//     assets — so `grep` from here cannot confirm it and this is the pointer
+//     instead. Checked 2026-08-03.
+//   - copy-map §3.4 authors every other cell of this rate card in both
+//     languages. That one IS checkable from here, on branch copy-map/en-es.
 //
 // AUTHORING EN TOO is the point, not incidental. Rendering the backend string
 // on /fees and an authored one on /es/fees is what leaks English today; one map
 // holding both keeps them from drifting apart, and keeps EN identical to what
-// the app shows a rider, which is the one real cost of translating (both apps
-// are English-only — yeride-mobile has no i18n at all and the legacy app on
-// Play renders `Order {name} Service` — so a Spanish reader matches "Económico"
-// here to "Economy" there; their docs call that temporary, "localization is a
-// post-cutover concern").
+// the app shows a rider — the one real cost of translating, since both apps are
+// English-only (yeride-mobile: no i18n dependency and no locale files;
+// yeride `src/rider/screens/RideSelect.js` L437 renders `Order {name} Service`.
+// yeride-mobile `docs/PHASE_8_KICKOFF.md` L286 calls that temporary:
+// "Localization is a post-cutover concern"). Checked 2026-08-03.
 //
 // The EN strings are the operator's own, transcribed from production
 // 2026-08-03, not rewritten — "SUVs Luxury ride" reads oddly and improving it is
 // a copy-map question, not this map's. The Spanish is written to be natural
 // rather than word-for-word.
 //
-// The cost is `serviceAreaNames`' cost: a tier renamed or added in the admin
-// console needs a web deploy to appear. `scripts/check-fee-labels.mjs` makes an
-// ADDED id loud (#56 extended by #65 — it fails on a service id this map does
-// not cover, across every area). It cannot see an EDITED description, which is
-// prose an operator may reword; that is the accepted trade for having the two
-// languages agree at all.
+// WHAT THE CHECK COVERS, precisely — the ids, not the prose.
+// `scripts/check-fee-labels.mjs` fails the deploy on a tier id this map does not
+// cover, across every area (#56, extended by #65). That reaches /fare-estimate
+// as well as /fees because both endpoints read the SAME subcollection
+// unfiltered: yeride-functions `lib/fee-schedule.js` `toRideService` maps every
+// `rideServices` doc, and `handlers/estimate-fares.js` L358 does
+// `serviceAreaRef.collection("rideServices").get()`. So the id sets agree.
+//
+// It does NOT cover the description text, and cannot: `getFeeSchedule` publishes
+// no `description` field at all (`toRideService` emits id, name and the rate
+// fields only), and an EDITED description is invisible to any check here anyway.
+// A NEW tier still fails the build, and its entry carries both fields, so the
+// prose cannot go missing — only go stale. That is the accepted trade for having
+// the two languages agree at all; it is `serviceAreaNames`' trade above.
 export interface ServiceLabel {
   name: Record<Lang, string>;
   description: Record<Lang, string>;
 }
 
-export const serviceNames: Record<string, ServiceLabel> = {
+// Named `serviceLabels`, not `serviceNames`, because it holds the blurb too —
+// the parallel is `feeLabels`/`ChargeLabel` above, not `serviceAreaNames`, which
+// really does hold only names.
+export const serviceLabels: Record<string, ServiceLabel> = {
   economy: {
     name: { en: "Economy", es: "Económico" },
     description: {
@@ -189,10 +217,10 @@ export const serviceNames: Record<string, ServiceLabel> = {
  * price on the page that exists to publish them.
  */
 export function serviceName(id: string, fetched: string, lang: Lang): string {
-  return serviceNames[id]?.name[lang] ?? fetched;
+  return serviceLabels[id]?.name[lang] ?? fetched;
 }
 
 /** As `serviceName`, for the tier blurb /fare-estimate renders under it. */
 export function serviceDescription(id: string, fetched: string, lang: Lang): string {
-  return serviceNames[id]?.description[lang] ?? fetched;
+  return serviceLabels[id]?.description[lang] ?? fetched;
 }
