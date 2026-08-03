@@ -43,6 +43,43 @@ const TICKET = /#\d+(?!\w)/;
 const IN_COMMENT = /(\/\/|\/\*|<!--|^[ \t]*\*)/;
 const COMMENT_ONLY_LINE = /^[ \t]*(\{?[ \t]*\/\*|\/\/|\*)/;
 
+// Homoglyphs, answering #57's "is folding honest?" with no. A Cyrillic "\u0435"
+// in "ch\u0435apest" defeats every pattern above, and folding confusables back to
+// ASCII needs a table whose wrong entries would invent failures in Spanish copy.
+// The confusable is itself the defect, so it is caught rather than folded — and
+// caught HERE, not over dist/, because src/ and public/ are wholly authored in
+// this repo. A vendored bundle may legitimately carry other scripts; a YeRide
+// page in English or Spanish never does.
+//
+// Curated, not whole blocks. An earlier revision took the Greek block entire and
+// failed on "\u0394/\u0394t" and "\u03c0" in a comment — legitimate maths, no
+// resemblance to a Latin letter. Only the letters that can PASS FOR Latin are
+// listed, so:
+//   - Cyrillic entire: no Cyrillic letter belongs in EN or ES copy at all.
+//   - Greek: the Latin lookalikes only. \u0394, \u03c0, \u03bc, \u03bb and \u03a9
+//     are left alone.
+//   - Cherokee, fullwidth Latin, Mathematical Alphanumeric Symbols, Roman-numeral
+//     forms, small-capital phonetic letters, and the letterlike \u2126/\u212a/\u212b
+//     — each of which renders as something a reader takes for an ASCII letter.
+// Accented Latin is untouched throughout: \u00e1, \u00e9, \u00f1 and \u00fc are Latin.
+//
+// Suppressible by the same copy-gate-allow pragma as any other hit, because a
+// legitimate exception is possible and an unsuppressable failure is not a gate,
+// it is a wall.
+const CONFUSABLE = new RegExp(
+  "[" +
+    "\\u0400-\\u04FF" + // Cyrillic
+    "\\u0391\\u0392\\u0395\\u0396\\u0397\\u0399\\u039A\\u039C\\u039D\\u039F\\u03A1\\u03A4\\u03A5\\u03A7" + // Greek capitals shaped like Latin
+    "\\u03B1\\u03B9\\u03BA\\u03BD\\u03BF\\u03C1\\u03C3\\u03C5\\u03C7" + // Greek lowercase shaped like Latin
+    "\\u13A0-\\u13FF" + // Cherokee
+    "\\u1D00-\\u1D25" + // small-capital phonetic letters
+    "\\u2126\\u212A\\u212B" + // ohm, kelvin, angstrom
+    "\\u2160-\\u217F" + // Roman numeral forms
+    "\\uFF21-\\uFF3A\\uFF41-\\uFF5A" + // fullwidth Latin
+    "]|[\\u{1D400}-\\u{1D7FF}]", // Mathematical Alphanumeric Symbols
+  "u",
+);
+
 // Blank comments out, keeping every newline so line numbers still line up.
 //
 // Only LINE-LEADING comment openers are stripped. A "//" or "/*" mid-line is far
@@ -96,55 +133,48 @@ for (const file of files) {
     });
   });
 
+  // A hit on line `here` is covered by a pragma on that same line, or by a
+  // comment-only pragma on the line directly above it.
+  const judge = (here, hit, why) => {
+    const pragma =
+      pragmas.find((p) => p.file === file && p.line === here) ??
+      pragmas.find((p) => p.file === file && p.line === here - 1 && p.coversNext);
+    const where = `${file}:${here}`;
+
+    if (!pragma) {
+      errors.push(`${where}  ${hit} — ${why}`);
+    } else if (!TICKET.test(pragma.reason)) {
+      errors.push(`${where}  copy-gate-allow must name the ticket that retires it, e.g. "#48"`);
+      pragma.used = true;
+    } else {
+      pragma.used = true;
+      allowed.push(`${where}  ${hit} — ${pragma.reason}`);
+    }
+  };
+
   code.forEach((line, i) => {
     for (const { re, why } of PATTERNS) {
       const hit = line.match(re);
-      if (!hit) continue;
-
-      const here = i + 1;
-      const pragma =
-        pragmas.find((p) => p.file === file && p.line === here) ??
-        pragmas.find((p) => p.file === file && p.line === here - 1 && p.coversNext);
-      const where = `${file}:${here}`;
-
-      if (!pragma) {
-        errors.push(`${where}  "${hit[0]}" — ${why}`);
-      } else if (!TICKET.test(pragma.reason)) {
-        errors.push(`${where}  copy-gate-allow must name the ticket that retires it, e.g. "#48"`);
-        pragma.used = true;
-      } else {
-        pragma.used = true;
-        allowed.push(`${where}  "${hit[0]}" — ${pragma.reason}`);
-      }
+      if (hit) judge(i + 1, `"${hit[0]}"`, why);
     }
+  });
+
+  // Homoglyphs are read from the RAW line, comments included: an HTML comment in
+  // an .astro file ships, and a confusable is worth catching wherever it is.
+  raw.forEach((line, i) => {
+    const hit = line.match(CONFUSABLE);
+    if (!hit) return;
+    const point = `U+${hit[0].codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`;
+    judge(
+      i + 1,
+      `"${hit[0]}" (${point})`,
+      "not a Latin letter, but shaped like one — a homoglyph hides a gated word from every pattern above",
+    );
   });
 }
 
 for (const p of pragmas.filter((p) => !p.used)) {
   errors.push(`${p.file}:${p.line}  copy-gate-allow matches nothing any more — delete it`);
-}
-
-// Homoglyphs, answering #57's "is folding honest?" with no. A Cyrillic "е" in
-// "chеapest" defeats every pattern above, and folding confusables back to ASCII
-// needs a table whose wrong entries would invent failures in Spanish copy. The
-// confusable is itself the defect, so it is caught rather than folded — and it is
-// caught HERE, not over dist/, because src/ and public/ are wholly authored in
-// this repo. A vendored bundle may legitimately carry other scripts; a YeRide
-// page in English or Spanish never does. Accented Latin is untouched: á, é, ñ and
-// ü are Latin, and this looks only at the Greek and Cyrillic blocks.
-const CONFUSABLE_SCRIPT = /[Ͱ-ϿЀ-ӿ]/;
-for (const file of files) {
-  readFileSync(file, "utf8")
-    .split(/\r?\n/)
-    .forEach((line, i) => {
-      const hit = line.match(CONFUSABLE_SCRIPT);
-      if (!hit) return;
-      const point = `U+${hit[0].codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`;
-      errors.push(
-        `${file}:${i + 1}  "${hit[0]}" (${point}) is a Greek or Cyrillic letter in EN/ES copy — ` +
-          `almost certainly a homoglyph that hides a gated word from this gate`,
-      );
-    });
 }
 
 // Copy-map §3.4 suspends the family-2 heading, lead and insurance note "until
