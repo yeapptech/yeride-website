@@ -523,6 +523,8 @@ persuasion.
 | Fare caption | estimated fare | tarifa estimada |
 | Seats | {n} seats | {n} asientos |
 | ~~Fee block heading~~ **(CUT — the rider does not pay these; see the amendment above)** | ~~Fees included~~ | ~~Cargos incluidos~~ |
+| Service area label **(added #62)** | Service area | Zona de servicio |
+| Service area note **(added #62)** | Every estimate here is at this area's rates, even for a route outside it. | Todo estimado aquí usa las tarifas de esta zona, incluso para una ruta fuera de ella. |
 | Limit note | Estimates are estimates — the meter decides. | Un estimado es un estimado — el taxímetro decide. |
 | Fee link → `/fees` | See the full fee schedule | Ver el tarifario completo |
 | No route error | We couldn't find a route between those two places. | No encontramos una ruta entre esos dos lugares. |
@@ -537,6 +539,33 @@ and mapping the line to it would tell every rider on the site they are somewhere
 does not serve, during an outage. The row returns when the site can answer the question
 the copy asks. (The same gap means a rider anywhere on earth is quoted South Florida
 rates — that is #62's real subject; the unshipped string is how it surfaced.)
+
+> **Amended 2026-08-03 (#62) — the two "Service area" rows above are new, and they are
+> what the page says instead.**
+>
+> #62 found that a service area is a **circle** and always has been: every
+> `serviceAreas/{id}` document carries `latitude`, `longitude` and `radius` in metres
+> (yeride-mobile's `ServiceAreaDoc`, typed by an admin in yeride-admin's
+> `ServiceAreaEditSheet`), and yeride-mobile's `ResolveActiveServiceArea` already answers
+> "is the rider inside?" with Haversine — first match in document-id order on overlap.
+> `getFeeSchedule`'s `readAreas` **already reads those documents** and publishes only
+> `{id, identifier}`, discarding the geography. So the site is not missing a model, it is
+> missing a field: [yeapptech/yeride-functions#45](https://github.com/yeapptech/yeride-functions/issues/45).
+>
+> Until that lands the page cannot say *where the rider is*, but it can say **where the
+> quote is from**, which is true today and needs no new data. The label carries the area
+> name and the note carries the consequence.
+>
+> **Neither string may govern the area name.** It is interpolated from the same bilingual
+> map `/fees` uses, and Spanish would need "de/del/de la" chosen by name — "en {area}" is
+> ungrammatical for "Sur de la Florida". Hence a colon in the label and "this area" /
+> "esta zona" in the note: correct for any area name the map ever holds. For the same
+> reason neither string may claim **how many** areas there are; a count would be a fact
+> nothing on the site checks.
+>
+> This is a floor, not the fix. Resolving the area from the rider's pickup, and with it
+> shipping the "Outside area" row above, is
+> [#73](https://github.com/yeapptech/yeride-website/issues/73).
 
 The **gated headline copy does not run here** — no "See the math", no "Cuentas claras", no
 claim that YeRide shows the math on every trip. The page shows a fare; it makes no claim
