@@ -196,6 +196,32 @@ An **unknown id falls back to the backend `description` verbatim in both languag
 build check (#41) fails on any id the map doesn't cover, so a new charge is a visible, fixable
 miss rather than a silent English leak.
 
+#### Service-area display names — the site's job, and staying there
+
+**Decided 2026-08-02 (#47).** Area documents carry an `identifier` slug and **no display-name
+field**, so `/fees`'s picker labels live beside the fee labels, in `serviceAreaNames`. They stay
+there rather than moving to a backend `name` field on the area document.
+
+An area name is **bilingual brand copy, not data**. One backend string ships one language, so
+`/es/fees` would show an English name — the exact failure the charge-id rekey above was opened
+to fix — and two of the three servable stage areas are Spanish-speaking. A bilingual backend
+field would work, but it is a larger ask for copy the site already owns, and splitting it
+(backend EN, site ES) breaks **EN and ES ship together or not at all**.
+
+The map is therefore keyed by language:
+
+```ts
+// src/i18n/feeLabels.ts
+export const serviceAreaNames: Record<string, Record<Lang, string>> = {
+  'us-fl-south-florida': { en: 'South Florida', es: 'Sur de la Florida' },
+};
+```
+
+The cost is that a **new area needs a web deploy to launch with a real name**; until then it
+falls back to its humanised identifier ("Us Mi Detroit") in both languages. #56 makes that
+visible rather than silent: it fails the build on an area id this map doesn't cover, the same
+treatment it gives an uncovered charge id.
+
 ---
 
 ## 3. Pages
@@ -353,11 +379,29 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 > card-only charge is ever itemised; the cash note is conditional on the same thing, and
 > renders for nobody today.
 >
-> **Three rows below were authored during #40**, not by this map, and have been live since
-> 2026-08-01: **Other-charges H2 / lead**, the neutral panel an unclassifiable charge falls
-> into rather than being guessed into a family; and **Example withheld**, shown instead of a
-> short ledger when any charge is unclassified or has no amount in the example. They are
-> recorded here so the map matches what ships — the map owner may still reword them.
+> **The rows #40 authored are now blessed and owned by this map (2026-08-02, #47).** They
+> were **Other-charges H2 / lead**, the neutral panel an unclassifiable charge falls into
+> rather than being guessed into a family, and **Example withheld**. The map owner reworded
+> one and split the other; both are ordinary rows below, no longer provisional.
+>
+> **Each withholding now states its own cause — one string per cause, never one for all.**
+> The single **Example withheld** row covered three different branches: the endpoint returned
+> no example, the site can't classify a charge, and a charge priced in the schedule is missing
+> from the example. It named only the second. Because the endpoint returns `example: null`,
+> production shipped *"until every published charge is described above"* while every published
+> charge **was** described above — a false reason, which is the same class of error as guessing
+> a charge into a family. It is now two rows: **Example withheld — no example published**, the
+> branch that actually ships today, and **Example withheld — a charge is undescribed**, the
+> site's own safety net, whose original wording is true where it now renders.
+>
+> **The gap dash is explained.** A charge whose expression the endpoint can't summarise prints
+> `—`. Honest, but silent on a page whose lead promises current amounts, so a panel containing
+> a gap carries the **Gap note** row. It is conditional and renders for nobody once
+> yeride-functions#21 publishes the rule.
+>
+> **"Other charges" says YeRide, not "the platform".** Every other line on this page owns the
+> charge by name; distancing language reads as evasion on a page whose whole pitch is
+> transparency.
 >
 > **Still open:** `getFeeSchedule` returns `example: null`, so the ledger stays withheld in
 > production regardless, and `pickupBandwidthCharge` publishes a gap because its expression
@@ -381,10 +425,12 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 | Family 2 lead **(SUSPENDED — #48)** | Costs YeRide forwards without touching. | Costos que YeRide traslada sin tocar. |
 | Insurance note **(SUSPENDED — #48)** | The coverage Florida requires during a ride. The rider's share and the driver's share are separate, published lines. | La cobertura que la Florida exige durante el viaje. La parte de quien viaja y la de quien maneja son líneas separadas y publicadas. |
 | Other-charges H2 | Other charges | Otros cargos |
-| Other-charges lead | Charges the platform publishes that this page does not yet describe. | Cargos que publica la plataforma y que esta página todavía no describe. |
+| Other-charges lead | Charges YeRide publishes that this page doesn’t describe yet. | Cargos que YeRide publica y que esta página todavía no describe. |
+| Gap note **(conditional — renders only in a panel holding a charge whose rule the endpoint can't summarise)** | A — means YeRide hasn’t published a rule for that charge that this page can state plainly. | Un — significa que YeRide todavía no publica una regla para ese cargo que esta página pueda expresar con claridad. |
 | Example H2 | Example at today’s rates | Ejemplo con las tarifas de hoy |
 | Example note | Computed from the schedule above, not a quote. | Calculado con el tarifario de arriba; no es una cotización. |
-| Example withheld | The example is unavailable until every published charge is described above. | El ejemplo no está disponible hasta que cada cargo publicado esté descrito arriba. |
+| Example withheld — **no example published** *(the branch that ships today)* | YeRide hasn’t published an example trip for this area yet. | YeRide todavía no publica un viaje de ejemplo para esta área. |
+| Example withheld — **a charge is undescribed** *(site-side safety net; renders for nobody today)* | The example is unavailable until every published charge is described above. | El ejemplo no está disponible hasta que cada cargo publicado esté descrito arriba. |
 | Example rider col H3 | What the rider pays | Lo que paga quien viaja |
 | Example driver col H3 | What the driver keeps | Lo que le queda a quien maneja |
 | Example row: fare | Metered fare | Tarifa del taxímetro |
