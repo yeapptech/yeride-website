@@ -29,9 +29,15 @@ This guide will help you set up the YeRide website for local development.
 
    ```bash
    PUBLIC_API_URL=https://your-api-url.com/
+   # ...and the other five — see CLAUDE.md for the full list
    ```
 
    > **Note:** The `PUBLIC_API_URL` must end with a trailing slash. This variable is used by the pre-registration form to submit user data.
+
+   > All six `PUBLIC_*` variables are required: `npm run build` fails on a missing or
+   > empty one (`scripts/check-env.mjs`), because the build inlines these and a page
+   > whose variable went missing ships broken rather than failing. `npm run dev`,
+   > `npm run checks` and `npx astro check` need none of them.
 
 ## Development
 

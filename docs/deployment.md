@@ -36,6 +36,10 @@ www.yeride.com
    |--------|-------------|---------|
    | `PUBLIC_API_URL` | Backend API URL | `https://api.yeride.com/` |
 
+   All six `PUBLIC_*` secrets are required, not just this one — the build fails
+   on a missing or empty one (`scripts/check-env.mjs`). The full list is in
+   CLAUDE.md, and `deploy-all.yml`'s "Create env file" step must write each one.
+
 ### Custom Domain
 
 The site uses a custom domain configured via:
@@ -96,7 +100,9 @@ jobs:
           cache: 'npm'
 
       - name: Create .env file
-        run: echo "PUBLIC_API_URL=${{ secrets.PUBLIC_API_URL }}" >> .env
+        # All six PUBLIC_* secrets, one line each — the build fails on a missing
+        # or empty one. See deploy-all.yml for the authoritative version.
+        run: echo "PUBLIC_API_URL=${{ secrets.PUBLIC_API_URL }}" > .env
 
       - name: Install dependencies
         run: npm ci
@@ -129,8 +135,9 @@ jobs:
 # Install dependencies
 npm ci
 
-# Create environment file
+# Create environment file — all six PUBLIC_* variables, see CLAUDE.md
 echo "PUBLIC_API_URL=https://api.yeride.com/" > .env
+# ...and the other five; npm run build fails if any is missing or empty
 
 # Build the site
 npm run build
@@ -178,7 +185,8 @@ npm install
 ```
 
 **Environment Variable Issues**
-- Verify `PUBLIC_API_URL` secret is set in repository settings
+- Verify all six `PUBLIC_*` secrets are set in repository settings — the build
+  fails naming the ones it could not find (`scripts/check-env.mjs`)
 - Check that the URL ends with a trailing slash
 
 ### Deployment Failures
@@ -232,7 +240,7 @@ git push origin main
 
 ## Security Checklist
 
-- [ ] `PUBLIC_API_URL` secret is set
+- [ ] All six `PUBLIC_*` secrets are set (see CLAUDE.md; a missing one fails the build)
 - [ ] No sensitive data in committed files
 - [ ] HTTPS enforced on custom domain
 - [ ] `.env` file in `.gitignore`

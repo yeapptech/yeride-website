@@ -8,7 +8,8 @@
     "checks": "node scripts/check-route-parity.mjs && node scripts/check-copy-gate.mjs",
     "check:fee-labels": "node scripts/check-fee-labels.mjs",
     "check:dist": "node scripts/check-dist-copy-gate.mjs",
-    "build": "npm run checks && astro check && astro build && npm run check:dist",
+    "check:env": "node scripts/check-env.mjs",
+    "build": "npm run checks && npm run check:env && astro check && astro build && npm run check:dist",
     "preview": "astro preview",
     "astro": "astro"
   },

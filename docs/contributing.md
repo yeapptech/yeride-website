@@ -18,9 +18,17 @@ This document describes how to contribute to the YeRide website.
    ```
 
 3. **Create environment file**
+
+   All six `PUBLIC_*` variables are required, and `npm run build` fails if any of them
+   is missing or empty (`scripts/check-env.mjs`). The full list is in CLAUDE.md.
+
    ```bash
    echo "PUBLIC_API_URL=https://api.yeride.com/" > .env
+   # ...and the other five — see CLAUDE.md
    ```
+
+   Without the keys you can still run `npm run dev`, `npm run checks` and
+   `npx astro check`; only `npm run build` needs all six.
 
 4. **Start development server**
    ```bash
