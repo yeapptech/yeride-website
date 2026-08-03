@@ -1,14 +1,28 @@
 // /fees and /es/fees copy — VERBATIM from docs/copy-map.md §3.4 (wayfinder #34).
 // Do not reword, re-case, or re-punctuate.
 //
-// Three groups are additions this build needed and the copy map does not yet
-// carry; they are marked and flagged on #40:
-//   - `otherFamilyH2` / `otherFamilyLead` — where a charge id the site can't
-//     classify renders, since guessing it into either family would be a claim.
-//   - `exampleUnavailable` — the ledger claims the money reconciles, so it is
-//     withheld rather than shown incomplete when a charge is unclassified.
-//   - the unit and rule fragments used to phrase rates and rules in both
-//     languages from the endpoint's machine-readable forms.
+// The strings #40 authored ahead of the map were blessed and amended into §3.4
+// on 2026-08-02 (#47), so they are no longer provisional. Only the unit and
+// rule fragments — used to phrase rates in both languages from the endpoint's
+// machine-readable forms — remain a build-side detail the map does not carry.
+//
+// The page withholds things, and each withholding states its own cause (#47).
+// One string covering every branch was how the live page came to say "until
+// every published charge is described above" while every published charge was
+// described above — a false reason is the same class of error as guessing a
+// charge into a family, which this page refuses to do:
+//   - `exampleUnpublished` — the endpoint returned no example trip at all. This
+//     is what production actually renders today: `getFeeSchedule` returns
+//     `example: null` because `pickupBandwidthCharge` meters the time before a
+//     ride starts, which a synthetic reference trip cannot know
+//     (yeride-functions#21).
+//   - `exampleUnavailable` — the site's own safety net: a charge it cannot
+//     classify, or one priced in the schedule but absent from the example. The
+//     ledger claims the money reconciles, so it is withheld rather than shown
+//     short. Renders for nobody today.
+//   - `gapNote` — explains the "—" a charge shows when the endpoint publishes
+//     no summarisable rule for it. Conditional, so it disappears by itself when
+//     #21 publishes one.
 
 export type Lang = "en" | "es";
 
@@ -42,10 +56,13 @@ export const feesCopy = {
       "The coverage Florida requires during a ride. The rider's share and the driver's share are separate, published lines.",
     cardNote:
       "The card networks' standard rate, borne by the driver on card fares. Cash fares have none.",
-    // addition — unclassified charges
+    // Unclassified charges. "YeRide", not "the platform": every other line on
+    // this page owns the charge by name, and distancing language reads as
+    // evasion on a page whose whole pitch is transparency (#47).
     otherFamilyH2: "Other charges",
-    otherFamilyLead:
-      "Charges the platform publishes that this page does not yet describe.",
+    otherFamilyLead: "Charges YeRide publishes that this page doesn’t describe yet.",
+    gapNote:
+      "A — means YeRide hasn’t published a rule for that charge that this page can state plainly.",
     exampleH2: "Example at today’s rates",
     exampleNote: "Computed from the schedule above, not a quote.",
     riderColH: "What the rider pays",
@@ -59,7 +76,8 @@ export const feesCopy = {
     driverTotalBeforeCard: "Total — before card processing",
     cashNotePre: "On a cash fare there’s no card processing — the driver keeps ",
     cashNotePost: ".",
-    // addition — withheld ledger
+    // withheld ledger — one string per cause, never one string for all of them
+    exampleUnpublished: "YeRide hasn’t published an example trip for this area yet.",
     exampleUnavailable:
       "The example is unavailable until every published charge is described above.",
     // Named for what it is, and attributed (map owner, 2026-08-02). No figure:
@@ -114,8 +132,9 @@ export const feesCopy = {
     cardNote:
       "La tarifa estándar de las redes de tarjetas, que paga quien maneja en viajes con tarjeta. Los viajes en efectivo no la tienen.",
     otherFamilyH2: "Otros cargos",
-    otherFamilyLead:
-      "Cargos que publica la plataforma y que esta página todavía no describe.",
+    otherFamilyLead: "Cargos que YeRide publica y que esta página todavía no describe.",
+    gapNote:
+      "Un — significa que YeRide todavía no publica una regla para ese cargo que esta página pueda expresar con claridad.",
     exampleH2: "Ejemplo con las tarifas de hoy",
     exampleNote: "Calculado con el tarifario de arriba; no es una cotización.",
     riderColH: "Lo que paga quien viaja",
@@ -128,6 +147,8 @@ export const feesCopy = {
     cashNotePre:
       "En un viaje en efectivo no hay procesamiento de tarjeta — a quien maneja le quedan ",
     cashNotePost: ".",
+    exampleUnpublished:
+      "YeRide todavía no publica un viaje de ejemplo para esta área.",
     exampleUnavailable:
       "El ejemplo no está disponible hasta que cada cargo publicado esté descrito arriba.",
     stripeH2: "El procesamiento de tarjeta es de Stripe, no de YeRide",

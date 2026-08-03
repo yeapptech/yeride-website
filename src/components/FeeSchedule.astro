@@ -354,6 +354,15 @@ const esPrefix = lang === "es" ? "/es" : "";
               </li>`,
             )
             .join("")}</ul>
+          ${
+            // A charge whose rule the endpoint can't summarise prints "—". The
+            // marker is honest but silent, so the panel showing one explains it
+            // rather than leaving a priced-fee page with an unpriced line and no
+            // reason. Conditional: it vanishes when #21 publishes the rule.
+            p.charges.some((c) => ruleText(c.rule) === GAP)
+              ? `<p class="mt-3 text-[12.5px] text-ink/50">${esc(t.gapNote)}</p>`
+              : ""
+          }
         </section>`,
       )
       .join("");
@@ -388,9 +397,13 @@ const esPrefix = lang === "es" ? "/es" : "";
       const a = amounts.get(c.id);
       return typeof a === "number" && Number.isFinite(a);
     });
-    if (!ex || !classified || !priced) {
-      return `<p class="mt-3 max-w-xl text-[14px] text-paper/60">${esc(t.exampleUnavailable)}</p>`;
-    }
+    // Each cause states itself. Collapsing these into one message is how the
+    // live page came to blame an undescribed charge while every charge was
+    // described — the endpoint simply had no example to give (#47).
+    const withheld = (message: string) =>
+      `<p class="mt-3 max-w-xl text-[14px] text-paper/60">${esc(message)}</p>`;
+    if (!ex) return withheld(t.exampleUnpublished);
+    if (!classified || !priced) return withheld(t.exampleUnavailable);
 
     const of = (id: string) => amounts.get(id) as number;
     const ids = (test: (l: ChargeLabel) => boolean) =>
@@ -469,7 +482,7 @@ const esPrefix = lang === "es" ? "/es" : "";
         .map(
           (a) =>
             `<option value="${esc(a.id)}"${a.id === schedule.area.id ? " selected" : ""}>${esc(
-              serviceAreaName(a.id, a.identifier),
+              serviceAreaName(a.id, a.identifier, lang),
             )}</option>`,
         )
         .join("");

@@ -31,6 +31,8 @@
 // entries were removed for that reason; the `passthrough` family and `cardOnly`
 // stay defined for when #48 gives them members again.
 
+import type { Lang } from "./feesCopy";
+
 export type ChargeFamily = "tech" | "passthrough";
 
 export interface ChargeLabel {
@@ -75,16 +77,25 @@ export const feeLabels: Record<string, ChargeLabel> = {
 };
 
 // Service-area documents carry an `identifier` slug and no display-name field
-// (yeride-admin-api docs/DATA-MODELS.md §serviceAreas), so the picker's labels
-// live here until the brand/admin side adds one. An area missing from this map
-// falls back to its humanised identifier.
-export const serviceAreaNames: Record<string, string> = {
-  "us-fl-south-florida": "South Florida",
+// (yeride-admin-api docs/DATA-MODELS.md §serviceAreas). Display names stay the
+// site's job by decision (#47, 2026-08-02) rather than moving to a backend
+// `name` field: an area name is bilingual brand copy, not data, and a single
+// backend string would ship one language and leak English onto /es/fees — the
+// exact failure the charge-id rekey above was opened to fix. Two of the three
+// servable stage areas are Spanish-speaking, so that is not hypothetical.
+//
+// The cost of keeping it here is that a new area needs a web deploy to launch
+// with a real name. #56 makes that visible instead of silent: it fails the
+// build on an area id this map doesn't cover, the same treatment it gives an
+// uncovered charge id. Until it lands, an uncovered area falls back to its
+// humanised identifier ("Us Mi Detroit") in both languages.
+export const serviceAreaNames: Record<string, Record<Lang, string>> = {
+  "us-fl-south-florida": { en: "South Florida", es: "Sur de la Florida" },
 };
 
-export function serviceAreaName(id: string, identifier: string): string {
+export function serviceAreaName(id: string, identifier: string, lang: Lang): string {
   return (
-    serviceAreaNames[id] ??
+    serviceAreaNames[id]?.[lang] ??
     identifier
       .split(/[-_]/)
       .filter(Boolean)
