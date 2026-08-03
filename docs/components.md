@@ -287,6 +287,17 @@ insurance. Copy-map §5 gates that word on #48 and the gate is a line matcher, s
 tell that denial from a claim — hence the pragmas, which print on every build. When #48
 lands the statements become *false* and must be rewritten, not merely un-pragma'd.
 
+Those pragmas are stripped by the build, so the same sentences are blessed a **second** time
+in `scripts/check-dist-copy-gate.mjs`'s `ALLOWED` list, keyed to the built pages (#57).
+Five entries cover the four pragmas, because §5's `/\b(seguros?|aseguranza|p[óo]liza)\b/`
+matches **twice** in *"el número de póliza de seguro del vehículo"* — two words, one
+sentence. Note that only two of the four are denials; the other two name the vehicle
+insurance policy number as a field the app collects.
+
+Both lists are self-cleaning, so editing a legal sentence that contains *insurance*,
+*seguro* or *póliza* — even to add a second one — fails the build until both are updated.
+That cost is the point: adding one is a decision.
+
 **Four refusals it enforces.** Read #38 before relaxing any of them:
 
 1. **It shows the fare and nothing else about money.** `estimateFares` also returns

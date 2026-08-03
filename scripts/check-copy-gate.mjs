@@ -15,20 +15,21 @@
 // WHAT THIS CANNOT DO — read before trusting it (adversarial review, 2026-08-02):
 // it is a line matcher over source text, so it holds against careless mistakes
 // and not against evasion. A phrase broken across a tag, an HTML entity or a
-// newline slips it ("at&nbsp;cost", "no\n surprises", "$" + "9"); so does copy
-// that arrives from the fee-schedule endpoint at runtime, and so does anything
-// in a file type this does not scan. The gate that would subsume those runs the
-// same pattern list over dist/ after the build, with entities and whitespace
-// normalised — filed as its own ticket, not done here.
+// newline slips it ("at&nbsp;cost", "no\n surprises"); so does copy that arrives
+// from the fee-schedule endpoint at runtime, and so does anything in a file type
+// this does not scan. Most of that is now covered by the second layer,
+// scripts/check-dist-copy-gate.mjs (#57), which runs this same pattern list over
+// the built output. This gate is still the one worth keeping: it fails at the
+// point of authorship with a file and a line number, it runs on every PR without
+// a build, and it is where the allowlist bookkeeping lives.
 //
 // Three §5 rules are judgement, not regex, and are NOT checked here — they stay
-// human review at copy time:
-//   - copy claiming a visible per-trip fee breakdown in the app
-//   - invented per-trip price or earnings comparisons against Uber or Lyft
-//   - safety claims beyond Fla. Stat. § 627.748
+// human review at copy time. The list lives with the patterns.
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+
+import { PATTERNS } from "./copy-gate-patterns.mjs";
 
 // public/ is copied verbatim into dist/, so it ships exactly as written.
 const ROOTS = ["src", "public"];
@@ -42,45 +43,42 @@ const TICKET = /#\d+(?!\w)/;
 const IN_COMMENT = /(\/\/|\/\*|<!--|^[ \t]*\*)/;
 const COMMENT_ONLY_LINE = /^[ \t]*(\{?[ \t]*\/\*|\/\/|\*)/;
 
-const PATTERNS = [
-  // Gated until positioning obligations 1–3 all ship (driver pillar 2).
-  { re: /see the math/i, why: "gated: driver pillar 2, obligations 1–3" },
-  { re: /cuentas claras/i, why: "gated: driver pillar 2, obligations 1–3" },
-
-  // Gated until YeRide actually has insurance coverage (#48). There is no
-  // pass-through family today: insurance does not exist and card processing is
-  // Stripe billing the driver's own connected account, not YeRide forwarding it.
-  { re: /\bat[- ]cost\b/i, why: "gated on #48: nothing is passed through at cost" },
-  { re: /\bal costo\b/i, why: "gated on #48: nothing is passed through at cost" },
-  // The separator is required, as §5 writes it. The one-word "passthrough" is
-  // only ever an identifier here (ChargeFamily, the family filter), never a claim.
-  { re: /\bpass(es|ed|ing)?[- ]through\b/i, why: "gated on #48: the pass-through family has no members" },
-  { re: /\b(zero|without) markup\b/i, why: "gated on #48: the pass-through family has no members" },
-  { re: /\bsin (recargo|margen)\b/i, why: "gated on #48: the pass-through family has no members" },
-  // The same claim without any of the words above — §3.4's suspended family-2
-  // lead reads "Costs YeRide forwards without touching." / "…traslada sin tocar."
-  { re: /\bforwards?\b[^.]{0,30}\bwithout touching\b/i, why: "gated on #48: pass-through claim without the words" },
-  { re: /\btraslada\b[^.]{0,30}\bsin tocar\b/i, why: "gated on #48: pass-through claim without the words" },
-  { re: /\binsurance\b/i, why: "gated on #48: YeRide carries no coverage" },
-  { re: /\b(seguros?|aseguranza|p[óo]liza)\b/i, why: "gated on #48: YeRide carries no coverage" },
-  { re: /\bcoverage\b/i, why: "gated on #48: YeRide carries no coverage" },
-  { re: /\bcobertura\b/i, why: "gated on #48: YeRide carries no coverage" },
-
-  // Never claimed, gate or no gate.
-  { re: /\blocked\b/i, why: "never claimed: fares are metered, not locked" },
-  { re: /\bupfront (price|pricing)\b/i, why: "never claimed: fares are metered, not locked" },
-  { re: /\bprecio (fijo|cerrado|garantizado)\b/i, why: "never claimed: fares are metered, not locked" },
-  { re: /\bno surprises\b/i, why: "never claimed: fares are metered, not locked" },
-  { re: /\bsin sorpresas\b/i, why: "never claimed: fares are metered, not locked" },
-  { re: /\bno surge\b(?![ \t]+today)/i, why: 'never claimed: only "no surge today" is permitted (§3.4)' },
-  { re: /\bnunca\b[^.]{0,20}\brecargo\b/i, why: 'never claimed: only "no surge today" is permitted (§3.4)' },
-  { re: /\bcheape(st|r)\b/i, why: "never claimed: no price-leadership claim" },
-  { re: /\blowest (fees|fares|price)\b/i, why: "never claimed: no price-leadership claim" },
-  { re: /\bm[áa]s barat[oa]s?\b/i, why: "never claimed: no price-leadership claim" },
-  { re: /\bm[áa]s econ[óo]mico\b/i, why: "never claimed: no price-leadership claim" },
-  { re: /\$[ \t]?\d/, why: "never claimed: no hard-coded money — every figure is fetched live" },
-  { re: /\b\d[\d,.]*[ \t]*(dollars|USD)\b/i, why: "never claimed: no hard-coded money — every figure is fetched live" },
-];
+// Homoglyphs, answering #57's "is folding honest?" with no. A Cyrillic "\u0435"
+// in "ch\u0435apest" defeats every pattern above, and folding confusables back to
+// ASCII needs a table whose wrong entries would invent failures in Spanish copy.
+// The confusable is itself the defect, so it is caught rather than folded — and
+// caught HERE, not over dist/, because src/ and public/ are wholly authored in
+// this repo. A vendored bundle may legitimately carry other scripts; a YeRide
+// page in English or Spanish never does.
+//
+// Curated, not whole blocks. An earlier revision took the Greek block entire and
+// failed on "\u0394/\u0394t" and "\u03c0" in a comment — legitimate maths, no
+// resemblance to a Latin letter. Only the letters that can PASS FOR Latin are
+// listed, so:
+//   - Cyrillic entire: no Cyrillic letter belongs in EN or ES copy at all.
+//   - Greek: the Latin lookalikes only. \u0394, \u03c0, \u03bc, \u03bb and \u03a9
+//     are left alone.
+//   - Cherokee, fullwidth Latin, Mathematical Alphanumeric Symbols, Roman-numeral
+//     forms, small-capital phonetic letters, and the letterlike \u2126/\u212a/\u212b
+//     — each of which renders as something a reader takes for an ASCII letter.
+// Accented Latin is untouched throughout: \u00e1, \u00e9, \u00f1 and \u00fc are Latin.
+//
+// Suppressible by the same copy-gate-allow pragma as any other hit, because a
+// legitimate exception is possible and an unsuppressable failure is not a gate,
+// it is a wall.
+const CONFUSABLE = new RegExp(
+  "[" +
+    "\\u0400-\\u04FF" + // Cyrillic
+    "\\u0391\\u0392\\u0395\\u0396\\u0397\\u0399\\u039A\\u039C\\u039D\\u039F\\u03A1\\u03A4\\u03A5\\u03A7" + // Greek capitals shaped like Latin
+    "\\u03B1\\u03B9\\u03BA\\u03BD\\u03BF\\u03C1\\u03C3\\u03C5\\u03C7" + // Greek lowercase shaped like Latin
+    "\\u13A0-\\u13FF" + // Cherokee
+    "\\u1D00-\\u1D25" + // small-capital phonetic letters
+    "\\u2126\\u212A\\u212B" + // ohm, kelvin, angstrom
+    "\\u2160-\\u217F" + // Roman numeral forms
+    "\\uFF21-\\uFF3A\\uFF41-\\uFF5A" + // fullwidth Latin
+    "]|[\\u{1D400}-\\u{1D7FF}]", // Mathematical Alphanumeric Symbols
+  "u",
+);
 
 // Blank comments out, keeping every newline so line numbers still line up.
 //
@@ -135,27 +133,43 @@ for (const file of files) {
     });
   });
 
+  // A hit on line `here` is covered by a pragma on that same line, or by a
+  // comment-only pragma on the line directly above it.
+  const judge = (here, hit, why) => {
+    const pragma =
+      pragmas.find((p) => p.file === file && p.line === here) ??
+      pragmas.find((p) => p.file === file && p.line === here - 1 && p.coversNext);
+    const where = `${file}:${here}`;
+
+    if (!pragma) {
+      errors.push(`${where}  ${hit} — ${why}`);
+    } else if (!TICKET.test(pragma.reason)) {
+      errors.push(`${where}  copy-gate-allow must name the ticket that retires it, e.g. "#48"`);
+      pragma.used = true;
+    } else {
+      pragma.used = true;
+      allowed.push(`${where}  ${hit} — ${pragma.reason}`);
+    }
+  };
+
   code.forEach((line, i) => {
     for (const { re, why } of PATTERNS) {
       const hit = line.match(re);
-      if (!hit) continue;
-
-      const here = i + 1;
-      const pragma =
-        pragmas.find((p) => p.file === file && p.line === here) ??
-        pragmas.find((p) => p.file === file && p.line === here - 1 && p.coversNext);
-      const where = `${file}:${here}`;
-
-      if (!pragma) {
-        errors.push(`${where}  "${hit[0]}" — ${why}`);
-      } else if (!TICKET.test(pragma.reason)) {
-        errors.push(`${where}  copy-gate-allow must name the ticket that retires it, e.g. "#48"`);
-        pragma.used = true;
-      } else {
-        pragma.used = true;
-        allowed.push(`${where}  "${hit[0]}" — ${pragma.reason}`);
-      }
+      if (hit) judge(i + 1, `"${hit[0]}"`, why);
     }
+  });
+
+  // Homoglyphs are read from the RAW line, comments included: an HTML comment in
+  // an .astro file ships, and a confusable is worth catching wherever it is.
+  raw.forEach((line, i) => {
+    const hit = line.match(CONFUSABLE);
+    if (!hit) return;
+    const point = `U+${hit[0].codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`;
+    judge(
+      i + 1,
+      `"${hit[0]}" (${point})`,
+      "not a Latin letter, but shaped like one — a homoglyph hides a gated word from every pattern above",
+    );
   });
 }
 

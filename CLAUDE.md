@@ -11,17 +11,18 @@ YeRide website — a static marketing, pre-registration, and fare-estimate site 
 ```bash
 npm run dev        # Dev server at http://localhost:4321
 npm run checks     # Route parity + copy gate (both fast, no deps)
-npm run build      # npm run checks + astro check (type-check) + astro build → dist/
+npm run build      # npm run checks + astro check + astro build → dist/ + dist copy gate
 npm run preview    # Preview production build locally
 ```
 
-No test runner and no linter are configured. `npm run build` is the only automated verification gate. It runs three things in order, and any one of them fails the build:
+No test runner and no linter are configured. `npm run build` is the only automated verification gate. It runs four things in order, and any one of them fails the build:
 
 1. **`scripts/check-route-parity.mjs`** — every route under `src/pages` has its `/es/` twin. `404` and `redirect` are exempt by name (single file, language switched client-side). Routes whose twin is not built yet sit in a `PENDING` map naming the ticket that retires them; an entry whose twin now exists fails, so the list cannot go stale.
-2. **`scripts/check-copy-gate.mjs`** — gated and never-claimed strings (`docs/copy-map.md` §5, on the unmerged `copy-map/en-es` branch) must not reach the site. Scans `src/` and `public/`. See the script header for the escape hatch and, more importantly, for what the check *cannot* catch — it is a line matcher over source text, so a phrase broken across a tag, an entity or a newline slips it, as does copy arriving from the fee-schedule endpoint at runtime.
+2. **`scripts/check-copy-gate.mjs`** — gated and never-claimed strings (`docs/copy-map.md` §5, on the unmerged `copy-map/en-es` branch) must not reach the site. Scans `src/` and `public/` and fails on a Greek or Cyrillic letter, which in EN/ES copy is a homoglyph hiding a gated word. It is a line matcher over **source** text, so a phrase broken across a tag, an entity or a newline slips it — that is item 4's job. Its value is the file-and-line failure at the point of authorship, and it owns the per-line `copy-gate-allow` escape hatch; see the script header.
 3. **`astro check`** — a type error fails the build.
+4. **`scripts/check-dist-copy-gate.mjs`** — the same §5 list (both gates import `scripts/copy-gate-patterns.mjs`; one list, never two) run over `dist/` **after** `astro build`, with character references decoded, invisible characters removed, JS escapes resolved, whitespace collapsed and three views of each HTML file matched. This is the layer that measures the actual promise — a forbidden claim must not reach the shipped site — and it is not optional for `/fees`, whose copy is rendered client-side and so exists only in the JS bundle, never in the built HTML. Source pragmas are stripped by the build and cannot be seen from here, so it carries its **own** allowlist keyed to the hash-free path, the matched text and an exact count; an entry that stops matching, or matches a different number of times, fails. Run it alone with `npm run check:dist` (needs a `dist/`).
 
-`.github/workflows/checks.yml` runs items 1–2 on every pull request; `deploy-all.yml` runs the full chain on `main` and gates deployment on it.
+`.github/workflows/checks.yml` runs items 1–2 on every pull request — it is dependency-free by design, and items 3–4 need `npm ci` against the private registry. `deploy-all.yml` runs the full chain on `main` and gates deployment on it, so item 4 is a pre-deploy backstop rather than a PR-time one.
 
 One further gate runs **outside `npm run build`**, because it needs the network:
 
