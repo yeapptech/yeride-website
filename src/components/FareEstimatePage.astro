@@ -222,6 +222,7 @@ if (!areaName) {
   import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
   import { getEstimates, type ServiceEstimate } from "../lib/fareEstimate";
   import { fareEstimateCopy } from "../i18n/fareEstimateCopy";
+  import { serviceName, serviceDescription } from "../i18n/feeLabels";
   import type { Lang } from "../i18n/feesCopy";
 
   const lang = (document.documentElement.lang === "es" ? "es" : "en") as Lang;
@@ -364,9 +365,9 @@ if (!areaName) {
         return `<li class="rounded-2xl border border-ink/15 bg-white px-5 py-5">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <p class="text-[17px] font-extrabold text-ink">${esc(estimate.name)}</p>
+              <p class="text-[17px] font-extrabold text-ink">${esc(serviceName(estimate.serviceId, estimate.name, lang))}</p>
               ${seats ? `<p class="mt-0.5 text-[13px] font-semibold text-ink/50">${esc(seats)}</p>` : ""}
-              ${estimate.description ? `<p class="mt-1.5 max-w-xs text-[14px] text-ink/60">${esc(estimate.description)}</p>` : ""}
+              ${estimate.description ? `<p class="mt-1.5 max-w-xs text-[14px] text-ink/60">${esc(serviceDescription(estimate.serviceId, estimate.description, lang))}</p>` : ""}
             </div>
             <div class="shrink-0 text-right">
               <p class="text-[24px] font-extrabold tabular-nums text-ink">${fareText(estimate.fare)}</p>

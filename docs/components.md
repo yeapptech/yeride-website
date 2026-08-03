@@ -219,9 +219,15 @@ and none of them should be relaxed without reading #47:
 The ledger splits by `payer`, never by family: YeRide's charges come out of the
 driver's side in both payment flows.
 
+**Ride tier names are site copy, in both languages** (#65). The rate card's name column
+and the example's trip line read `serviceName()` from `src/i18n/feeLabels.ts`, keyed by
+the service id — the endpoint's own `name` is rendered only as the fallback for an id
+the map doesn't cover, which `scripts/check-fee-labels.mjs` fails the deploy on. EN is
+authored too, so it stays identical to what the app shows a rider.
+
 **Related:** `src/lib/feeSchedule.ts` (endpoint contract, fetch, formatting),
-`src/i18n/feeLabels.ts` (charge labels + family/payer), `src/i18n/feesCopy.ts` (page
-copy, EN/ES).
+`src/i18n/feeLabels.ts` (charge labels + family/payer, area names, ride tier names),
+`src/i18n/feesCopy.ts` (page copy, EN/ES).
 
 ### FareEstimatePage
 
@@ -337,10 +343,17 @@ That cost is the point: adding one is a decision.
    circle no endpoint publishes yet — and shipped the "Priced for" pair instead; the
    line itself waits on #73.
 
+Each result's **tier name and blurb are site copy in both languages** (#65), read from
+`serviceName()` / `serviceDescription()` by `serviceId`. Before that the callable's
+English `name` and `description` were printed verbatim, so `/es/fare-estimate` said
+"Standard sedans with more legroom" under a Spanish heading. The fetched strings survive
+only as the fallback for a tier id the map doesn't cover.
+
 **Related:** `src/lib/fareEstimate.ts` (callable contract), `src/lib/serviceArea.ts`
 (the area the page prices), `src/lib/firebase.ts` (callable region),
 `src/i18n/fareEstimateCopy.ts` (page copy, EN/ES), `src/i18n/feeLabels.ts`
-(`serviceAreaNames`, read in the frontmatter for the area's bilingual name).
+(`serviceAreaNames`, read in the frontmatter for the area's bilingual name; ride tier
+names, read in the result list).
 
 ## Page-Specific Components
 

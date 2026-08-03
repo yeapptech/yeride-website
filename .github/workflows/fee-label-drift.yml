@@ -55,7 +55,7 @@ jobs:
           $(cat report.txt)
           \`\`\`"
           else
-            gh issue create --title "$TITLE" --body "\`getFeeSchedule\` is publishing a charge id or service area that \`src/i18n/feeLabels.ts\` does not cover, so \`/es/fees\` would print English (a charge) or a humanised slug (an area), and an unclassified charge withholds the example ledger on \`/fees\` entirely.
+            gh issue create --title "$TITLE" --body "\`getFeeSchedule\` is publishing a charge id, service area or ride tier that \`src/i18n/feeLabels.ts\` does not cover, so \`/es/fees\` would print English (a charge or a tier) or a humanised slug (an area), an uncovered tier also reaches \`/es/fare-estimate\`, and an unclassified charge withholds the example ledger on \`/fees\` entirely.
 
           Found by the daily [fee-label drift check](https://github.com/${{ github.repository }}/actions/workflows/fee-label-drift.yml) (wayfinder #56). It also runs before every deploy, so **the site cannot ship until this is closed.**
 

@@ -103,3 +103,96 @@ export function serviceAreaName(id: string, identifier: string, lang: Lang): str
       .join(" ")
   );
 }
+
+// Ride-tier display copy, keyed by the `rideServices/{id}` document id. Both
+// languages are authored here, exactly as `feeLabels` above authors both for a
+// charge — the backend's `name` and `description` are never rendered.
+//
+// THE TIERS ARE COPY, NOT BRAND NAMES (#65, decided with the map owner
+// 2026-08-03). The reading that they are proper nouns is defensible — Uber
+// keeps "Comfort" in Spanish-language markets — but nothing here backed it:
+// `@yeapptech/yeride-brand` names no tier anywhere (messaging, positioning,
+// brand-system, identity, logo), so there is no brand asset to protect, and
+// copy-map §3.4 authors every other cell of the rate card in both languages.
+// The tier column was a gap in that method, not an exception to it.
+//
+// AUTHORING EN TOO is the point, not incidental. Rendering the backend string
+// on /fees and an authored one on /es/fees is what leaks English today; one map
+// holding both keeps them from drifting apart, and keeps EN identical to what
+// the app shows a rider, which is the one real cost of translating (both apps
+// are English-only — yeride-mobile has no i18n at all and the legacy app on
+// Play renders `Order {name} Service` — so a Spanish reader matches "Económico"
+// here to "Economy" there; their docs call that temporary, "localization is a
+// post-cutover concern").
+//
+// The EN strings are the operator's own, transcribed from production
+// 2026-08-03, not rewritten — "SUVs Luxury ride" reads oddly and improving it is
+// a copy-map question, not this map's. The Spanish is written to be natural
+// rather than word-for-word.
+//
+// The cost is `serviceAreaNames`' cost: a tier renamed or added in the admin
+// console needs a web deploy to appear. `scripts/check-fee-labels.mjs` makes an
+// ADDED id loud (#56 extended by #65 — it fails on a service id this map does
+// not cover, across every area). It cannot see an EDITED description, which is
+// prose an operator may reword; that is the accepted trade for having the two
+// languages agree at all.
+export interface ServiceLabel {
+  name: Record<Lang, string>;
+  description: Record<Lang, string>;
+}
+
+export const serviceNames: Record<string, ServiceLabel> = {
+  economy: {
+    name: { en: "Economy", es: "Económico" },
+    description: {
+      en: "Affordable rides, compact cars",
+      es: "Viajes accesibles, autos compactos",
+    },
+  },
+  comfort: {
+    name: { en: "Comfort", es: "Confort" },
+    description: {
+      en: "Standard sedans with more legroom",
+      es: "Sedanes estándar con más espacio para las piernas",
+    },
+  },
+  comfort_plus: {
+    name: { en: "Comfort Plus", es: "Confort Plus" },
+    description: { en: "SUVs or minivans", es: "SUV o minivans" },
+  },
+  luxury: {
+    name: { en: "Luxury", es: "Lujo" },
+    description: { en: "Luxury ride", es: "Viaje de lujo" },
+  },
+  // The separator really is a hyphen here where `comfort_plus` uses an
+  // underscore. That is the admin console's inconsistency, not a typo — these
+  // keys are document ids and must match it exactly.
+  "luxury-plus": {
+    name: { en: "Luxury Plus", es: "Lujo Plus" },
+    description: { en: "SUVs Luxury ride", es: "SUV de lujo" },
+  },
+};
+
+/**
+ * A tier's display name, or the backend's own `name` for an id this map does
+ * not cover.
+ *
+ * Falling back to the fetched string — rather than humanising the id the way
+ * `serviceAreaName` must — is deliberate: a ride service document HAS a real
+ * name field, so there is never a reason to invent one from `luxury-plus`
+ * ("Luxury Plus" by luck, "Comfort Plus" only because the underscore happens to
+ * split too). It is the same treatment /fees gives a charge id it cannot
+ * classify: show what the backend calls it, verbatim, and never guess.
+ *
+ * The fallback leaks English onto /es until someone adds the key, which is why
+ * #56 fails the deploy on it. Hiding the row instead would suppress a published
+ * price on the page that exists to publish them.
+ */
+export function serviceName(id: string, fetched: string, lang: Lang): string {
+  return serviceNames[id]?.name[lang] ?? fetched;
+}
+
+/** As `serviceName`, for the tier blurb /fare-estimate renders under it. */
+export function serviceDescription(id: string, fetched: string, lang: Lang): string {
+  return serviceNames[id]?.description[lang] ?? fetched;
+}
