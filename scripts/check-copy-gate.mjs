@@ -15,20 +15,21 @@
 // WHAT THIS CANNOT DO — read before trusting it (adversarial review, 2026-08-02):
 // it is a line matcher over source text, so it holds against careless mistakes
 // and not against evasion. A phrase broken across a tag, an HTML entity or a
-// newline slips it ("at&nbsp;cost", "no\n surprises", "$" + "9"); so does copy
-// that arrives from the fee-schedule endpoint at runtime, and so does anything
-// in a file type this does not scan. The gate that would subsume those runs the
-// same pattern list over dist/ after the build, with entities and whitespace
-// normalised — filed as its own ticket, not done here.
+// newline slips it ("at&nbsp;cost", "no\n surprises"); so does copy that arrives
+// from the fee-schedule endpoint at runtime, and so does anything in a file type
+// this does not scan. Most of that is now covered by the second layer,
+// scripts/check-dist-copy-gate.mjs (#57), which runs this same pattern list over
+// the built output. This gate is still the one worth keeping: it fails at the
+// point of authorship with a file and a line number, it runs on every PR without
+// a build, and it is where the allowlist bookkeeping lives.
 //
 // Three §5 rules are judgement, not regex, and are NOT checked here — they stay
-// human review at copy time:
-//   - copy claiming a visible per-trip fee breakdown in the app
-//   - invented per-trip price or earnings comparisons against Uber or Lyft
-//   - safety claims beyond Fla. Stat. § 627.748
+// human review at copy time. The list lives with the patterns.
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+
+import { PATTERNS } from "./copy-gate-patterns.mjs";
 
 // public/ is copied verbatim into dist/, so it ships exactly as written.
 const ROOTS = ["src", "public"];
@@ -41,46 +42,6 @@ const TICKET = /#\d+(?!\w)/;
 // authorise itself, e.g. <p data-note="copy-gate-allow: ... #48">.
 const IN_COMMENT = /(\/\/|\/\*|<!--|^[ \t]*\*)/;
 const COMMENT_ONLY_LINE = /^[ \t]*(\{?[ \t]*\/\*|\/\/|\*)/;
-
-const PATTERNS = [
-  // Gated until positioning obligations 1–3 all ship (driver pillar 2).
-  { re: /see the math/i, why: "gated: driver pillar 2, obligations 1–3" },
-  { re: /cuentas claras/i, why: "gated: driver pillar 2, obligations 1–3" },
-
-  // Gated until YeRide actually has insurance coverage (#48). There is no
-  // pass-through family today: insurance does not exist and card processing is
-  // Stripe billing the driver's own connected account, not YeRide forwarding it.
-  { re: /\bat[- ]cost\b/i, why: "gated on #48: nothing is passed through at cost" },
-  { re: /\bal costo\b/i, why: "gated on #48: nothing is passed through at cost" },
-  // The separator is required, as §5 writes it. The one-word "passthrough" is
-  // only ever an identifier here (ChargeFamily, the family filter), never a claim.
-  { re: /\bpass(es|ed|ing)?[- ]through\b/i, why: "gated on #48: the pass-through family has no members" },
-  { re: /\b(zero|without) markup\b/i, why: "gated on #48: the pass-through family has no members" },
-  { re: /\bsin (recargo|margen)\b/i, why: "gated on #48: the pass-through family has no members" },
-  // The same claim without any of the words above — §3.4's suspended family-2
-  // lead reads "Costs YeRide forwards without touching." / "…traslada sin tocar."
-  { re: /\bforwards?\b[^.]{0,30}\bwithout touching\b/i, why: "gated on #48: pass-through claim without the words" },
-  { re: /\btraslada\b[^.]{0,30}\bsin tocar\b/i, why: "gated on #48: pass-through claim without the words" },
-  { re: /\binsurance\b/i, why: "gated on #48: YeRide carries no coverage" },
-  { re: /\b(seguros?|aseguranza|p[óo]liza)\b/i, why: "gated on #48: YeRide carries no coverage" },
-  { re: /\bcoverage\b/i, why: "gated on #48: YeRide carries no coverage" },
-  { re: /\bcobertura\b/i, why: "gated on #48: YeRide carries no coverage" },
-
-  // Never claimed, gate or no gate.
-  { re: /\blocked\b/i, why: "never claimed: fares are metered, not locked" },
-  { re: /\bupfront (price|pricing)\b/i, why: "never claimed: fares are metered, not locked" },
-  { re: /\bprecio (fijo|cerrado|garantizado)\b/i, why: "never claimed: fares are metered, not locked" },
-  { re: /\bno surprises\b/i, why: "never claimed: fares are metered, not locked" },
-  { re: /\bsin sorpresas\b/i, why: "never claimed: fares are metered, not locked" },
-  { re: /\bno surge\b(?![ \t]+today)/i, why: 'never claimed: only "no surge today" is permitted (§3.4)' },
-  { re: /\bnunca\b[^.]{0,20}\brecargo\b/i, why: 'never claimed: only "no surge today" is permitted (§3.4)' },
-  { re: /\bcheape(st|r)\b/i, why: "never claimed: no price-leadership claim" },
-  { re: /\blowest (fees|fares|price)\b/i, why: "never claimed: no price-leadership claim" },
-  { re: /\bm[áa]s barat[oa]s?\b/i, why: "never claimed: no price-leadership claim" },
-  { re: /\bm[áa]s econ[óo]mico\b/i, why: "never claimed: no price-leadership claim" },
-  { re: /\$[ \t]?\d/, why: "never claimed: no hard-coded money — every figure is fetched live" },
-  { re: /\b\d[\d,.]*[ \t]*(dollars|USD)\b/i, why: "never claimed: no hard-coded money — every figure is fetched live" },
-];
 
 // Blank comments out, keeping every newline so line numbers still line up.
 //
@@ -161,6 +122,29 @@ for (const file of files) {
 
 for (const p of pragmas.filter((p) => !p.used)) {
   errors.push(`${p.file}:${p.line}  copy-gate-allow matches nothing any more — delete it`);
+}
+
+// Homoglyphs, answering #57's "is folding honest?" with no. A Cyrillic "е" in
+// "chеapest" defeats every pattern above, and folding confusables back to ASCII
+// needs a table whose wrong entries would invent failures in Spanish copy. The
+// confusable is itself the defect, so it is caught rather than folded — and it is
+// caught HERE, not over dist/, because src/ and public/ are wholly authored in
+// this repo. A vendored bundle may legitimately carry other scripts; a YeRide
+// page in English or Spanish never does. Accented Latin is untouched: á, é, ñ and
+// ü are Latin, and this looks only at the Greek and Cyrillic blocks.
+const CONFUSABLE_SCRIPT = /[Ͱ-ϿЀ-ӿ]/;
+for (const file of files) {
+  readFileSync(file, "utf8")
+    .split(/\r?\n/)
+    .forEach((line, i) => {
+      const hit = line.match(CONFUSABLE_SCRIPT);
+      if (!hit) return;
+      const point = `U+${hit[0].codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`;
+      errors.push(
+        `${file}:${i + 1}  "${hit[0]}" (${point}) is a Greek or Cyrillic letter in EN/ES copy — ` +
+          `almost certainly a homoglyph that hides a gated word from this gate`,
+      );
+    });
 }
 
 // Copy-map §3.4 suspends the family-2 heading, lead and insurance note "until
