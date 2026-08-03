@@ -65,7 +65,7 @@ or footer change is therefore one edit, in one place.
 Redesigned routes keep the page file thin — `BaseLayout` plus one component that holds the
 whole body (`HomePage`, `DriversPage`, `RidersPage`, `FeeSchedule`, `FareEstimatePage`) — with
 the copy in `src/i18n/`. Follow that shape when adding a page. The pages still awaiting
-their redesign ticket (`about`, `contact`, `privacy-policy`) sit on `BaseLayout` with their
+their redesign ticket (`about`, `contact`) sit on `BaseLayout` with their
 pre-redesign bodies inline.
 
 `navBar.astro`, `src/data/navData.ts`, `src/styles/main.css` (Open Props from unpkg) and the
@@ -81,6 +81,13 @@ and bury your real change in a full-file diff.
 - **Tally.so** — embedded contact form on `/contact` (form ID `mJa5J7`)
 - **Nunito** — the brand typeface, self-hosted via `@fontsource-variable/nunito` and imported once in `BaseLayout`; exposed as `font-brand`. The old per-page Google Fonts link to Inter is gone (#35)
 - `src/pages/redirect.astro` — bare HTML that bounces to the `yeride://register` deep link
+- **URL aliases the mobile app depends on** — `redirects` in `astro.config.mjs` maps `/privacy`
+  → `/privacy-policy`, `/es/privacy` → `/es/privacy-policy` and `/support` → `/contact`
+  (wayfinder #44). These are not cosmetic: yeride-mobile links `yeride.com/privacy` in-app and
+  submits it as the store-listing privacy URL, and a missing `/support` was a 2025 App Store
+  rejection. Do not remove or rename them without changing the app first. They live in the
+  config, not in `src/pages`, so the route-parity check is not asked to find `/es/` twins for
+  aliases.
 
 ## Coding Conventions
 

@@ -22,7 +22,6 @@ const EXEMPT = new Set(["404", "redirect"]);
 const PENDING = {
   about: "#39 — utility pages",
   contact: "#39 — utility pages",
-  "privacy-policy": "#44 — legal pages",
 };
 
 function walk(dir) {
