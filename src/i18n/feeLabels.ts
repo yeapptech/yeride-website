@@ -10,12 +10,11 @@
 // so an id this map doesn't cover is never guessed into a family (see /fees).
 //
 // VERIFIED against production 2026-08-01 (#47) — these are the ids
-// `getFeeSchedule` actually returns, not the names positioning.md guessed.
-// Nothing checks that automatically yet: the check that fails on an id the
-// endpoint returns and this map misses needs the live endpoint, which does not
-// exist (yeride-functions#21), so it is filed as #41's leftover in #56. Until it
-// lands, an id added upstream leaks its English description onto /es/fees and
-// only a human will notice.
+// `getFeeSchedule` actually returns, not the names positioning.md guessed, and
+// `scripts/check-fee-labels.mjs` keeps them verified (#56): it asks the live
+// endpoint, across every service area, and fails the deploy on an id this map
+// misses. It runs daily too, because an id added upstream would otherwise sit
+// unnoticed until the next release.
 //
 // `payer` is "driver" for all four, and that is not a guess: YeRide's charges
 // come out of the driver's side in both payment flows (`yeride-functions
@@ -85,10 +84,11 @@ export const feeLabels: Record<string, ChargeLabel> = {
 // servable stage areas are Spanish-speaking, so that is not hypothetical.
 //
 // The cost of keeping it here is that a new area needs a web deploy to launch
-// with a real name. #56 makes that visible instead of silent: it fails the
-// build on an area id this map doesn't cover, the same treatment it gives an
-// uncovered charge id. Until it lands, an uncovered area falls back to its
-// humanised identifier ("Us Mi Detroit") in both languages.
+// with a real name. `scripts/check-fee-labels.mjs` makes that visible instead of
+// silent (#56): it fails the deploy on an area id this map doesn't cover, the
+// same treatment it gives an uncovered charge id. Without it an uncovered area
+// falls back to its humanised identifier ("Us Mi Detroit") in both languages —
+// which is what stage's two other areas do today.
 export const serviceAreaNames: Record<string, Record<Lang, string>> = {
   "us-fl-south-florida": { en: "South Florida", es: "Sur de la Florida" },
 };

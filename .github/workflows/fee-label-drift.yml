@@ -1,0 +1,66 @@
+# Fee-label drift — daily (wayfinder #56).
+#
+# deploy-all.yml already runs this check before every deploy, but drift does not
+# arrive with a deploy: someone files a new charge or opens a new service area in
+# the admin console, and this site can go weeks without a push. Between releases
+# the only thing that notices is a schedule.
+#
+# The run fails AND opens an issue. The red run is the notification; the issue is
+# the durable, assignable artifact, and it says exactly what a human has to
+# decide (family and payer are editorial, not data).
+
+name: Fee-label drift
+
+on:
+  schedule:
+    # 13:17 UTC — off the hour, so it is not queued behind the top-of-hour rush.
+    - cron: "17 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Fee-label coverage
+        id: check
+        env:
+          PUBLIC_FEE_SCHEDULE_URL: ${{ secrets.PUBLIC_FEE_SCHEDULE_URL }}
+        run: |
+          node scripts/check-fee-labels.mjs 2>&1 | tee report.txt
+          echo "status=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Open an issue on drift
+        if: steps.check.outputs.status != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: "Fee-label drift: getFeeSchedule publishes an id the site cannot name"
+        run: |
+          # Searched on the phrase, not the whole title: the colon in it is
+          # search syntax to GitHub and would match nothing.
+          open=$(gh issue list --state open --search '"Fee-label drift" in:title' --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then
+            echo "Already tracked in #$open — commenting instead."
+            gh issue comment "$open" --body "Still drifting as of $(date -u +%FT%TZ):
+
+          \`\`\`
+          $(cat report.txt)
+          \`\`\`"
+          else
+            gh issue create --title "$TITLE" --body "\`getFeeSchedule\` is publishing a charge id or service area that \`src/i18n/feeLabels.ts\` does not cover, so \`/es/fees\` would print English (a charge) or a humanised slug (an area), and an unclassified charge withholds the example ledger on \`/fees\` entirely.
+
+          Found by the daily [fee-label drift check](https://github.com/${{ github.repository }}/actions/workflows/fee-label-drift.yml) (wayfinder #56). It also runs before every deploy, so **the site cannot ship until this is closed.**
+
+          \`\`\`
+          $(cat report.txt)
+          \`\`\`"
+          fi
+          exit 1
