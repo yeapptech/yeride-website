@@ -190,24 +190,51 @@ const esPrefix = lang === "es" ? "/es" : "";
   const GAP = "—";
   const rate = (n: number | null | undefined) => usd(n) ?? GAP;
 
-  /** Phrase the endpoint's machine-readable rule; never invent one. */
-  function ruleText(rule: ChargeRule | null | undefined): string {
-    if (!rule) return GAP;
+  const finite = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n);
+
+  /** Phrase the endpoint's machine-readable rule; never invent one.
+   *
+   *  Returns `null` — not the gap glyph — when the rule has no statable form, so
+   *  callers can ask "is this a gap?" without pattern-matching rendered text. The
+   *  charge labels contain em dashes of their own ("Ride technology — to pickup"),
+   *  so a `=== GAP` test on the output is both fragile and, for anything phrased
+   *  around the glyph, wrong.
+   *
+   *  Every amount is checked before it is interpolated. A template literal turns
+   *  `null` into the text "null", and `perMile(null)` is `0` because `null * n`
+   *  coerces — so an unguarded per-km rule with a missing amount published
+   *  "$0.00 per mile", the exact $0.00-masking-a-gap failure this page exists to
+   *  refuse. A broken source document must be visible, never priced. */
+  function ruleText(rule: ChargeRule | null | undefined): string | null {
+    if (!rule) return null;
     switch (rule.kind) {
-      case "flat":
-        return `${usd(rule.amount)} ${t.perTrip}`;
-      case "per_minute":
-        return `${usd(rule.amount)} ${t.perMinute}`;
-      case "per_km":
-        return `${usd(perMile(rule.amount))} ${t.perMile}`;
+      case "flat": {
+        const amount = usd(rule.amount);
+        return amount && `${amount} ${t.perTrip}`;
+      }
+      case "per_minute": {
+        const amount = usd(rule.amount);
+        return amount && `${amount} ${t.perMinute}`;
+      }
+      case "per_km": {
+        if (!finite(rule.amount)) return null;
+        const amount = usd(perMile(rule.amount));
+        return amount && `${amount} ${t.perMile}`;
+      }
       case "percent_of_fare": {
+        if (!finite(rule.percent)) return null;
         const base = `${rule.percent}% ${t.percentOfFare}`;
-        return rule.plus ? `${base} + ${usd(rule.plus)}` : base;
+        if (rule.plus == null) return base;
+        const plus = usd(rule.plus);
+        return plus && `${base} + ${plus}`;
       }
       default:
-        return GAP;
+        return null;
     }
   }
+
+  /** What the amount column shows: the rule, or an explicit gap. */
+  const ruleCell = (rule: ChargeRule | null | undefined) => ruleText(rule) ?? GAP;
 
   function fetchedStamp(iso: string): string {
     const d = new Date(iso);
@@ -344,7 +371,7 @@ const esPrefix = lang === "es" ? "/es" : "";
               (c) => `<li class="border-b border-ink/10 py-2.5 last:border-b-0">
                 <div class="flex items-baseline justify-between gap-3">
                   <span class="text-ink">${esc(chargeName(c))}</span>
-                  <span class="text-right font-bold tabular-nums text-ink">${esc(ruleText(c.rule))}</span>
+                  <span class="text-right font-bold tabular-nums text-ink">${esc(ruleCell(c.rule))}</span>
                 </div>
                 ${
                   p.notes[c.id]
@@ -355,11 +382,15 @@ const esPrefix = lang === "es" ? "/es" : "";
             )
             .join("")}</ul>
           ${
-            // A charge whose rule the endpoint can't summarise prints "—". The
+            // A charge whose rule the endpoint can't summarise shows a gap. The
             // marker is honest but silent, so the panel showing one explains it
             // rather than leaving a priced-fee page with an unpriced line and no
             // reason. Conditional: it vanishes when #21 publishes the rule.
-            p.charges.some((c) => ruleText(c.rule) === GAP)
+            //
+            // Asked of the rule, not of the rendered cell: two charge labels
+            // carry em dashes themselves, so the note must not be phrased around
+            // the glyph and the test must not look for it.
+            p.charges.some((c) => ruleText(c.rule) === null)
               ? `<p class="mt-3 text-[12.5px] text-ink/50">${esc(t.gapNote)}</p>`
               : ""
           }
@@ -399,11 +430,14 @@ const esPrefix = lang === "es" ? "/es" : "";
     });
     // Each cause states itself. Collapsing these into one message is how the
     // live page came to blame an undescribed charge while every charge was
-    // described — the endpoint simply had no example to give (#47).
+    // described — the endpoint simply had no example to give (#47). Three
+    // branches, three strings: two of them sharing one message reintroduced the
+    // same bug on the surviving branch, which is what the review of #47 caught.
     const withheld = (message: string) =>
       `<p class="mt-3 max-w-xl text-[14px] text-paper/60">${esc(message)}</p>`;
     if (!ex) return withheld(t.exampleUnpublished);
-    if (!classified || !priced) return withheld(t.exampleUnavailable);
+    if (!classified) return withheld(t.exampleUnavailable);
+    if (!priced) return withheld(t.exampleIncomplete);
 
     const of = (id: string) => amounts.get(id) as number;
     const ids = (test: (l: ChargeLabel) => boolean) =>
