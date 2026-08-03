@@ -1,5 +1,6 @@
 import { httpsCallable } from "firebase/functions";
 import { functions } from "./firebase";
+import { DEFAULT_SERVICE_AREA_ID } from "./serviceArea";
 
 export interface ServiceEstimate {
   serviceId: string;
@@ -49,7 +50,6 @@ interface FareEstimateRequest {
   duration: number;
 }
 
-const DEFAULT_SERVICE_AREA_ID = "us-fl-south-florida";
 
 export async function getEstimates(
   distance: number,

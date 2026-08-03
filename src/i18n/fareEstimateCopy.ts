@@ -34,6 +34,18 @@ const en = {
   /** "{n} seats" — §3.5 gives the row with the placeholder in it. */
   seats: "{n} seats",
   limitNote: "Estimates are estimates — the meter decides.",
+  /**
+   * §3.5, amended by #62. The page prices ONE area whatever the rider typed,
+   * so it says which — the label carries the area name, the note carries the
+   * consequence.
+   *
+   * The name is interpolated, so neither string may govern it: Spanish would
+   * need "de/del/de la" by name and "en {area}" is ungrammatical for "Sur de
+   * la Florida". A colon in the label and "this area" in the note keep both
+   * languages correct for any area name the map ever holds.
+   */
+  areaLabel: "Service area",
+  areaNote: "Every estimate here is at this area's rates, even for a route outside it.",
   feeLink: "See the full fee schedule",
   noRouteError: "We couldn't find a route between those two places.",
   serviceError: "We couldn't get an estimate right now. Try again in a moment.",
@@ -42,8 +54,15 @@ const en = {
   // call and has no way to know where the rider is, so nothing it can observe
   // means "you are outside our area" — `functions/not-found` means South
   // Florida itself has no services configured. Shipping the string would put a
-  // sentence on screen the site cannot know to be true. Filed as #62; it
-  // returns when the site can answer the question the copy asks.
+  // sentence on screen the site cannot know to be true.
+  //
+  // #62 settled WHY the site cannot know: a service area is a circle
+  // (`latitude`/`longitude`/`radius` on every `serviceAreas/{id}` document, and
+  // yeride-mobile's `ResolveActiveServiceArea` already tests it with Haversine),
+  // but `getFeeSchedule` publishes only `{id, identifier}`. Until
+  // yeapptech/yeride-functions#45 publishes the circle, no condition on this
+  // page means "you are outside our area" — so #62 shipped what IS true, the
+  // `areaLabel`/`areaNote` pair below, and the row itself waits for #73.
 };
 
 export const fareEstimateCopy: Record<Lang, typeof en> = {
@@ -64,6 +83,9 @@ export const fareEstimateCopy: Record<Lang, typeof en> = {
     fareCaption: "tarifa estimada",
     seats: "{n} asientos",
     limitNote: "Un estimado es un estimado — el taxímetro decide.",
+    areaLabel: "Zona de servicio",
+    areaNote:
+      "Todo estimado aquí usa las tarifas de esta zona, incluso para una ruta fuera de ella.",
     feeLink: "Ver el tarifario completo",
     noRouteError: "No encontramos una ruta entre esos dos lugares.",
     serviceError: "No pudimos calcular el estimado ahora. Intenta de nuevo en un momento.",

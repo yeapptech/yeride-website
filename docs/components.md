@@ -249,6 +249,14 @@ loader supplies autocomplete, the map and Directions, and the fares come from th
 Firebase callable `estimateFares` at submit time. `setOptions({ language })` is passed
 the page's language, or the ES page gets English place names and an English "18 mins".
 
+**Why it names a service area** (wayfinder #62). Every quote is for
+`DEFAULT_SERVICE_AREA_ID`, whatever the rider typed, so the page states which area —
+otherwise the map underneath implies the rider's own and a Chicago route reads as a
+Chicago price. The line is rendered in the frontmatter, not from the response, because
+it must stand in every state including a failed estimate. The constant lives in
+`src/lib/serviceArea.ts` rather than `src/lib/fareEstimate.ts` so that reading it here
+does not import `src/lib/firebase.ts`, which calls `initializeApp` at module scope.
+
 ### LegalDocument
 
 The whole body of `/privacy-policy`, `/terms` and their ES twins (wayfinder #44). One
