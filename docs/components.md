@@ -249,13 +249,24 @@ loader supplies autocomplete, the map and Directions, and the fares come from th
 Firebase callable `estimateFares` at submit time. `setOptions({ language })` is passed
 the page's language, or the ES page gets English place names and an English "18 mins".
 
-**Why it names a service area** (wayfinder #62). Every quote is for
+**Why it says what it is priced for** (wayfinder #62). Every quote is for
 `DEFAULT_SERVICE_AREA_ID`, whatever the rider typed, so the page states which area —
 otherwise the map underneath implies the rider's own and a Chicago route reads as a
 Chicago price. The line is rendered in the frontmatter, not from the response, because
 it must stand in every state including a failed estimate. The constant lives in
 `src/lib/serviceArea.ts` rather than `src/lib/fareEstimate.ts` so that reading it here
 does not import `src/lib/firebase.ts`, which calls `initializeApp` at module scope.
+
+The label is **"Priced for"**, not "Service area": the latter is the site's coverage
+vocabulary (`/es/fees` labels its picker "Área de servicio", and both legal documents
+use it that way), so on a page showing the rider's own route it would read as a claim
+that the ride is served — the very implicature the ticket removed. The note carries
+availability instead, and says a price is not a promise of service rather than naming
+the served set, which would be a count nothing on the site checks. The area's bilingual
+name is read straight out of `serviceAreaNames`, **not** via `serviceAreaName()`: that
+helper humanises an unknown identifier ("Us Fl South Florida") so `/fees` can render an
+area it has never heard of, which on this page would publish an English-derived string
+on `/es/fare-estimate`. Here a missing name is a defect, so it fails the build.
 
 ### LegalDocument
 
@@ -322,10 +333,14 @@ That cost is the point: adding one is a decision.
    abandoned journey can never be rendered under a map showing a different one.
 4. **§3.5's "Outside area" line is not shipped.** The page asks for
    `us-fl-south-florida` on every call and cannot know where the rider is, so it has no
-   condition that makes the sentence true — see #62.
+   condition that makes the sentence true. #62 established why — a service area is a
+   circle no endpoint publishes yet — and shipped the "Priced for" pair instead; the
+   line itself waits on #73.
 
-**Related:** `src/lib/fareEstimate.ts` (callable contract), `src/lib/firebase.ts`
-(callable region), `src/i18n/fareEstimateCopy.ts` (page copy, EN/ES).
+**Related:** `src/lib/fareEstimate.ts` (callable contract), `src/lib/serviceArea.ts`
+(the area the page prices), `src/lib/firebase.ts` (callable region),
+`src/i18n/fareEstimateCopy.ts` (page copy, EN/ES), `src/i18n/feeLabels.ts`
+(`serviceAreaNames`, read in the frontmatter for the area's bilingual name).
 
 ## Page-Specific Components
 

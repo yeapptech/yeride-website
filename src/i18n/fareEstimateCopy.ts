@@ -39,13 +39,29 @@ const en = {
    * so it says which — the label carries the area name, the note carries the
    * consequence.
    *
+   * NOT "Service area" (the first attempt, corrected by review). That is the
+   * site's COVERAGE vocabulary — `/es/fees` labels its picker "Área de
+   * servicio" and both legal documents use it in that sense — so on a page
+   * that has just drawn the rider's own route, "Service area: South Florida"
+   * reads as *your ride is handled under our South Florida service area*: the
+   * exact implicature this ticket exists to remove, restated in the site's own
+   * words. "Priced for" makes the pricing claim and no coverage claim, and it
+   * cannot collide with `/fees`, which is naming a different thing.
+   *
+   * The note then has to carry availability, because nothing else on the page
+   * does: naming the area a price came from does not tell a rider YeRide is
+   * absent where they are. It says a price is not a promise of service rather
+   * than naming the served set, because the served set is a COUNT — it would
+   * be false the day an area is added and nothing on the site checks it.
+   *
    * The name is interpolated, so neither string may govern it: Spanish would
    * need "de/del/de la" by name and "en {area}" is ungrammatical for "Sur de
    * la Florida". A colon in the label and "this area" in the note keep both
    * languages correct for any area name the map ever holds.
    */
-  areaLabel: "Service area",
-  areaNote: "Every estimate here is at this area's rates, even for a route outside it.",
+  areaLabel: "Priced for",
+  areaNote:
+    "Every estimate here uses this area's rates, even for a route outside it — a price is not a promise that YeRide operates there.",
   feeLink: "See the full fee schedule",
   noRouteError: "We couldn't find a route between those two places.",
   serviceError: "We couldn't get an estimate right now. Try again in a moment.",
@@ -62,7 +78,7 @@ const en = {
   // but `getFeeSchedule` publishes only `{id, identifier}`. Until
   // yeapptech/yeride-functions#45 publishes the circle, no condition on this
   // page means "you are outside our area" — so #62 shipped what IS true, the
-  // `areaLabel`/`areaNote` pair below, and the row itself waits for #73.
+  // `areaLabel`/`areaNote` pair ABOVE, and the row itself waits for #73.
 };
 
 export const fareEstimateCopy: Record<Lang, typeof en> = {
@@ -83,9 +99,13 @@ export const fareEstimateCopy: Record<Lang, typeof en> = {
     fareCaption: "tarifa estimada",
     seats: "{n} asientos",
     limitNote: "Un estimado es un estimado — el taxímetro decide.",
-    areaLabel: "Zona de servicio",
+    areaLabel: "Precio calculado para",
+    // "esta área", not "esta zona": `/es/fees` already says "para esta área"
+    // (feesCopy.ts) and both legal documents say "área de servicio", so a new
+    // "zona" would give the Spanish site two words for one thing, one click
+    // apart — the leak #47 kept these names site-side to prevent.
     areaNote:
-      "Todo estimado aquí usa las tarifas de esta zona, incluso para una ruta fuera de ella.",
+      "Todo estimado aquí usa las tarifas de esta área, incluso para una ruta fuera de ella — un precio no significa que YeRide opere allí.",
     feeLink: "Ver el tarifario completo",
     noRouteError: "No encontramos una ruta entre esos dos lugares.",
     serviceError: "No pudimos calcular el estimado ahora. Intenta de nuevo en un momento.",

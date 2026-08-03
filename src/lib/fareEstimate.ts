@@ -50,7 +50,6 @@ interface FareEstimateRequest {
   duration: number;
 }
 
-
 export async function getEstimates(
   distance: number,
   duration: number,

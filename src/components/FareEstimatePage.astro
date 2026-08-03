@@ -16,7 +16,7 @@
 // The stack is unchanged: Firebase callable `estimateFares` + the Google Maps
 // loader (maps, places, marker, routes).
 import { fareEstimateCopy } from "../i18n/fareEstimateCopy";
-import { serviceAreaName } from "../i18n/feeLabels";
+import { serviceAreaNames } from "../i18n/feeLabels";
 import { DEFAULT_SERVICE_AREA_ID } from "../lib/serviceArea";
 import type { Lang } from "../i18n/feesCopy";
 
@@ -27,16 +27,30 @@ const { lang } = Astro.props;
 const t = fareEstimateCopy[lang];
 const esPrefix = lang === "es" ? "/es" : "";
 
-// The area every quote on this page is for (#62). Named from the same constant
-// the request is built from, through the same bilingual map /fees uses — so a
-// new area is named once, in one place, and #56 fails the deploy if it is not.
-// The second argument is the fallback identifier the humaniser would use; the
-// id is all this page has, and it is only reached if the map loses this key.
-const areaName = serviceAreaName(
-  DEFAULT_SERVICE_AREA_ID,
-  DEFAULT_SERVICE_AREA_ID,
-  lang,
-);
+// The area every quote on this page is for (#62), named from the same constant
+// the request is built from and through the same bilingual map /fees uses.
+//
+// The map is read DIRECTLY rather than through `serviceAreaName`, whose job is
+// to survive an area the site has never heard of: it humanises the identifier,
+// which turns "us-fl-south-florida" into "Us Fl South Florida" and publishes
+// that English-derived string on the SPANISH page too. That is the right
+// behaviour for /fees, which renders whatever the endpoint lists and must not
+// drop an area it cannot name — and the wrong behaviour here, where there is
+// exactly one hard-coded area whose name is site-authored copy. A missing key
+// is then not a fallback but a defect, so it stops the build.
+//
+// `scripts/check-fee-labels.mjs` (#56) does NOT cover this: it needs the
+// network, runs outside `npm run build`, and skips when the endpoint does not
+// answer — so a deleted key plus an unreachable endpoint ships the humanised
+// string with every gate green. This throw needs no network.
+const areaName = serviceAreaNames[DEFAULT_SERVICE_AREA_ID]?.[lang];
+if (!areaName) {
+  throw new Error(
+    `serviceAreaNames has no ${lang} name for "${DEFAULT_SERVICE_AREA_ID}". ` +
+      `/fare-estimate states the area every fare is priced for, so without a ` +
+      `site-authored name it would publish a humanised id — in both languages.`,
+  );
+}
 ---
 
 <main>
@@ -126,11 +140,19 @@ const areaName = serviceAreaName(
         was given and never another, so the response could not correct this
         anyway.
       */}
-      <p class="mt-6 max-w-xl text-[15px] text-ink/60">
-        <span class="font-bold text-ink">{t.areaLabel}:</span>
+      {/*
+        Contrast: the area name carries the whole claim, so it sits at full
+        `text-ink` (14.9:1) rather than the `text-ink/60` used for secondary
+        prose — which measures 4.16:1 on paper and so misses WCAG AA's 4.5:1
+        for normal text. The note is secondary but is still a disclosure, so it
+        takes `/70` (5.7:1) — the smallest step that clears AA while staying
+        visibly quieter than the fact above it.
+      */}
+      <p class="mt-6 max-w-xl text-[15px] text-ink">
+        <span class="font-bold">{t.areaLabel}:</span>
         {areaName}
       </p>
-      <p class="mt-1 max-w-xl text-[15px] text-ink/60">{t.areaNote}</p>
+      <p class="mt-1 max-w-xl text-[15px] text-ink/70">{t.areaNote}</p>
 
       {/*
         The limit note stands in every state, not only alongside a result: it is
