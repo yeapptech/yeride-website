@@ -249,6 +249,44 @@ loader supplies autocomplete, the map and Directions, and the fares come from th
 Firebase callable `estimateFares` at submit time. `setOptions({ language })` is passed
 the page's language, or the ES page gets English place names and an English "18 mins".
 
+### LegalDocument
+
+The whole body of `/privacy-policy`, `/terms` and their ES twins (wayfinder #44). One
+component for both documents, because they have the same shape: H1, a last-changed date,
+a lead, numbered sections of paragraphs and bullet lists, and the governing-language note
+copy-map §3.8/§3.9 fixes on both languages. No hero — these are the two pages nobody
+arrives at to be sold something, so it is a reading column on paper.
+
+**Props**
+
+| Prop | Type | Required | Notes |
+|---|---|---|---|
+| `lang` | `"en" \| "es"` | yes | Selects the language from `src/i18n/legalCopy.ts` |
+| `doc` | `"privacy" \| "terms"` | yes | Selects which of the two documents to render |
+
+Both axes are needed, so this is the one page component that takes more than `lang` — it
+still resolves its own copy from `src/i18n/`, which is the part of the contract that
+matters. Passing the resolved document object instead would make the page files reach into
+the copy module and leave the component unable to know its own language.
+
+**Usage**
+
+```astro
+<BaseLayout title="Terms of Service | YeRide" lang="en">
+  <LegalDocument lang="en" doc="terms" />
+</BaseLayout>
+```
+
+**It linkifies two patterns and nothing else.** Email addresses and `www.yeride.com/...`
+URLs in the copy become links, because "write to support@yeride.com" is the only action
+either document asks for and plain text would make it unclickable. Everything else stays
+plain, so the copy in `src/i18n/legalCopy.ts` remains strings rather than markup.
+
+**The four `copy-gate-allow` pragmas.** `legalCopy.ts` states that YeRide provides no
+insurance. Copy-map §5 gates that word on #48 and the gate is a line matcher, so it cannot
+tell that denial from a claim — hence the pragmas, which print on every build. When #48
+lands the statements become *false* and must be rewritten, not merely un-pragma'd.
+
 **Four refusals it enforces.** Read #38 before relaxing any of them:
 
 1. **It shows the fare and nothing else about money.** `estimateFares` also returns

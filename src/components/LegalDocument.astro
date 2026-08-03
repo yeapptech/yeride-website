@@ -4,15 +4,39 @@
 // last-changed date, a lead, numbered sections of paragraphs and lists, and the
 // governing-language note that copy-map §3.8/§3.9 fixes on both languages.
 //
+// Takes `lang` and WHICH document, then resolves its own copy from src/i18n —
+// the contract docs/components.md sets for page components ("takes `lang`
+// alone, resolving its copy from `src/i18n/`"). An earlier pass took the
+// resolved `LegalDoc` as a prop, which made the page files reach into the copy
+// module and left the component unable to know its own language.
+//
 // No hero. These are the two pages on the site nobody arrives at to be sold
 // something: a reading column on paper, at a size meant to be read rather than
 // skimmed past.
-import type { LegalDoc } from "../i18n/legalCopy";
+import { privacyCopy, termsCopy } from "../i18n/legalCopy";
+import type { Lang } from "../i18n/feesCopy";
 
 export interface Props {
-  doc: LegalDoc;
+  lang: Lang;
+  doc: "privacy" | "terms";
 }
-const { doc } = Astro.props;
+const { lang, doc } = Astro.props;
+const t = (doc === "privacy" ? privacyCopy : termsCopy)[lang];
+
+// Both documents tell the reader to write to us, and one points at the fee
+// schedule. Plain text would make the only action either page asks for
+// unclickable, so the two patterns that ARE actions get linked — nothing else
+// is, and the copy stays plain strings in src/i18n rather than becoming markup.
+const LINKABLE = /([\w.+-]+@[\w-]+\.[\w.]+|www\.yeride\.com\/[\w/-]*)/g;
+const linkify = (text: string) =>
+  text.split(LINKABLE).map((part, i) =>
+    i % 2 === 0
+      ? part
+      : {
+          href: part.includes("@") ? `mailto:${part}` : `https://${part}`,
+          label: part,
+        },
+  );
 ---
 
 <main class="bg-paper">
@@ -20,13 +44,13 @@ const { doc } = Astro.props;
     <h1
       class="font-extrabold tracking-headline text-[2rem] leading-[1.06] text-ink sm:text-[2.5rem]"
     >
-      {doc.h1}
+      {t.h1}
     </h1>
-    <p class="mt-3 text-[14px] text-ink/55">{doc.updated}</p>
-    <p class="mt-6 text-[17px] leading-relaxed text-ink/80">{doc.lead}</p>
+    <p class="mt-3 text-[14px] text-ink/55">{t.updated}</p>
+    <p class="mt-6 text-[17px] leading-relaxed text-ink/80">{t.lead}</p>
 
     {
-      doc.sections.map((section) => (
+      t.sections.map((section) => (
         <section class="mt-12">
           <h2 class="font-extrabold tracking-headline text-[1.25rem] leading-tight text-ink">
             {section.heading}
@@ -35,11 +59,37 @@ const { doc } = Astro.props;
             Array.isArray(block) ? (
               <ul class="mt-4 space-y-3 border-l-2 border-ink/15 pl-5">
                 {block.map((item) => (
-                  <li class="text-[16px] leading-relaxed text-ink/80">{item}</li>
+                  <li class="text-[16px] leading-relaxed text-ink/80">
+                    {linkify(item).map((part) =>
+                      typeof part === "string" ? (
+                        part
+                      ) : (
+                        <a
+                          href={part.href}
+                          class="underline underline-offset-2 hover:text-ink"
+                        >
+                          {part.label}
+                        </a>
+                      ),
+                    )}
+                  </li>
                 ))}
               </ul>
             ) : (
-              <p class="mt-4 text-[16px] leading-relaxed text-ink/80">{block}</p>
+              <p class="mt-4 text-[16px] leading-relaxed text-ink/80">
+                {linkify(block).map((part) =>
+                  typeof part === "string" ? (
+                    part
+                  ) : (
+                    <a
+                      href={part.href}
+                      class="underline underline-offset-2 hover:text-ink"
+                    >
+                      {part.label}
+                    </a>
+                  ),
+                )}
+              </p>
             ),
           )}
         </section>
@@ -49,7 +99,7 @@ const { doc } = Astro.props;
     <p
       class="mt-12 rounded-2xl border border-ink/15 bg-white/60 px-5 py-4 text-[15px] text-ink/70"
     >
-      {doc.governing}
+      {t.governing}
     </p>
   </div>
 </main>

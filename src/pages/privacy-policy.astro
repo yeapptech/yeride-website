@@ -5,12 +5,11 @@
 // redirect in astro.config.mjs.
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LegalDocument from "../components/LegalDocument.astro";
-import { privacyCopy } from "../i18n/legalCopy";
 ---
 
 <BaseLayout
   title="Privacy Policy | YeRide"
   description="How YeRide collects, uses, and protects your personal data."
 >
-  <LegalDocument doc={privacyCopy.en} />
+  <LegalDocument lang="en" doc="privacy" />
 </BaseLayout>

@@ -83,8 +83,12 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "to Google Maps, so it can suggest places and measure the route. They " +
             "are not sent to YeRide. What reaches us is the distance, the duration " +
             "and the service area — never where you are going.",
-          "This site sets no cookies. It runs no analytics, no advertising and no " +
-            "third-party tracking of any kind, and it stores nothing in your browser.",
+          "YeRide sets no cookies on this site, runs no analytics and shows no " +
+            "advertising. We add no tracking of our own to any page.",
+          "Two pages do load code from other companies in order to work: the fare " +
+            "estimate uses Google Maps and Firebase, and the contact page embeds " +
+            "Tally's form. Those companies can store data in your browser, and what " +
+            "they do with it is governed by their own privacy policies.",
           "The message form on our contact page is hosted by Tally. What you type " +
             "into it goes to Tally, who deliver it to us.",
           "The site itself is served by GitHub Pages, which records the usual " +
@@ -102,11 +106,16 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "Your account — your name, email address, phone number, password and, " +
               "if you add one, a profile photo. We also record whether your email " +
               "address has been verified.",
-            "Your location — while you are using the app, YeRide collects your " +
-              "device's precise location. For a driver on a trip this continues " +
-              "while the app is in the background, because a trip has to be tracked " +
-              "to its end. Location is what matches riders to nearby drivers, " +
-              "measures distance and duration, and draws the route.",
+            "Your location — the app collects your device's precise location from " +
+              "the moment you sign in until you sign out. This applies whether you " +
+              "are a rider or a driver and whether or not a trip is running, and the " +
+              "app asks for permission to do it in the background as well as while " +
+              "you are looking at the screen. That is how riders are matched to " +
+              "nearby drivers, how distance and duration are measured, and how a " +
+              "route is drawn and followed to its end. The app also keeps a log of " +
+              "these locations on your own device for up to 14 days. You can switch " +
+              "location off at any time in your phone's settings; the app cannot " +
+              "book or drive a ride without it.",
             "Motion — on iOS the app may read motion activity, meaning whether the " +
               "device is walking, cycling or in a vehicle, to tell moving from stopped.",
             "Your trips — pickup and drop-off, the route taken, the times, the fare " +
@@ -117,13 +126,16 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
               "and VIN, photographs of it, and the vehicle's " +
               // copy-gate-allow: factual description of a field the app collects, not a claim that YeRide carries any — rewrite when #48 lands
               "insurance policy number.",
-            "Payment — card details are entered into Stripe, not into YeRide. We " +
-              "never see or store a card number; Stripe holds the card and gives us " +
-              "only a reference that lets us charge it for a ride. Drivers are paid " +
-              "through Stripe Connect, and the identity and tax information Stripe " +
-              "needs in order to pay a driver goes to Stripe directly — it does not " +
-              "reach us. When a rider pays cash, the money goes to the driver and we " +
-              "record only that the ride was paid in cash.",
+            "Payment — card details are entered into Stripe, not into YeRide, and " +
+              "we never see or store a card number. What we do store is what is " +
+              "needed to show you which card you saved and to charge it for a ride: " +
+              "a Stripe reference, the card's brand, its last four digits and " +
+              "whether it is debit or credit. Drivers are paid through Stripe " +
+              "Connect, and the identity and tax information Stripe needs in order " +
+              "to pay a driver goes to Stripe directly — it does not reach us. When " +
+              "a rider pays cash, the fare passes from rider to driver in person; " +
+              "YeRide then charges the driver's own Stripe account for its fees on " +
+              "that ride, and records that charge against the trip.",
             "Your device — if the app crashes, Firebase Crashlytics sends us a crash " +
               "report identifying the device model, the operating system version and " +
               "the app installation. If you allow notifications, we store a push " +
@@ -154,7 +166,13 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
               "reports; Google Maps provides place suggestions, routes and navigation.",
             "Stripe — card payments and driver payouts.",
             "Tally — the message form on our contact page.",
-            "Apple and Google — delivery of push notifications to your device.",
+            "Expo — push notifications are sent through Expo, which receives your " +
+              "device's notification token and the text of the notification. That " +
+              "text can name a person, such as the driver assigned to your trip. " +
+              "Expo hands it to Apple or Google, who deliver it to your device.",
+            "The National Highway Traffic Safety Administration — if you register a " +
+              "vehicle to drive, its VIN is sent to this US Department of " +
+              "Transportation service to look up the vehicle's details.",
           ],
           "We will also hand over data where the law requires it, such as a valid " +
             "court order or a lawful request from law enforcement.",
@@ -175,8 +193,11 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
           "We keep what we collect until you ask us to delete it, or until we no " +
             "longer need it for ride records, payment history and the tax and " +
             "accounting obligations that come with them.",
-          "Nothing is deleted automatically. There is no expiry timer on a " +
-            "pre-registration entry, a trip record or a stored location. If you want " +
+          "Almost nothing is deleted automatically. No account, pre-registration " +
+            "entry, trip, message or stored location expires on a timer. There are " +
+            "two exceptions, and neither is about you: short-lived technical records " +
+            "used to rate-limit our own service are purged daily, and the location " +
+            "log the app keeps on your device rolls off after 14 days. If you want " +
             "your data gone, ask us — that is the whole mechanism, and it is " +
             "described next.",
         ],
@@ -192,11 +213,15 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
           ],
           "Deletion today is by email, and we will confirm when it is done. When we " +
             "delete an account we remove your login, your profile, your stored " +
-            "location and your rider payment record at Stripe. Completed trips stay, " +
-            "with your name and contact details stripped out of them: both sides of " +
-            "a ride have a financial record of it, and the tax and accounting " +
-            "obligations on it outlast the account. A driver's Stripe payout account " +
-            "stays for the same reason.",
+            "location and your rider payment record at Stripe, and we strip your " +
+            "name and contact details from your trip records. Completed trips " +
+            "themselves stay: both sides of a ride hold a financial record of it, " +
+            "and the tax and accounting obligations on it outlast the account. A " +
+            "driver's Stripe payout account stays for the same reason.",
+          "One thing to know, because we would rather say it than let you assume " +
+            "otherwise: the event log attached to a trip — the running account of " +
+            "what happened during it — can still contain a name that was written " +
+            "into its text at the time. Ask us and we will remove those by hand too.",
           "On your phone, location and notifications are controlled in the system " +
             "settings and you can withdraw either at any time. The app needs your " +
             "location to book or to drive a ride, so switching it off will stop those " +
@@ -262,8 +287,13 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "navegador a Google Maps, para que sugiera lugares y mida la ruta. No se " +
             "envían a YeRide. Lo que llega hasta nosotros es la distancia, la " +
             "duración y el área de servicio, nunca a dónde va usted.",
-          "Este sitio no utiliza cookies. No ejecuta analítica, ni publicidad, ni " +
-            "rastreo de terceros de ningún tipo, y no guarda nada en su navegador.",
+          "YeRide no coloca cookies en este sitio, no ejecuta analítica y no " +
+            "muestra publicidad. No añadimos rastreo propio a ninguna página.",
+          "Dos páginas sí cargan código de otras empresas para poder funcionar: el " +
+            "estimador de tarifa usa Google Maps y Firebase, y la página de contacto " +
+            "incrusta el formulario de Tally. Esas empresas pueden guardar datos en " +
+            "su navegador, y lo que hagan con ellos se rige por sus propias " +
+            "políticas de privacidad.",
           "El formulario de mensajes de nuestra página de contacto está alojado por " +
             "Tally. Lo que usted escriba allí llega a Tally, que nos lo entrega.",
           "El sitio en sí lo sirve GitHub Pages, que registra la información " +
@@ -281,12 +311,17 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "Su cuenta: su nombre, su correo electrónico, su número de teléfono, su " +
               "contraseña y, si usted la agrega, una foto de perfil. También " +
               "registramos si su correo electrónico ha sido verificado.",
-            "Su ubicación: mientras usted usa la aplicación, YeRide recopila la " +
-              "ubicación precisa de su dispositivo. En el caso de un conductor " +
-              "durante un viaje, esto continúa con la aplicación en segundo plano, " +
-              "porque un viaje debe rastrearse hasta el final. La ubicación es lo que " +
-              "conecta a los pasajeros con conductores cercanos, mide la distancia y " +
-              "la duración, y traza la ruta.",
+            "Su ubicación: la aplicación recopila la ubicación precisa de su " +
+              "dispositivo desde que usted inicia sesión hasta que la cierra. Esto " +
+              "ocurre tanto si usted es pasajero como conductor, haya o no un viaje " +
+              "en curso, y la aplicación pide permiso para hacerlo también en " +
+              "segundo plano, no solo mientras usted mira la pantalla. Así es como " +
+              "se conecta a los pasajeros con conductores cercanos, se mide la " +
+              "distancia y la duración, y se traza y se sigue una ruta hasta el " +
+              "final. La aplicación además guarda un registro de esas ubicaciones en " +
+              "su propio dispositivo durante un máximo de 14 días. Usted puede " +
+              "desactivar la ubicación cuando quiera desde los ajustes de su " +
+              "teléfono; la aplicación no puede pedir ni conducir un viaje sin ella.",
             "Movimiento: en iOS la aplicación puede leer la actividad de movimiento " +
               "—si el dispositivo va caminando, en bicicleta o en un vehículo— para " +
               "distinguir el movimiento de la detención.",
@@ -300,15 +335,17 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
               "VIN de su vehículo, fotografías del mismo y el " +
               // copy-gate-allow: descripción factual de un campo que la app recopila, no una afirmación de que YeRide tenga alguno — reescribir cuando entre #48
               "número de póliza de seguro del vehículo.",
-            "Pago: los datos de la tarjeta se ingresan en Stripe, no en YeRide. " +
-              "Nunca vemos ni guardamos un número de tarjeta; Stripe conserva la " +
-              "tarjeta y nos entrega solamente una referencia que nos permite " +
-              "cobrarla por un viaje. A los conductores se les paga mediante Stripe " +
-              "Connect, y la información de identidad y tributaria que Stripe " +
-              "necesita para pagarle a un conductor va directamente a Stripe: no " +
-              "llega hasta nosotros. Cuando un pasajero paga en efectivo, el dinero " +
-              "va al conductor y nosotros solo registramos que el viaje se pagó en " +
-              "efectivo.",
+            "Pago: los datos de la tarjeta se ingresan en Stripe, no en YeRide, y " +
+              "nunca vemos ni guardamos un número de tarjeta. Lo que sí guardamos es " +
+              "lo necesario para mostrarle cuál tarjeta guardó y para cobrarla por " +
+              "un viaje: una referencia de Stripe, la marca de la tarjeta, sus " +
+              "últimos cuatro dígitos y si es de débito o de crédito. A los " +
+              "conductores se les paga mediante Stripe Connect, y la información de " +
+              "identidad y tributaria que Stripe necesita para pagarle a un " +
+              "conductor va directamente a Stripe: no llega hasta nosotros. Cuando " +
+              "un pasajero paga en efectivo, la tarifa va del pasajero al conductor " +
+              "en persona; YeRide luego le cobra a la propia cuenta de Stripe del " +
+              "conductor sus cargos por ese viaje, y registra ese cobro en el viaje.",
             "Su dispositivo: si la aplicación falla, Firebase Crashlytics nos envía " +
               "un informe de error que identifica el modelo del dispositivo, la " +
               "versión del sistema operativo y la instalación de la aplicación. Si " +
@@ -342,7 +379,15 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
               "lugares, las rutas y la navegación.",
             "Stripe: los pagos con tarjeta y los pagos a los conductores.",
             "Tally: el formulario de mensajes de nuestra página de contacto.",
-            "Apple y Google: la entrega de notificaciones a su dispositivo.",
+            "Expo: las notificaciones se envían a través de Expo, que recibe el " +
+              "token de notificación de su dispositivo y el texto de la " +
+              "notificación. Ese texto puede nombrar a una persona, como el " +
+              "conductor asignado a su viaje. Expo se lo entrega a Apple o a " +
+              "Google, que lo hacen llegar a su dispositivo.",
+            "La Administración Nacional de Seguridad del Tráfico en las Carreteras " +
+              "(NHTSA): si usted registra un vehículo para conducir, su VIN se envía " +
+              "a este servicio del Departamento de Transporte de los Estados Unidos " +
+              "para consultar los datos del vehículo.",
           ],
           "También entregaremos datos cuando la ley lo exija, por ejemplo ante una " +
             "orden judicial válida o un requerimiento legítimo de las autoridades.",
@@ -364,10 +409,14 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "hasta que ya no lo necesitemos para los registros de viajes, el " +
             "historial de pagos y las obligaciones tributarias y contables que los " +
             "acompañan.",
-          "Nada se elimina automáticamente. No hay un plazo de caducidad sobre un " +
-            "prerregistro, sobre el registro de un viaje ni sobre una ubicación " +
-            "guardada. Si usted quiere que sus datos desaparezcan, pídanoslo: ese es " +
-            "todo el mecanismo, y se describe a continuación.",
+          "Casi nada se elimina automáticamente. Ninguna cuenta, prerregistro, " +
+            "viaje, mensaje ni ubicación guardada caduca por sí sola. Hay dos " +
+            "excepciones, y ninguna trata sobre usted: unos registros técnicos de " +
+            "corta vida que usamos para limitar el ritmo de peticiones a nuestro " +
+            "servicio, que se purgan a diario, y el registro de ubicaciones que la " +
+            "aplicación guarda en su dispositivo, que se descarta a los 14 días. Si " +
+            "usted quiere que sus datos desaparezcan, pídanoslo: ese es todo el " +
+            "mecanismo, y se describe a continuación.",
         ],
       },
       {
@@ -382,11 +431,17 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
           "Hoy la eliminación se solicita por correo electrónico, y le confirmaremos " +
             "cuando esté hecha. Al eliminar una cuenta borramos su acceso, su " +
             "perfil, su ubicación guardada y su registro de pago como pasajero en " +
-            "Stripe. Los viajes completados permanecen, con su nombre y sus datos de " +
-            "contacto retirados: ambas partes de un viaje tienen un registro " +
-            "financiero de él, y las obligaciones tributarias y contables que recaen " +
-            "sobre ese registro duran más que la cuenta. La cuenta de pagos en " +
-            "Stripe de un conductor permanece por la misma razón.",
+            "Stripe, y retiramos su nombre y sus datos de contacto de sus registros " +
+            "de viaje. Los viajes completados en sí permanecen: ambas partes de un " +
+            "viaje tienen un registro financiero de él, y las obligaciones " +
+            "tributarias y contables que recaen sobre ese registro duran más que la " +
+            "cuenta. La cuenta de pagos en Stripe de un conductor permanece por la " +
+            "misma razón.",
+          "Conviene que sepa una cosa, porque preferimos decirla a dejar que usted " +
+            "suponga lo contrario: la bitácora de eventos de un viaje —el relato de " +
+            "lo que fue ocurriendo durante él— puede seguir conteniendo un nombre " +
+            "que quedó escrito en su texto en aquel momento. Pídanoslo y también los " +
+            "retiraremos a mano.",
           "En su teléfono, la ubicación y las notificaciones se controlan desde los " +
             "ajustes del sistema y usted puede retirar cualquiera de las dos en " +
             "cualquier momento. La aplicación necesita su ubicación para pedir o " +
