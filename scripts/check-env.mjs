@@ -2,21 +2,24 @@
 // shipping a page that cannot work.
 // Wayfinder #59.
 //
-// WHY THIS EXISTS. Astro inlines `import.meta.env.PUBLIC_*` at BUILD time. When
-// the value is empty, Vite substitutes `undefined` and esbuild then deletes
-// every branch that depended on it. Measured against vite 6.4.1 with Astro's
-// `envPrefix: "PUBLIC_"`, on the shape of the pre-registration handler: with
-// PUBLIC_API_URL set the built bundle contains `v1/auth/register`; with it
-// empty the fetch is gone from the output entirely and only the "is not set"
-// branch survives. The page still builds, still renders, still shows a submit
-// button, and can never submit. Nothing goes red.
+// WHY THIS EXISTS. Astro inlines `import.meta.env.PUBLIC_*` at BUILD time, and
+// a value that is not there is inlined as a falsy literal — `undefined` where
+// the key is absent, `""` where the key is present but empty. Rollup then folds
+// the branch that tested it and drops everything the branch guarded. Measured
+// against vite 6.4.1 with Astro's `envPrefix: "PUBLIC_"`, on the shape of the
+// pre-registration handler, with the esbuild minifier OFF so the elimination is
+// demonstrably Rollup's own: with PUBLIC_API_URL set the built bundle contains
+// `v1/auth/register`; with it empty the fetch is gone from the output entirely
+// and only the "is not set" branch survives. The page still builds, still
+// renders, still shows a submit button, and can never submit. Nothing goes red.
 //
-// The production trigger is precisely the EMPTY case, not the undefined one:
+// The production trigger is precisely the EMPTY case, the `""` one:
 // deploy-all.yml's "Create env file" step writes
 // `PUBLIC_API_URL=${{ secrets.PUBLIC_API_URL }}`, and a secret that does not
 // exist interpolates to the empty string. So a renamed or deleted secret
 // produces a defined key with no value — which is why this checks for a
-// non-empty value rather than for a defined key.
+// non-empty value rather than for a defined key. A check that only asked
+// "is the key defined?" would pass the exact failure it was written for.
 //
 // WHY ALL SIX AND NOT JUST PUBLIC_API_URL. All six are inlined the same way, so
 // all six go missing the same way. They do not FAIL the same way, though, and
@@ -36,18 +39,41 @@
 // lets process.env override — and an empty value in a later source blanks a
 // non-empty one from an earlier source. Re-implementing that here would be a
 // second answer to a question that already has one, free to drift from it.
-// Vite ships with Astro, and this script only ever runs where Astro is.
+//
+// It is deliberately NOT declared in package.json. The contract is "the same
+// Vite the build uses", and that is what the bare specifier resolves to —
+// Astro's own copy, hoisted. Declaring a version range here would allow a
+// SECOND copy to be installed alongside it, and a second copy is the one thing
+// that could make this check and the build disagree, which is the entire
+// failure it exists to prevent. If it cannot be resolved at all, the import
+// below fails closed and says so.
 //
 // WHAT IT CANNOT DO: it checks that a value EXISTS, never that it works. A
 // wrong key, a revoked key, or a URL pointing at the wrong environment all pass
 // here and fail in the browser.
 
-import { loadEnv } from "vite";
+let loadEnv;
+try {
+  ({ loadEnv } = await import("vite"));
+} catch (err) {
+  // Fail closed, and name the cause: without Vite this cannot answer the
+  // question at all, and "could not check" must never read as "checked, fine".
+  console.error(`✗ env — could not load Vite, so nothing was checked`);
+  console.error(`  This reads the environment through Astro's own Vite (see the header).`);
+  console.error(`  Run \`npm ci\` first; if that is done, the install layout is not one`);
+  console.error(`  that hoists Vite to the project root, which this script requires.`);
+  console.error(`  ${err.message}`);
+  process.exit(1);
+}
 
 // `npm run build` passes no --mode, so `astro build` builds with Vite's
 // "production" mode and the project root as envDir; astro.config.mjs overrides
 // neither, nor the "PUBLIC_" prefix.
 const env = loadEnv("production", process.cwd(), "PUBLIC_");
+
+// All three Firebase values feed one `initializeApp` call, so any one of them
+// missing has the same single consequence.
+const NO_CALLABLE = "the estimateFares callable cannot be reached, so no fare is ever quoted";
 
 const REQUIRED = [
   {
@@ -59,8 +85,9 @@ const REQUIRED = [
     // rather than borrowing `breaks`: with a non-empty value the fetch is in
     // the bundle, it just builds the wrong URL. One string covering both would
     // have to describe an elimination that did not happen.
+    // Returns nothing when the value is fine, a {problem, breaks} pair when not.
     shape: (v) =>
-      v.endsWith("/") || {
+      v.endsWith("/") ? undefined : {
         problem:
           "must end with a trailing slash, and nothing after it — not even a space —\n" +
           "      because the form appends `v1/auth/register` to it",
@@ -75,18 +102,9 @@ const REQUIRED = [
       "/fare-estimate cannot load Google Maps, so init() rejects and the page shows\n" +
       "      its service-error line on arrival — no address can be entered at all",
   },
-  {
-    name: "PUBLIC_FIREBASE_API_KEY",
-    breaks: "the estimateFares callable cannot be reached, so no fare is ever quoted",
-  },
-  {
-    name: "PUBLIC_FIREBASE_AUTH_DOMAIN",
-    breaks: "the estimateFares callable cannot be reached, so no fare is ever quoted",
-  },
-  {
-    name: "PUBLIC_FIREBASE_PROJECT_ID",
-    breaks: "the estimateFares callable cannot be reached, so no fare is ever quoted",
-  },
+  { name: "PUBLIC_FIREBASE_API_KEY", breaks: NO_CALLABLE },
+  { name: "PUBLIC_FIREBASE_AUTH_DOMAIN", breaks: NO_CALLABLE },
+  { name: "PUBLIC_FIREBASE_PROJECT_ID", breaks: NO_CALLABLE },
   {
     name: "PUBLIC_FEE_SCHEDULE_URL",
     breaks:
@@ -108,9 +126,7 @@ for (const { name, breaks, shape } of REQUIRED) {
     continue;
   }
   const bad = shape?.(value);
-  if (bad && bad !== true) {
-    errors.push(`${name} ${bad.problem}\n      ${bad.breaks}`);
-  }
+  if (bad) errors.push(`${name} ${bad.problem}\n      ${bad.breaks}`);
 }
 
 if (errors.length) {
