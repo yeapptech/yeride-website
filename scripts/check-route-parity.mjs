@@ -3,7 +3,7 @@
 //
 // Dumb on purpose: it reads filenames under src/pages and nothing else.
 
-import { readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
 const PAGES = "src/pages";
@@ -22,7 +22,6 @@ const EXEMPT = new Set(["404", "redirect"]);
 const PENDING = {
   about: "#39 — utility pages",
   contact: "#39 — utility pages",
-  "privacy-policy": "#44 — legal pages",
 };
 
 function walk(dir) {
@@ -68,6 +67,20 @@ for (const [route, ticket] of Object.entries(PENDING)) {
   } else if (es.has(route)) {
     errors.push(`PENDING lists "${route}" (${ticket}), but /es/${route} now exists — drop the entry`);
   }
+}
+
+// The URL aliases in astro.config.mjs are mirrored too — they are routes as far
+// as a visitor is concerned, even though they are not files here. /es/support is
+// deferred only because its target /es/contact does not exist yet (#39, above),
+// so this fails the moment that excuse expires. Without it the deferral has no
+// trigger and /es/support could stay a silent 404 forever — the same staleness
+// the PENDING map exists to prevent.
+const config = readFileSync("astro.config.mjs", "utf8");
+if (es.has("contact") && !/["']\/es\/support["']\s*:/.test(config)) {
+  errors.push(
+    `/es/contact now exists, so astro.config.mjs must redirect "/es/support" to it — ` +
+      `the English /support alias has had no ES twin only because the target was missing`,
+  );
 }
 
 const scope = `${en.size} EN / ${es.size} ES page${en.size === 1 ? "" : "s"}`;

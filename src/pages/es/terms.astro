@@ -1,0 +1,14 @@
+---
+// /es/terms — the ES twin. Routes are mirrored with English slugs (copy-map
+// §0.3). Register is formal *usted*, a deliberate exception to §0.2.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import LegalDocument from "../../components/LegalDocument.astro";
+---
+
+<BaseLayout
+  title="Términos de servicio | YeRide"
+  description="Los términos que rigen tu uso de YeRide."
+  lang="es"
+>
+  <LegalDocument lang="es" doc="terms" />
+</BaseLayout>

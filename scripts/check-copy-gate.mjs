@@ -170,7 +170,17 @@ for (const p of pragmas.filter((p) => !p.used)) {
 // shipped JS bundle, dormant rather than absent — so the data and the allowlist
 // have to move together.
 const LABELS = "src/i18n/feeLabels.ts";
-const suspended = pragmas.filter((p) => /#48(?!\w)/.test(p.reason));
+// Scoped to the /fees copy, because that is the only copy §3.4 suspends. The
+// legal pages (#44) also name #48 — they STATE that YeRide has no insurance,
+// and the gate cannot tell that denial from a claim — but they are not part of
+// the pass-through suspension and must not be swept into "retire these". They
+// do have to be rewritten when #48 lands, since the statement becomes false;
+// that is recorded on #48 itself rather than enforced by this rule, which would
+// otherwise demand the legal pages drop a pragma they still need.
+const SUSPENSION = /^src[/\\](i18n[/\\]fee(Labels|sCopy)\.ts|components[/\\]FeeSchedule\.astro)$/;
+const suspended = pragmas.filter(
+  (p) => /#48(?!\w)/.test(p.reason) && SUSPENSION.test(p.file),
+);
 if (suspended.length && /family:\s*"passthrough"/.test(stripComments(readFileSync(LABELS, "utf8")))) {
   errors.push(
     `${LABELS}  a charge is now filed into the "passthrough" family, so the family-2 copy ` +

@@ -1,0 +1,13 @@
+---
+// /terms — new page (wayfinder #44). The footer has promised "Terms of Service"
+// via a dead link; copy-map §3.9 put the route in the IA and this fills it.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LegalDocument from "../components/LegalDocument.astro";
+---
+
+<BaseLayout
+  title="Terms of Service | YeRide"
+  description="The terms that govern your use of YeRide."
+>
+  <LegalDocument lang="en" doc="terms" />
+</BaseLayout>
