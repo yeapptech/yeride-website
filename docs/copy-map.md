@@ -169,7 +169,8 @@ section had wrong:
 
 Fee line names arrive from the database as a single `description` string per charge. The site
 keeps an ES lookup keyed by the charge `id`, used by `/fees` — and by `/fees` alone, since
-§ 3.5's fee block was cut. `/fare-estimate` renders no charge lines and needs no labels.
+§ 3.5's fee block was cut. `/fare-estimate` renders no **charge** lines and needs no charge
+labels; it does read this file's **ride tier** map, added below by #65.
 
 ```ts
 // src/i18n/feeLabels.ts — ids VERIFIED against production 2026-08-01 (#47)
@@ -222,6 +223,59 @@ The cost is that a **new area needs a web deploy to launch with a real name**; u
 falls back to its humanised identifier ("Us Mi Detroit") in both languages. #56 makes that
 visible rather than silent: it fails the build on an area id this map doesn't cover, the same
 treatment it gives an uncovered charge id.
+
+#### Ride tier names — copy, not brand names
+
+**Decided 2026-08-03 (#65).** `rideServices[].name` and `.description` arrive from the
+database in English and were rendered verbatim in both languages, so `/es/fees`' rate card read
+**Economy · Comfort · Comfort Plus · Luxury · Luxury Plus** and `/es/fare-estimate` printed
+English sentences under each tier ("Standard sedans with more legroom").
+
+The question was whether a tier is a **proper noun** — the way Uber keeps "Comfort" in
+Spanish-language markets — or ordinary copy. It is copy:
+
+- `@yeapptech/yeride-brand` **names no tier anywhere** — not in `messaging.md`,
+  `positioning.md`, `brand-system.md`, `identity.md` or `logo.md`. There is no brand asset to
+  protect, so "brand name" had nothing behind it but the habit.
+- § 3.4 authors **every other cell** of this rate card in both languages. The tier column was a
+  gap in that method, not an exception to it.
+- The names are operator free-text in the admin console — the ids are `economy`, `comfort`,
+  `comfort_plus`, `luxury`, `luxury-plus`, whose separators disagree with each other. That is
+  data entry, not a naming system.
+
+**EN is authored here too**, exactly as a charge label is. That is the point rather than a side
+effect: rendering the fetched string on `/fees` and an authored one on `/es/fees` is what leaks
+English in the first place, and pinning EN keeps it **byte-identical to what the app shows a
+rider** — the one real cost of translating. Both apps are English-only (yeride-mobile has no
+i18n at all; the legacy app on Play renders `Order {name} Service`), so a Spanish reader matches
+"Económico" here to "Economy" there. Their own docs call that temporary — *"localization is a
+post-cutover concern"* — and nothing about keeping the website English would have made the app
+speak Spanish sooner.
+
+| id | EN name | ES name | EN description | ES description |
+|---|---|---|---|---|
+| `economy` | Economy | Económico | Affordable rides, compact cars | Viajes accesibles, autos compactos |
+| `comfort` | Comfort | Confort | Standard sedans with more legroom | Sedanes estándar con más espacio para las piernas |
+| `comfort_plus` | Comfort Plus | Confort Plus | SUVs or minivans | SUV o minivans |
+| `luxury` | Luxury | Lujo | Luxury ride | Viaje de lujo |
+| `luxury-plus` | Luxury Plus | Lujo Plus | SUVs Luxury ride | SUV de lujo |
+
+The **EN column is the operator's own wording, transcribed from production 2026-08-03, not
+rewritten.** "SUVs Luxury ride" reads oddly; improving it is a copy decision for this map to
+take deliberately, not something to smuggle in under a translation ticket. The Spanish is
+written to be natural rather than word-for-word — English "Affordable" is not "Economy", so
+neither is the Spanish.
+
+An **uncovered id falls back to the backend `name` / `description` verbatim**, in both
+languages — never to a humanised id the way an area must, because a ride service document *has*
+a real name field and there is no reason to invent "Luxury Plus" out of `luxury-plus`. Hiding
+the row instead would suppress a published price on the page that exists to publish them. #56
+fails the deploy on a tier id this map doesn't cover, across every area, the same treatment it
+gives a charge id and an area id.
+
+It **cannot** catch an *edited* description — that is prose an operator may reword, and no
+check here can see it. That is the accepted cost of having the two languages agree at all; it
+is the same trade `serviceAreaNames` above makes.
 
 ---
 
@@ -426,6 +480,7 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 | Lead | Every fee YeRide charges. Current amounts, fetched live. | Cada cargo que cobra YeRide. Montos actuales, en vivo. |
 | Area picker label | Service area | Área de servicio |
 | Rate card H2 | The rate card | El tarifario base |
+| Rate card tier name **(added #65)** | *from § 2.3's ride tier map, keyed by the service id* | *ídem* |
 | Rate row: base | Base | Base |
 | Rate row: distance | Per mile | Por milla |
 | Rate row: time | Per minute | Por minuto |
@@ -520,6 +575,7 @@ persuasion.
 | Distance | Distance | Distancia |
 | Duration | Estimated time | Tiempo estimado |
 | Results H2 | Available services | Servicios disponibles |
+| Tier name and blurb **(added #65)** | *from § 2.3's ride tier map, keyed by `serviceId`* | *ídem* |
 | Fare caption | estimated fare | tarifa estimada |
 | Seats | {n} seats | {n} asientos |
 | ~~Fee block heading~~ **(CUT — the rider does not pay these; see the amendment above)** | ~~Fees included~~ | ~~Cargos incluidos~~ |
@@ -767,7 +823,10 @@ Rider pillar 2 ("Same math every trip." / "Las mismas cuentas en cada viaje.") i
 1. **Route-parity check (#41)** skips `404` and `redirect` by name, with a comment saying they
    are single-file by design. Every other route must have its `/es/` twin.
 2. **Fee-label check (#41)** fails on any charge `id` returned by `getFeeSchedule` that § 2.3
-   doesn't cover.
+   doesn't cover — extended to **service area** ids by #47, and to **ride tier** ids by #65.
+   All three are checked across every area the endpoint serves, not just the default one, and
+   the tier ids cover `/fare-estimate` too: `estimateFares` reads the same `rideServices`
+   documents.
 3. **`/es/about` is blocked** on the yeride-brand ES identity paragraph.
 4. **`/privacy-policy` and `/terms`** are blocked on the legal-rewrite ticket.
 5. **The ES Tally form** does not exist yet; `/es/contact` cannot ship without its id.
