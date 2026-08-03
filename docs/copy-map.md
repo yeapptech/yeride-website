@@ -168,7 +168,8 @@ section had wrong:
 ### 2.3 Fee label map
 
 Fee line names arrive from the database as a single `description` string per charge. The site
-keeps an ES lookup keyed by the charge `id`, used by **both** `/fees` and `/fare-estimate`.
+keeps an ES lookup keyed by the charge `id`, used by `/fees` — and by `/fees` alone, since
+§ 3.5's fee block was cut. `/fare-estimate` renders no charge lines and needs no labels.
 
 ```ts
 // src/i18n/feeLabels.ts — ids VERIFIED against production 2026-08-01 (#47)
@@ -496,6 +497,11 @@ Keeps the Firebase callable `estimateFares` and the Google Maps loader.
 > **Therefore: drop the "Fee block heading" row below.** Keep the limit note and the `/fees`
 > link — that is where the charges belong, on the page that explains whose they are. If a
 > rider-facing view of the driver's side is ever wanted, that is a new decision, not this row.
+>
+> **Amended again 2026-08-02 (#38), building it.** Two rows elsewhere still described the
+> page the cut removed and are corrected with it: § 4's meta descriptions promised "with
+> every fee itemized" / "con cada cargo detallado", and § 2.3 said the fee label map served
+> this page as well as `/fees`. Neither is true. The claim is now nowhere on the site.
 
 The page's tone stays as `docs/messaging.md` prescribes for fees: numbers, named lines, no
 persuasion.
@@ -645,8 +651,8 @@ structured data, and analytics remain out of scope for this ticket.
 | `/es/riders` | Paga lo justo. \| YeRide | Tarifas publicadas — base, millas, minutos. Las mismas cuentas en cada viaje y cada cargo publicado. Tarjeta o efectivo. |
 | `/fees` | The fee schedule \| YeRide | Every fee YeRide charges, with current amounts fetched live. |
 | `/es/fees` | El tarifario \| YeRide | Cada cargo que cobra YeRide, con los montos actuales en vivo. |
-| `/fare-estimate` | Estimate a fare \| YeRide | See what a ride would cost at today's published rates, with every fee itemized. Estimates are estimates — the meter decides. |
-| `/es/fare-estimate` | Estimar tarifa \| YeRide | Mira lo que costaría un viaje con las tarifas publicadas de hoy, con cada cargo detallado. Un estimado es un estimado — el taxímetro decide. |
+| `/fare-estimate` | Estimate a fare \| YeRide | See what a ride would cost at today's published rates. Estimates are estimates — the meter decides. |
+| `/es/fare-estimate` | Estimar tarifa \| YeRide | Mira lo que costaría un viaje con las tarifas publicadas de hoy. Un estimado es un estimado — el taxímetro decide. |
 | `/about` | About YeRide \| YeRide | Why YeRide exists, who built it, and the four things it holds to. |
 | `/es/about` | Sobre YeRide \| YeRide | Por qué existe YeRide, quién lo construyó y las cuatro cosas en las que se sostiene. |
 | `/contact` | Contact us \| YeRide | Questions, problems, or something we got wrong — reach the team behind YeRide. |
