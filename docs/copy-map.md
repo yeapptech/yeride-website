@@ -390,14 +390,26 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 > from the example. It named only the second. Because the endpoint returns `example: null`,
 > production shipped *"until every published charge is described above"* while every published
 > charge **was** described above — a false reason, which is the same class of error as guessing
-> a charge into a family. It is now two rows: **Example withheld — no example published**, the
-> branch that actually ships today, and **Example withheld — a charge is undescribed**, the
-> site's own safety net, whose original wording is true where it now renders.
+> a charge into a family. It is now **three rows, one per branch**.
 >
-> **The gap dash is explained.** A charge whose expression the endpoint can't summarise prints
-> `—`. Honest, but silent on a page whose lead promises current amounts, so a panel containing
-> a gap carries the **Gap note** row. It is conditional and renders for nobody once
-> yeride-functions#21 publishes the rule.
+> *Corrected 2026-08-02, after review.* The first pass split three causes into **two** rows,
+> leaving `!classified` and `!priced` sharing the undescribed-charge wording. Since every
+> production id is classified, `!priced` was that row's only reachable trigger — and its cause
+> is that the endpoint priced a charge in the schedule and **left it out of the example**, with
+> every charge described. The same false reason, surviving on the branch that hadn't been split.
+> **Example withheld — the example is incomplete** now states it, and is the likeliest of the
+> three once yeride-functions#21 ships, for exactly the reason the example is null today.
+>
+> **A charge with no statable rule is explained.** Its amount column shows `—`. Honest, but
+> silent on a page whose lead promises current amounts, so a panel containing one carries the
+> **Gap note** row. It is conditional and renders for nobody once yeride-functions#21 publishes
+> the rule.
+>
+> The note is phrased around the **missing amount, never around the `—` that fills it**. It
+> first read *"A — means…"*, which was false about most of the dashes on screen: the marker is
+> U+2014 and so is the em dash inside the charge labels "Ride technology — to pickup" / "— on
+> trip", agreed in the same session. Copy on this page must not be keyed to a glyph that also
+> appears in fetched or authored names.
 >
 > **"Other charges" says YeRide, not "the platform".** Every other line on this page owns the
 > charge by name; distancing language reads as evasion on a page whose whole pitch is
@@ -426,10 +438,11 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 | Insurance note **(SUSPENDED — #48)** | The coverage Florida requires during a ride. The rider's share and the driver's share are separate, published lines. | La cobertura que la Florida exige durante el viaje. La parte de quien viaja y la de quien maneja son líneas separadas y publicadas. |
 | Other-charges H2 | Other charges | Otros cargos |
 | Other-charges lead | Charges YeRide publishes that this page doesn’t describe yet. | Cargos que YeRide publica y que esta página todavía no describe. |
-| Gap note **(conditional — renders only in a panel holding a charge whose rule the endpoint can't summarise)** | A — means YeRide hasn’t published a rule for that charge that this page can state plainly. | Un — significa que YeRide todavía no publica una regla para ese cargo que esta página pueda expresar con claridad. |
+| Gap note **(conditional — renders only in a panel holding a charge whose rule the endpoint can't summarise; must not be keyed to the `—` glyph)** | A charge with no amount shown is one YeRide hasn’t published a rule for that this page can state plainly. | Un cargo sin monto es uno para el que YeRide todavía no publica una regla que esta página pueda expresar con claridad. |
 | Example H2 | Example at today’s rates | Ejemplo con las tarifas de hoy |
 | Example note | Computed from the schedule above, not a quote. | Calculado con el tarifario de arriba; no es una cotización. |
 | Example withheld — **no example published** *(the branch that ships today)* | YeRide hasn’t published an example trip for this area yet. | YeRide todavía no publica un viaje de ejemplo para esta área. |
+| Example withheld — **the example is incomplete** *(endpoint published an example but left a priced charge out of it)* | YeRide’s example trip leaves out one of the charges above, so it wouldn’t add up. | El viaje de ejemplo de YeRide deja fuera uno de los cargos de arriba, así que no cuadraría. |
 | Example withheld — **a charge is undescribed** *(site-side safety net; renders for nobody today)* | The example is unavailable until every published charge is described above. | El ejemplo no está disponible hasta que cada cargo publicado esté descrito arriba. |
 | Example rider col H3 | What the rider pays | Lo que paga quien viaja |
 | Example driver col H3 | What the driver keeps | Lo que le queda a quien maneja |
