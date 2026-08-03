@@ -14,10 +14,11 @@ pnpm-debug.log*
 
 
 # environment variables
-.env
-.env.production
-.env.local
-.env.production.local
+# Every file Vite loads, in any mode: .env, .env.local, .env.[mode] and
+# .env.[mode].local. Listed one mode at a time, this misses whichever mode
+# is added next; .env.development.local is a real key file and was tracked.
+.env*
+!.env.example
 
 # macOS-specific files
 .DS_Store
