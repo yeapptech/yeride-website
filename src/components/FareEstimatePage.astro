@@ -16,6 +16,8 @@
 // The stack is unchanged: Firebase callable `estimateFares` + the Google Maps
 // loader (maps, places, marker, routes).
 import { fareEstimateCopy } from "../i18n/fareEstimateCopy";
+import { serviceAreaNames } from "../i18n/feeLabels";
+import { DEFAULT_SERVICE_AREA_ID } from "../lib/serviceArea";
 import type { Lang } from "../i18n/feesCopy";
 
 export interface Props {
@@ -24,6 +26,31 @@ export interface Props {
 const { lang } = Astro.props;
 const t = fareEstimateCopy[lang];
 const esPrefix = lang === "es" ? "/es" : "";
+
+// The area every quote on this page is for (#62), named from the same constant
+// the request is built from and through the same bilingual map /fees uses.
+//
+// The map is read DIRECTLY rather than through `serviceAreaName`, whose job is
+// to survive an area the site has never heard of: it humanises the identifier,
+// which turns "us-fl-south-florida" into "Us Fl South Florida" and publishes
+// that English-derived string on the SPANISH page too. That is the right
+// behaviour for /fees, which renders whatever the endpoint lists and must not
+// drop an area it cannot name — and the wrong behaviour here, where there is
+// exactly one hard-coded area whose name is site-authored copy. A missing key
+// is then not a fallback but a defect, so it stops the build.
+//
+// `scripts/check-fee-labels.mjs` (#56) does NOT cover this: it needs the
+// network, runs outside `npm run build`, and skips when the endpoint does not
+// answer — so a deleted key plus an unreachable endpoint ships the humanised
+// string with every gate green. This throw needs no network.
+const areaName = serviceAreaNames[DEFAULT_SERVICE_AREA_ID]?.[lang];
+if (!areaName) {
+  throw new Error(
+    `serviceAreaNames has no ${lang} name for "${DEFAULT_SERVICE_AREA_ID}". ` +
+      `/fare-estimate states the area every fare is priced for, so without a ` +
+      `site-authored name it would publish a humanised id — in both languages.`,
+  );
+}
 ---
 
 <main>
@@ -102,11 +129,37 @@ const esPrefix = lang === "es" ? "/es" : "";
       </div>
 
       {/*
+        WHERE the quote applies. The page prices one area whatever the rider
+        typed, so it says which rather than letting the map underneath imply
+        the rider's own (#62).
+
+        Rendered here rather than from the response for the same reason the
+        limit note below is: it has to stand in EVERY state — before a route is
+        entered, and when the estimate fails — and a rider who never gets a
+        number is still owed the reason. `estimateFares` echoes back the id it
+        was given and never another, so the response could not correct this
+        anyway.
+      */}
+      {/*
+        Contrast: the area name carries the whole claim, so it sits at full
+        `text-ink` (14.9:1) rather than the `text-ink/60` used for secondary
+        prose — which measures 4.16:1 on paper and so misses WCAG AA's 4.5:1
+        for normal text. The note is secondary but is still a disclosure, so it
+        takes `/70` (5.7:1) — the smallest step that clears AA while staying
+        visibly quieter than the fact above it.
+      */}
+      <p class="mt-6 max-w-xl text-[15px] text-ink">
+        <span class="font-bold">{t.areaLabel}:</span>
+        {areaName}
+      </p>
+      <p class="mt-1 max-w-xl text-[15px] text-ink/70">{t.areaNote}</p>
+
+      {/*
         The limit note stands in every state, not only alongside a result: it is
         what this page is for, and a rider reading an error or waiting on a
         quote is owed it as much as one reading a number.
       */}
-      <p class="mt-6 max-w-xl text-[15px] text-ink/60">{t.limitNote}</p>
+      <p class="mt-4 max-w-xl text-[15px] text-ink/60">{t.limitNote}</p>
 
       <div data-results hidden>
         <section class="mt-10">
@@ -494,7 +547,9 @@ const esPrefix = lang === "es" ? "/es" : "";
     // every call and has no way to know where the rider is, so a rider in
     // Chicago is quoted South Florida rates and `functions/not-found` means
     // "South Florida has no services configured" — a fault, not a geography.
-    // Saying "We're not in that area yet" there would be false. Filed as #62.
+    // Saying "We're not in that area yet" there would be false. The page states
+    // the area it priced instead (#62); the row itself waits on #73, which
+    // waits on yeapptech/yeride-functions#45 to publish each area's circle.
     console.error("[fare-estimate]", err);
     return t.serviceError;
   }
