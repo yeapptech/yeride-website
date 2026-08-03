@@ -52,8 +52,8 @@ const esPrefix = lang === "es" ? "/es" : "";
             {/*
               `for` is not used: the field is a `gmp-place-autocomplete` custom
               element, which is not a labelable element, so an association here
-              would be silently dead. The accessible name is set on the input
-              the component owns — see `describeInput` below.
+              would be silently dead. The field's accessible name comes from its
+              placeholder instead — see `dressAutocomplete` below.
             */}
             <p class="text-[14px] font-bold text-ink">{t.pickupLabel}</p>
             <div data-autocomplete="pickup" class="mt-1.5"></div>
@@ -326,22 +326,23 @@ const esPrefix = lang === "es" ? "/es" : "";
   }
 
   /**
-   * Give the autocomplete's own input its name and placeholder.
+   * Give the autocomplete its §3.5 placeholder, and stop it rendering dark.
    *
-   * The `gmp-place-autocomplete` custom element is not labelable, so the
-   * visible label above it cannot be associated with `for`, and the input is
-   * the component's, not ours. If the component ever stops exposing it in the
-   * light DOM this returns having done nothing, and the field keeps the
-   * component's own default name — degraded, not broken.
+   * `gmp-place-autocomplete` is a CLOSED custom element — checked in the
+   * browser: no light-DOM children, no reachable `shadowRoot`. Nothing inside
+   * it can be selected, so reaching in for the `<input>` cannot work, and a
+   * `<label for>` cannot bind to it either (a custom element is not labelable).
+   * Its `placeholder` PROPERTY is the way in: real at runtime, absent from
+   * @types/google.maps, hence the cast. It doubles as the field's accessible
+   * name, which is the only one available here.
+   *
+   * `color-scheme` is one of the few things that inherits *through* a shadow
+   * boundary. Without it the component follows the OS into dark mode and puts
+   * a black field in the middle of the paper card.
    */
-  function describeInput(node: HTMLElement, name: string, placeholder: string) {
-    const input = node.querySelector("input");
-    if (!input) {
-      console.warn("[fare-estimate] autocomplete input not reachable:", name);
-      return;
-    }
-    input.placeholder = placeholder;
-    input.setAttribute("aria-label", name);
+  function dressAutocomplete(element: HTMLElement, placeholder: string) {
+    (element as any).placeholder = placeholder;
+    element.style.colorScheme = "light";
   }
 
   async function init() {
@@ -378,18 +379,14 @@ const esPrefix = lang === "es" ? "/es" : "";
     const fields = ["location", "displayName", "formattedAddress"];
 
     function mountAutocomplete(
-      end: {
-        slot: "pickup" | "dropoff";
-        name: string;
-        placeholder: string;
-      },
+      end: { slot: "pickup" | "dropoff"; placeholder: string },
       set: (location: google.maps.LatLng) => void,
     ) {
       const slot = el<HTMLElement>(`[data-autocomplete="${end.slot}"]`)!;
       const element = new PlaceAutocompleteElement({} as any);
       element.id = `${end.slot}-autocomplete`;
       slot.appendChild(element);
-      describeInput(element, end.name, end.placeholder);
+      dressAutocomplete(element, end.placeholder);
 
       element.addEventListener("gmp-select", async (event: any) => {
         try {
@@ -415,11 +412,7 @@ const esPrefix = lang === "es" ? "/es" : "";
     }
 
     mountAutocomplete(
-      {
-        slot: "pickup",
-        name: t.pickupLabel,
-        placeholder: t.pickupPlaceholder,
-      },
+      { slot: "pickup", placeholder: t.pickupPlaceholder },
       (location) => {
         pickup = location;
         if (pickupMarker) pickupMarker.map = null;
@@ -432,11 +425,7 @@ const esPrefix = lang === "es" ? "/es" : "";
     );
 
     mountAutocomplete(
-      {
-        slot: "dropoff",
-        name: t.dropoffLabel,
-        placeholder: t.dropoffPlaceholder,
-      },
+      { slot: "dropoff", placeholder: t.dropoffPlaceholder },
       (location) => {
         dropoff = location;
         if (dropoffMarker) dropoffMarker.map = null;

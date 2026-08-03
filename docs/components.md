@@ -223,7 +223,7 @@ driver's side in both payment flows.
 `src/i18n/feeLabels.ts` (charge labels + family/payer), `src/i18n/feesCopy.ts` (page
 copy, EN/ES).
 
-### FareEstimate
+### FareEstimatePage
 
 The whole body of `/fare-estimate` and `/es/fare-estimate` (wayfinder #38), on the
 "Hail" language: Cab Yellow ground for the ask and the form, paper for the map and the
@@ -240,7 +240,7 @@ numbers, an Ink close linking `/fees`. Replaced `FareEstimateForm` and
 
 ```astro
 <BaseLayout title="Estimate a fare | YeRide" lang="en" headerGround="yellow">
-  <FareEstimate lang="en" />
+  <FareEstimatePage lang="en" />
 </BaseLayout>
 ```
 
