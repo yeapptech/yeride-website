@@ -807,19 +807,35 @@ connected account — but never with a YeRide-published amount, since YeRide doe
 **Never claimed** — these never run, gate or no gate:
 
 - `locked` / upfront-price language · `no surprises`
-- `tarifa` + a settled-in-advance adjective — `fija` · `fijada` · `plana` · `cerrada` ·
-  `garantizada` · `única` · `preestablecida` · `predeterminada` — and its EN mirror,
-  `flat` / `fixed` / `guaranteed` before or after `fare` / `price` / `rate`
-  *(added 2026-08-04, #75; widened the same day after review)*. Matched **anywhere in the
-  sentence, not only adjacent**, because "la tarifa es fija" is the same claim. `rate` is
-  in scope on the EN side because on this site "rates" names the **meter** ("Published
-  rates — base, miles, minutes"), so "flat rate" is the claim and not innocent fee
-  vocabulary. **`acordada`, `pactada` and EN `agreed` are deliberately excluded**: the
-  Terms make the honest *denial* in exactly those words ("no se pactan de antemano" /
-  "not agreed in advance"), so gating them would fire on the copy this rule exists to
-  protect. There is **no exemption for the qualified form** "tarifas de tecnología fijas" —
-  under the vocabulary rule below a YeRide charge is a `cargo`, so that is the wrong noun
-  too, not a safe variant of it.
+- `tarifa` or `precio` + a settled-in-advance adjective — `fija` · `fijada` · `plana` ·
+  `cerrada` · `garantizada` · `acordada` · `pactada` · `preestablecida` ·
+  `predeterminada` (and the masculine forms with `precio`) — plus its EN mirror,
+  `flat` / `fixed` / `guaranteed` with `fare` / `price` / `pricing` / `rate`
+  *(added 2026-08-04, #75; twice widened the same day after review)*. Matched in **either
+  word order**, and with the two words a few **words** apart rather than adjacent, since
+  "la tarifa es fija" is the same claim as "tarifa fija". Never across a full stop.
+
+  The gap is counted in **words, not characters**, and the EN one is deliberately **short
+  (two words)**. Both facts are measured, not preferences. A sentence-wide EN gap fails the
+  build on **four live, correct EN strings**, the canonical driver pillar among them
+  ("Flat, published tech fees — never a percentage of the fare"); and in characters the
+  claim and the correct copy are only 12 against 23 apart — "A flat, published price"
+  versus § 4's own home meta, "flat published fees, and a rate card anyone can read".
+  In words that is 1 against 4, which is a margin worth having. `rate` is in scope on the
+  EN side because here "rates" names the **meter** ("Published rates — base, miles,
+  minutes"), so "flat rate" is the claim, not innocent fee vocabulary.
+
+  **`única` / `único` are adjacent-only**, alone among the adjectives: "tarifa única" is
+  the flat-fare claim, but `única` is also the ordinary word for *only*, so at any gap it
+  fires on "Tarifas en la única zona donde operamos." Catching the claim is not worth
+  making that sentence unwritable. **EN `agreed` is excluded** and `acordada`/`pactada`
+  are **not**: the Spanish denial uses the finite verb ("no se **pactan** de antemano"),
+  never the participle, so there is no collision at any gap — while the English one reads
+  "rates for the service area, and they are not **agreed** in advance", which collides at
+  sentence scope and clears the word gap by three words, too thin for the one sentence the
+  rule exists to protect. There is **no exemption for the qualified form** "tarifas de
+  tecnología fijas" — under the vocabulary rule below a YeRide charge is a `cargo`, so
+  that is the wrong noun too, not a safe variant of it.
 - `no surge ever` / `nunca habrá recargo` (note: "no surge **today**" is permitted, § 3.4)
 - `cheapest` / `lowest fees` / `más barato`
 - any earnings dollar figure
@@ -835,6 +851,11 @@ de tecnología de YeRide", "Otros cargos", "Cargo por cancelación"), and reserv
 for the meter ("Tarifa mínima", "Tarifa del taxímetro", "de la tarifa"). Keeping the two
 nouns apart is what keeps the claim honest; a qualifier bolted onto the wrong noun is not
 a substitute for the right one.
+
+The rule governs a **charge**, so it does not reach `tarifario` — the rate card itself,
+which is what `/es/fees` is called (§ 3.4's H1, "El tarifario") and what § 1.1's nav item
+`Tarifas` is the short form of, exactly as EN's `Fees` is the short form of "The fee
+schedule". A rate card may be named for the rates it publishes; a single charge may not.
 
 Rider pillar 2 ("Same math every trip." / "Las mismas cuentas en cada viaje.") is **not gated**
 — it claims published rates, not fee breakdowns, and runs at launch on `/riders`.
