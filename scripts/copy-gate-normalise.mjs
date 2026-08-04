@@ -25,8 +25,11 @@
 //     second pass would invent a hit the reader never sees.
 //   - invisible characters (zero-width space/joiner, soft hyphen, BOM) removed —
 //     they exist only to split a word without showing it.
-//   - whitespace collapsed to single spaces, so a newline inside a phrase — the
-//     accidental case — reads as the space it renders as.
+//   - whitespace collapsed to a single space, so a newline inside a phrase — the
+//     accidental case — reads as the space it renders as. A run of TWO or more
+//     newlines is a paragraph break instead, and collapses to a newline: it is
+//     not a word space, and welding across it invents a phrase ("Everything is
+//     at\n\ncost of nothing." is two paragraphs, not "at cost").
 //
 // NOT applied: homoglyph folding. Folding needs a confusables table, and a wrong
 // entry in it invents failures in Spanish copy, which is full of legitimate
@@ -38,27 +41,47 @@
 // ---------------------------------------------------------------------------
 // FABRICATION, AND WHY THE TWO GATES TAKE DIFFERENT VIEW SETS
 //
-// Two of the views can invent a phrase that nobody ships:
+// Two of the views invent a phrase nobody ships, ON PURPOSE, accepting the noise
+// to close a hole:
 //   - "tags to a space" reads "<td>no</td><td>surprises</td>" as two words, and
 //     a reader sees two table cells.
 //   - "unknown reference to a space" does the same for a separator this file's
 //     NAMED table does not know.
-// Their non-fabricating twins — tag REMOVED, reference BLANKED — cannot, because
-// removing the separator removes the gap: the same markup reads "nosurprises".
+//
+// Their twins — tag REMOVED, reference BLANKED — do not, because removing the
+// separator removes the gap: the same markup reads "nosurprises". That property
+// is REAL but it is not free, and #68 shipped a version where it was simply
+// false: dropping a tag left any whitespace beside it behind, so the moment the
+// markup was indented — which is to say, always — "<td>no</td>\n<td>surprises</td>"
+// read as "no surprises" under the view documented as safe. Three independent
+// reviews found it, and the control that had "proved" the property used the one
+// formatting where it held, tags butted together on a single line. The
+// inter-element-whitespace rule in view() is what makes it true; see the comment
+// there, because the rule is the claim.
 //
 // The dist gate takes the fabricating views, because it measures the shipped
 // promise and would rather fail loudly on a phantom than miss a real claim; it
 // blesses each phantom once, by hand, in its own ALLOWED list.
 //
-// The source gate does NOT, and that asymmetry is deliberate rather than an
-// oversight. Its allowlist is a per-line pragma that a human writes into the
-// file, and a pragma authorising a claim nobody made teaches the next reader
-// that the gate cries wolf. The case it gives up — a phrase whose ONLY separator
-// is a tag boundary — is caught downstream by the dist gate before anything
-// deploys, and is not the accidental-authoring shape #68 was about.
+// The source gate does NOT, and that asymmetry is deliberate. Its allowlist is a
+// per-line pragma a human writes into the copy, and a pragma authorising a claim
+// nobody made teaches the next reader that the gate cries wolf. What it gives up
+// is a phrase whose ONLY separator is a tag boundary, whitespace or not —
+// "<td>no</td><td>surprises</td>" and "<span>no</span> <span>surprises</span>"
+// alike — which the dist gate catches before anything deploys, and which is not
+// the accidental-authoring shape #68 was about.
 //
 // Callers therefore say which they want: includeFabricating: true is the dist
 // gate's reading, false is the source gate's.
+//
+// WHAT NEITHER SET FIXES, so that no reader takes "non-fabricating" for
+// "infallible": the tables below are still finite. NAMED holds a few dozen of
+// HTML5's ~2200 named references, and only the fabricating "spaced" view covers
+// the rest; REFERENCE bounds numeric references at 7 decimal / 6 hex digits and
+// requires the closing semicolon, which browsers do not; and INVISIBLE holds
+// eight code points out of a class of several thousand. All three are #80. Which
+// FILE TYPES get the tag views at all is #81 — a .js bundle writing tag-split
+// markup into innerHTML is read by neither gate's tag views today.
 
 // ---------------------------------------------------------------------------
 
@@ -101,9 +124,17 @@ function decodeReference(body) {
 }
 
 /** A JS or CSS escape at `raw[i]`, as [decodedText, consumedLength], or null.
- *  CSS spells the same idea "\69 " — 1-6 hex digits and an optional trailing
- *  space that is part of the escape rather than of the text. */
-function decodeEscape(raw, i) {
+ *
+ *  `css` enables CSS's own spelling of the same idea, "\69 " — 1-6 hex digits and
+ *  an optional trailing space that is part of the escape rather than of the text.
+ *  It is OFF by default and enabled only for stylesheets, because outside CSS that
+ *  form is not syntax and reading it as one FABRICATES: every one of \a \b \c \d
+ *  \e \f is a hex digit, and four of them decode to whitespace, so an ordinary
+ *  JavaScript regex like /no\asurprises/ normalised to "no surprises" and failed
+ *  the build on a phrase nobody wrote. It also decodes greedily — /at\dcost/ read
+ *  "dc", not "d". #57 added the form for a real CSS evasion and that catch is
+ *  kept; #68's adversarial review found the collateral. */
+function decodeEscape(raw, i, css = false) {
   const braced = /^\\u\{([0-9a-fA-F]{1,6})\}/.exec(raw.slice(i, i + 10));
   if (braced) return [cp(parseInt(braced[1], 16)), braced[0].length];
 
@@ -113,10 +144,55 @@ function decodeEscape(raw, i) {
   const x = /^\\x([0-9a-fA-F]{2})/.exec(raw.slice(i, i + 4));
   if (x) return [cp(parseInt(x[1], 16)), x[0].length];
 
-  const css = /^\\([0-9a-fA-F]{1,6})[ \t\n]?/.exec(raw.slice(i, i + 9));
-  if (css) return [cp(parseInt(css[1], 16)), css[0].length];
+  if (!css) return null;
+  const hex = /^\\([0-9a-fA-F]{1,6})[ \t\n]?/.exec(raw.slice(i, i + 9));
+  if (hex) return [cp(parseInt(hex[1], 16)), hex[0].length];
 
   return null;
+}
+
+// A "<" only opens a tag when what follows could begin one. HTML treats "< 5 min"
+// as literal text, and so must this: an adversarial review hid
+// "Insur<span>ance</span>" behind an earlier bare "<" by making the scan below
+// swallow everything up to the next ">".
+const TAG_START = /^<[a-zA-Z!/?]/;
+
+/** The index just past the tag, comment or CDATA section starting at `raw[i]`, or
+ *  -1 if it never closes.
+ *
+ *  Not an HTML parser — just enough of one that a ">" belonging to something else
+ *  cannot end a tag early and spill the remainder into the text as copy. The
+ *  previous one-line `indexOf(">")` was broken three ways by an adversarial
+ *  review, each of which FABRICATED a forbidden phrase out of markup nobody
+ *  wrote: a ">" inside an HTML comment ("at<!-- see /fees > cost -->market" read
+ *  as "at cost"), inside a quoted attribute value, and inside an Astro attribute
+ *  expression, where "=>" is an arrow function and not a tag end. */
+function tagEnd(raw, i) {
+  if (raw.startsWith("<!--", i)) {
+    const end = raw.indexOf("-->", i + 4);
+    return end === -1 ? -1 : end + 3;
+  }
+  if (raw.startsWith("<![CDATA[", i)) {
+    const end = raw.indexOf("]]>", i + 9);
+    return end === -1 ? -1 : end + 3;
+  }
+  let quote = "";
+  let depth = 0;
+  for (let j = i + 1; j < raw.length; j++) {
+    const ch = raw[j];
+    if (quote) {
+      if (ch === quote) quote = "";
+    } else if (ch === '"' || ch === "'") {
+      quote = ch;
+    } else if (ch === "{") {
+      depth++;
+    } else if (ch === "}") {
+      if (depth > 0) depth--;
+    } else if (ch === ">" && depth === 0) {
+      return j + 1;
+    }
+  }
+  return -1;
 }
 
 /**
@@ -127,24 +203,46 @@ function decodeEscape(raw, i) {
  * view of a file maps back to the same coordinates, which is what lets
  * overlapping matches from different views be recognised as one occurrence.
  */
-export function view(raw, { tags = "keep", unknownReference = "keep", escapes = false }) {
+function view(
+  raw,
+  { tags = "keep", unknownReference = "keep", escapes = false, cssEscapes = false },
+) {
   const out = [];
   const map = [];
+  // Where the run of whitespace waiting to be emitted began, and how many
+  // newlines it contains — a run of two or more is a PARAGRAPH break, which is
+  // not a word space and must not weld the words either side of it into a phrase.
+  // Prose files are where this bites: in "Everything is at\n\ncost of nothing."
+  // a reader sees two paragraphs and the collapse saw "at cost".
   let pendingSpace = -1;
+  let pendingNewlines = 0;
+  // Whether any text has been emitted since the last tag was dropped. See the
+  // inter-element-whitespace rule below.
+  let textSinceTag = true;
+
+  const flush = () => {
+    if (pendingSpace < 0) return;
+    // TWO or more newlines, counted across the whole run — not "a newline that is
+    // not the first character of the run", which is how this was first written and
+    // which made an ordinary wrapped line ("no <!-- note -->\n  surprises") read as
+    // a paragraph break and stop matching.
+    out.push(pendingNewlines >= 2 ? "\n" : " ");
+    map.push(pendingSpace);
+    pendingSpace = -1;
+    pendingNewlines = 0;
+  };
 
   const emit = (ch, at) => {
     if (INVISIBLE.has(ch)) return;
     if (/\s/.test(ch)) {
       if (pendingSpace < 0) pendingSpace = at;
+      if (ch === "\n") pendingNewlines++;
       return;
     }
-    if (pendingSpace >= 0) {
-      out.push(" ");
-      map.push(pendingSpace);
-      pendingSpace = -1;
-    }
+    flush();
     out.push(ch);
     map.push(at);
+    textSinceTag = true;
   };
   const emitAll = (s, at) => {
     for (const ch of s) emit(ch, at);
@@ -153,11 +251,24 @@ export function view(raw, { tags = "keep", unknownReference = "keep", escapes = 
   for (let i = 0; i < raw.length; ) {
     const ch = raw[i];
 
-    if (tags !== "keep" && ch === "<") {
-      const end = raw.indexOf(">", i);
+    if (tags !== "keep" && ch === "<" && TAG_START.test(raw.slice(i, i + 2))) {
+      const end = tagEnd(raw, i);
       if (end !== -1) {
-        if (tags === "space") emit(" ", i);
-        i = end + 1;
+        if (tags === "space") {
+          emit(" ", i);
+        } else if (pendingSpace >= 0 && !textSinceTag) {
+          // INTER-ELEMENT WHITESPACE — a dropped tag on BOTH sides of it, so it
+          // renders as nothing and joining across it fabricates. This is the rule
+          // that makes "tag removed" honestly non-fabricating, and #68 shipped
+          // without it: "<td>no</td>\n<td>surprises</td>" read as "no surprises",
+          // a phrase no reader sees, reported under the view documented as safe.
+          // Whitespace with TEXT on either side is real and survives, which is
+          // what keeps "Flat fees, <strong>no</strong> surprises." caught.
+          pendingSpace = -1;
+          pendingNewlines = 0;
+        }
+        textSinceTag = false;
+        i = end;
         continue;
       }
     }
@@ -176,7 +287,7 @@ export function view(raw, { tags = "keep", unknownReference = "keep", escapes = 
     }
 
     if (escapes && ch === "\\") {
-      const hit = decodeEscape(raw, i);
+      const hit = decodeEscape(raw, i, cssEscapes);
       if (hit) {
         emitAll(hit[0], i);
         i += hit[1];
@@ -196,10 +307,11 @@ export function view(raw, { tags = "keep", unknownReference = "keep", escapes = 
 // detail: it is fixed here once rather than assembled per caller, so a caller
 // that takes a subset cannot change what anything is called.
 //
-// The order puts each fabricating view immediately after the non-fabricating
-// twin it exaggerates. A hit both of them see is therefore labelled with the
-// safe one — which is the honest label, because a view that cannot fabricate
-// having seen it is proof the phrase is really there.
+// The order puts each fabricating view immediately after the twin it exaggerates,
+// so a hit both of them see is labelled with the quieter one. Read that label as
+// "this did not need the noisy view" — evidence, not proof: the tables above are
+// finite and view() only stopped fabricating under `drop` once #68's review
+// forced the inter-element-whitespace rule.
 const VIEWS = [
   { name: "plain",            markupOnly: false, fabricates: false, opts: {} },
   { name: "tags-removed",     markupOnly: true,  fabricates: false, opts: { tags: "drop" } },
@@ -219,10 +331,13 @@ const VIEWS = [
  * Character references are decoded in every view, markup or not, because a
  * bundle that assigns "&#105;nsurance" to innerHTML publishes the word.
  */
-export function viewsOf(raw, { markup, includeFabricating }) {
+export function viewsOf(raw, { markup, includeFabricating, css = false }) {
   return VIEWS.filter(
     (v) => (markup || !v.markupOnly) && (includeFabricating || !v.fabricates),
-  ).map((v) => ({ name: v.name, ...view(raw, markup ? v.opts : { ...v.opts, tags: "keep" }) }));
+  ).map((v) => ({
+    name: v.name,
+    ...view(raw, { ...v.opts, ...(markup ? {} : { tags: "keep" }), cssEscapes: css }),
+  }));
 }
 
 /** Merge overlapping spans. Two matches that overlap in the original bytes are

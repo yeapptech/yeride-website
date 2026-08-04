@@ -77,7 +77,9 @@
 //     source gate is the layer that sees such a string being authored.
 //
 // KNOWN FALSE-POSITIVE SOURCES, both deliberate:
-//   - the "tags to a space" view, as described above.
+//   - the "tags to a space" view and its "unknown reference to a space" twin —
+//     the two this gate takes and the source gate declines. A hit labelled with
+//     one of those two, and only those two, may be a phrase nobody wrote.
 //   - §5's /\$[ \t]?\d/ matches a regex backreference like "$1" in a minified
 //     vendor chunk. Nothing in dist/ trips it today, but a dependency bump can.
 //     The pattern is §5's and shared with the source gate, so it is not narrowed
@@ -248,6 +250,10 @@ for (const path of files) {
   const views = viewsOf(readFileSync(path, "utf8"), {
     markup: MARKUP_EXT.test(path),
     includeFabricating: true,
+    // CSS escape decoding is scoped to stylesheets; outside CSS the form is not
+    // syntax and reading it as one fabricates. #57 added it for a real CSS
+    // evasion and that catch is kept. See copy-gate-normalise.mjs.
+    css: /\.css$/i.test(path),
   });
 
   // (pattern, matched text) -> { spans, view }. Keyed by the text as well as the
