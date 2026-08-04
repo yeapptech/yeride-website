@@ -12,16 +12,43 @@
 // The pragma must sit in a comment, must name a ticket, and one that stops
 // matching anything fails the build, so the allowlist cannot outlive its reason.
 //
-// WHAT THIS CANNOT DO — read before trusting it (adversarial review, 2026-08-02):
-// it is a line matcher over source text, so it holds against careless mistakes
-// and not against evasion. A phrase broken across a tag, an HTML entity or a
-// newline slips it ("at&nbsp;cost", "no\n surprises"); so does copy that arrives
-// from the fee-schedule endpoint at runtime, and so does anything in a file type
-// this does not scan. Most of that is now covered by the second layer,
-// scripts/check-dist-copy-gate.mjs (#57), which runs this same pattern list over
-// the built output. This gate is still the one worth keeping: it fails at the
-// point of authorship with a file and a line number, it runs on every PR without
-// a build, and it is where the allowlist bookkeeping lives.
+// HOW IT READS A FILE — two passes.
+//
+// 1. Line by line, raw. This is the pass that gives the gate its value: an exact
+//    file and line at the point of authorship.
+// 2. Whole-file, normalised, through scripts/copy-gate-normalise.mjs — the same
+//    reading machine check-dist-copy-gate.mjs uses. Character references are
+//    decoded, invisible characters removed, JS and CSS escapes resolved,
+//    whitespace collapsed, and markup additionally read with its tags removed.
+//    A match here is a span of original bytes, so it is still reported with a
+//    line number — a range, when the phrase crosses one.
+//
+// Pass 2 exists because pass 1 alone was missing accidents, not just evasion
+// (#68 measured three: "no</strong> surprises", "at&nbsp;cost", and a phrase
+// wrapped across a newline). Those only failed after a merge, in the dist gate,
+// on main. A hit found only by pass 2 names the view that found it.
+//
+// The allowlist is unchanged and still per line: a pragma covers the line a
+// match STARTS on. It has to be the start rather than any line in the span,
+// because the alternative is the laundering shape an earlier review already
+// closed here — a pragma further down authorising a claim whose reader, looking
+// at the line it begins on, sees no pragma at all.
+//
+// WHAT THIS STILL CANNOT DO — read before trusting it:
+//   - a phrase whose ONLY separator is a tag boundary, "<td>no</td>
+//     <td>surprises</td>". Reading that needs the view that turns a tag into a
+//     space, which can also invent a phrase nobody wrote; this gate declines it
+//     so that no pragma here ever has to bless a phantom, and the dist gate takes
+//     it instead. copy-gate-normalise.mjs argues the split at length.
+//   - copy assembled at runtime from fragments, and copy that arrives from the
+//     fee-schedule endpoint — neither is in the source at all. The first belongs
+//     to the dist gate, the second to #56.
+//   - anything in a file type SCAN_EXT does not list.
+//
+// The second layer, scripts/check-dist-copy-gate.mjs (#57), still runs this same
+// pattern list over the built output and still earns its place — it reads
+// vendored code and whatever the build injects, and it measures the promise
+// itself. Keep both.
 //
 // Three §5 rules are judgement, not regex, and are NOT checked here — they stay
 // human review at copy time. The list lives with the patterns.
@@ -30,10 +57,16 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { PATTERNS } from "./copy-gate-patterns.mjs";
+import { matchesIn, viewsOf } from "./copy-gate-normalise.mjs";
 
 // public/ is copied verbatim into dist/, so it ships exactly as written.
 const ROOTS = ["src", "public"];
 const SCAN_EXT = /\.(astro|ts|tsx|js|jsx|mjs|cjs|md|mdx|html|json|ya?ml|svg|css|txt)$/;
+// Which of those carry tags worth removing. .astro is the one that matters —
+// it is where prose gets typed straight into markup — but .md and .svg can hold
+// literal HTML too. A .ts file is read with its tags kept, because "a < b" is a
+// comparison and stripping to the next ">" would eat real code.
+const MARKUP_EXT = /\.(astro|html|svg|md|mdx)$/i;
 
 const PRAGMA = /copy-gate-allow:[ \t]*(.+?)[ \t]*$/;
 // "#48ff00" is a colour, not a ticket.
@@ -112,7 +145,23 @@ for (const file of files) {
   scanned++;
   const source = readFileSync(file, "utf8");
   const raw = source.split(/\r?\n/);
-  const code = stripComments(source).split(/\r?\n/);
+  // stripComments blanks with spaces and keeps every newline, so codeText is the
+  // same length as source and an offset into it is an offset into the file.
+  const codeText = stripComments(source);
+  const code = codeText.split(/\r?\n/);
+
+  const lineStarts = [0];
+  for (let i = 0; i < codeText.length; i++) if (codeText[i] === "\n") lineStarts.push(i + 1);
+  const lineAt = (offset) => {
+    let lo = 0;
+    let hi = lineStarts.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (lineStarts[mid] <= offset) lo = mid;
+      else hi = mid - 1;
+    }
+    return lo + 1;
+  };
 
   raw.forEach((line, i) => {
     const hit = line.match(PRAGMA);
@@ -135,11 +184,10 @@ for (const file of files) {
 
   // A hit on line `here` is covered by a pragma on that same line, or by a
   // comment-only pragma on the line directly above it.
-  const judge = (here, hit, why) => {
+  const judge = (here, hit, why, where = `${file}:${here}`) => {
     const pragma =
       pragmas.find((p) => p.file === file && p.line === here) ??
       pragmas.find((p) => p.file === file && p.line === here - 1 && p.coversNext);
-    const where = `${file}:${here}`;
 
     if (!pragma) {
       errors.push(`${where}  ${hit} — ${why}`);
@@ -152,12 +200,39 @@ for (const file of files) {
     }
   };
 
+  // Pass 1 — raw, line by line. Reported exactly as it always was.
+  const reported = new Set();
   code.forEach((line, i) => {
-    for (const { re, why } of PATTERNS) {
+    for (const [at, { re, why }] of PATTERNS.entries()) {
       const hit = line.match(re);
-      if (hit) judge(i + 1, `"${hit[0]}"`, why);
+      if (!hit) continue;
+      reported.add(`${i + 1}\u0000${at}\u0000${hit[0].toLowerCase()}`);
+      judge(i + 1, `"${hit[0]}"`, why);
     }
   });
+
+  // Pass 2 — the same patterns over the normalised views. Only hits pass 1 could
+  // not see are printed, each naming the view that found it.
+  const views = viewsOf(codeText, {
+    markup: MARKUP_EXT.test(file),
+    // See copy-gate-normalise.mjs: the fabricating views belong to the dist gate,
+    // because a per-line pragma blessing a phrase nobody wrote teaches the next
+    // reader that this gate cries wolf.
+    includeFabricating: false,
+  });
+  for (const { at, text, view: viewName, span } of matchesIn(views, PATTERNS)) {
+    const start = lineAt(span[0]);
+    const id = `${start}\u0000${at}\u0000${text}`;
+    if (reported.has(id)) continue;
+    reported.add(id);
+    const end = lineAt(span[1] - 1);
+    judge(
+      start,
+      `"${text}" [${viewName}]`,
+      PATTERNS[at].why,
+      `${file}:${start}${end > start ? `-${end}` : ""}`,
+    );
+  }
 
   // Homoglyphs are read from the RAW line, comments included: an HTML comment in
   // an .astro file ships, and a confusable is worth catching wherever it is.

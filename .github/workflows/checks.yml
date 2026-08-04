@@ -7,6 +7,17 @@
 #
 # It deliberately does NOT run astro check or astro build — those need the
 # @yeapptech registry. deploy-all.yml still runs the full chain on main.
+#
+# WHETHER IT SHOULD BUILD was asked directly, as wayfinder #68, and answered no.
+# The reason to build here would have been the dist copy gate, which needs one —
+# but the gap that argued for it was three ordinary authoring accidents (a phrase
+# split by a tag, by an entity, or across a newline) that the source gate could
+# not see. #68 gave the source gate the dist gate's own normaliser instead, so all
+# three now fail on this job, in seconds, without a registry. What is left for the
+# post-merge gate is vendored code, text the build injects, and concatenation
+# Rollup folds — none of them things a PR author writes by accident. Measured
+# before deciding: this job runs in ~12s and the full build job in ~32s, so the
+# cost was never the point; the point is that nothing here needs a build.
 
 name: Build checks
 

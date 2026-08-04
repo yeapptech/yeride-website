@@ -35,11 +35,12 @@
 //
 // §5 gates `insurance` / `coverage` / `seguro` / `póliza` / `cobertura` on #48,
 // because YeRide carries none and the home page once claimed it did. The gate
-// is a line matcher, so it cannot tell a CLAIM from a DENIAL — and a terms page
-// whose job is to say there is no insurance has to say it. Those lines carry an
-// explicit `copy-gate-allow` naming #48, so every one of them prints on every
-// build. When #48 lands the statements become FALSE and must be rewritten, not
-// merely un-pragma'd; that is why #48 is the right ticket to hang them on.
+// matches patterns, not meaning, so it cannot tell a CLAIM from a DENIAL — and
+// a terms page whose job is to say there is no insurance has to say it. Those
+// lines carry an explicit `copy-gate-allow` naming #48, so every one of them
+// prints on every build. When #48 lands the statements become FALSE and must be
+// rewritten, not merely un-pragma'd; that is why #48 is the right ticket to
+// hang them on.
 import type { Lang } from "./feesCopy";
 
 /** A paragraph, or a bullet list. */
