@@ -51,8 +51,10 @@ Model it on `RidersPage.astro` + `audienceCopy.ts`, or `FeeSchedule.astro` +
 
 `BaseLayout` props: `title`, `description`, `lang`, `headerGround`
 (`"paper" | "yellow" | "ink"` — the ground the header sits on, so it picks the
-legible mark), and `alternates` (leave default; `false` only for `/404` and
-`/redirect`, which are single-file by design).
+legible mark), `alternates` (leave default; `false` only for `/404` and
+`/redirect`, which are single-file by design), and `bilingual` (leave default —
+those same two pages, and no others, ship both languages of the chrome and
+reveal one client-side; see `docs/components.md` under `BaseLayout`).
 
 ## Rules
 

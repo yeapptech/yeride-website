@@ -20,7 +20,10 @@ const EXEMPT = new Set(["404", "redirect"]);
 // The list cannot go stale: an entry whose twin now exists, or whose EN page has
 // gone, fails the check.
 const PENDING = {
-  about: "#39 — utility pages",
+  // #39 split /about out to #85 on 2026-08-04: it is the only route left whose
+  // ES twin is blocked OUTSIDE this repo, on yeapptech/yeride-brand#22's
+  // authored ES identity paragraph. Nothing here can retire it.
+  about: "#85 — the identity page",
   contact: "#39 — utility pages",
 };
 

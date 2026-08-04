@@ -19,6 +19,13 @@ export interface Props {
   /** /404 and /redirect are single-file with a client-side language switch
    *  (copy-map §3.10–3.11) — they carry no hreflang alternates. */
   alternates?: boolean;
+  /** Those same two pages, and only those two: ship BOTH languages of the
+   *  chrome and reveal one client-side. GitHub Pages serves a single root
+   *  404.html for every missing path, so a Spanish visitor at /es/anything
+   *  lands here — and header and footer are page copy like any other. Leaving
+   *  them English would ship Spanish content under English navigation, the
+   *  half-translated page #65 and #62 were re-opened over. */
+  bilingual?: boolean;
 }
 const {
   title,
@@ -26,6 +33,7 @@ const {
   lang = "en",
   headerGround = "paper",
   alternates = true,
+  bilingual = false,
 } = Astro.props;
 
 // Routes are mirrored with English slugs: /fees ⇄ /es/fees (copy-map §0.3).
@@ -58,10 +66,69 @@ const toggleHref = lang === "es" ? enPath : esPath;
     <link rel="icon" type="image/png" sizes="16x16" href={favicon16.src} />
     <link rel="icon" type="image/png" sizes="32x32" href={favicon32.src} />
     <link rel="icon" type="image/png" sizes="48x48" href={favicon48.src} />
+    {
+      bilingual && (
+        <>
+          {/* Runs in <head>, before the body is parsed, so the correct
+              language is already chosen when the first pixel is painted —
+              a switch that ran on DOMContentLoaded would flash English at
+              every Spanish visitor. It only stamps the root; the CSS below
+              does the hiding. */}
+          <script is:inline>
+            (function () {
+              var p = location.pathname;
+              if (p === "/es" || p.indexOf("/es/") === 0) {
+                document.documentElement.lang = "es";
+                document.documentElement.setAttribute("data-lang", "es");
+              }
+            })();
+          </script>
+          {/* Not a scoped <style>: these selectors have to reach through
+              <slot> into the page's own halves, and scoping keys them to this
+              component's elements alone. The default — no data-lang, which is
+              what a visitor with JavaScript off gets — hides ES and shows EN,
+              matching copy-map §3.10's "renders English by default". */}
+          <style is:inline>
+            html:not([data-lang="es"]) [data-lang="es"] { display: none; }
+            html[data-lang="es"] [data-lang="en"] { display: none; }
+          </style>
+        </>
+      )
+    }
   </head>
   <body class="bg-paper font-brand text-ink">
-    <Header lang={lang} ground={headerGround} toggleHref={toggleHref} />
+    {
+      bilingual ? (
+        /* Both toggles point at the other language's HOME, not at this path in
+           the other language: the path a visitor is on here either does not
+           exist (/404) or is a bounce stub (/redirect), so mirroring it would
+           hand them a second dead end. */
+        <>
+          <div data-lang="en">
+            <Header lang="en" ground={headerGround} toggleHref="/es/" />
+          </div>
+          <div data-lang="es">
+            <Header lang="es" ground={headerGround} toggleHref="/" />
+          </div>
+        </>
+      ) : (
+        <Header lang={lang} ground={headerGround} toggleHref={toggleHref} />
+      )
+    }
     <slot />
-    <Footer lang={lang} />
+    {
+      bilingual ? (
+        <>
+          <div data-lang="en">
+            <Footer lang="en" />
+          </div>
+          <div data-lang="es">
+            <Footer lang="es" />
+          </div>
+        </>
+      ) : (
+        <Footer lang={lang} />
+      )
+    }
   </body>
 </html>

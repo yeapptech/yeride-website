@@ -1,12 +1,58 @@
 ---
-// Single-file for every missing path (GitHub Pages serves one root 404.html);
-// the client-side language switch and copy-map content are ticket #39.
+// /404 — ONE file for every missing path in both languages (copy-map §3.10),
+// because GitHub Pages serves a single root 404.html and /es/404 is therefore
+// unreachable. Both halves ship in the HTML and BaseLayout's `bilingual` mode
+// reveals one off location.pathname; header and footer switch with them.
+//
+// Exempt from the route-parity check by name (§6.1). No hreflang alternates:
+// there is no pair of URLs to point them at.
+//
+// §4 authors ONE title for this route, English, and no meta description. That
+// is deliberate and stays: the tab title is the one string here that cannot
+// switch without inventing Spanish the copy map has not authored.
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { notFoundCopy } from "../i18n/utilityCopy";
+
+const LANGS = ["en", "es"] as const;
 ---
 
-<BaseLayout title="Page not found | YeRide" alternates={false}>
-  <main class="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6">
-    <h1 class="text-3xl font-bold tracking-headline">404 Not Found</h1>
-    <a href="/" class="mt-4 inline-block font-semibold underline underline-offset-4 hover:no-underline">Go Home</a>
+<BaseLayout title="Page not found | YeRide" alternates={false} bilingual>
+  <main class="bg-paper">
+    <div class="mx-auto w-full max-w-3xl px-5 pb-24 pt-16 sm:px-6 md:pb-32 md:pt-24">
+      {
+        LANGS.map((lang) => {
+          const t = notFoundCopy[lang];
+          const prefix = lang === "es" ? "/es" : "";
+          return (
+            <div data-lang={lang}>
+              <h1 class="font-extrabold tracking-headline text-[2rem] leading-[1.06] text-ink sm:text-[2.5rem]">
+                {t.h1}
+              </h1>
+              <p class="mt-4 text-[17px] leading-relaxed text-ink/70">{t.sub}</p>
+              <nav class="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-[15px] font-semibold">
+                <a
+                  href={`${prefix}/`}
+                  class="underline underline-offset-4 hover:no-underline"
+                >
+                  {t.home}
+                </a>
+                <a
+                  href={`${prefix}/fees`}
+                  class="underline underline-offset-4 hover:no-underline"
+                >
+                  {t.fees}
+                </a>
+                <a
+                  href={`${prefix}/fare-estimate`}
+                  class="underline underline-offset-4 hover:no-underline"
+                >
+                  {t.estimate}
+                </a>
+              </nav>
+            </div>
+          );
+        })
+      }
+    </div>
   </main>
 </BaseLayout>

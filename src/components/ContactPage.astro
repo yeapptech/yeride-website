@@ -1,0 +1,98 @@
+---
+// /contact and /es/contact (wayfinder #39). Copy VERBATIM from copy-map §3.7;
+// §4's title and meta description sit on the page files.
+//
+// Takes `lang` alone and resolves its own copy from src/i18n — the contract
+// docs/components.md sets for page components.
+//
+// This is the URL yeride-mobile submits to the app stores as its support
+// contact (/support redirects here, wayfinder #44), so the address on it is
+// load-bearing: it was support@yeride.app, which nobody reads, and §3.7
+// corrects it to support@yeride.com.
+//
+// Removed by §3.7 and not to be restored: the "Response Time — Within 24
+// hours" card, an unbacked service promise, and "Location — United States",
+// replaced by the brand's own South Florida line.
+import { contactCopy } from "../i18n/utilityCopy";
+import type { Lang } from "../i18n/feesCopy";
+
+export interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = contactCopy[lang];
+
+// Two Tally forms, not one embed with a language parameter: Tally has no
+// runtime localisation, and §3.7 requires the ES questions to be AUTHORED
+// rather than translated. Embedding mJa5J7 under Spanish chrome would ship the
+// half-translated page #65 was re-opened over — an English form under a
+// Spanish heading, on a money-adjacent surface.
+const TALLY_FORM_ID: Record<Lang, string> = {
+  en: "mJa5J7",
+  es: "PENDING",
+};
+
+// Fail the BUILD, not the page. The failure this guards is silent by nature —
+// an unfilled id renders a perfectly healthy-looking form in the wrong
+// language, and nothing downstream would notice. Same rule the rest of this
+// site runs on: a missing value is a gap that stops the build, never a
+// plausible-looking default (#40's $0.00, #62's humanised area id).
+const formId = TALLY_FORM_ID[lang];
+if (formId === "PENDING" || formId === TALLY_FORM_ID.en && lang === "es") {
+  throw new Error(
+    `ContactPage: no Tally form id for "${lang}". /es/contact needs its own ` +
+      `Spanish form (copy-map §3.7, §6.5) — it must not fall back to the ` +
+      `English one. Set TALLY_FORM_ID.es in src/components/ContactPage.astro.`,
+  );
+}
+---
+
+<main class="bg-paper">
+  <div class="mx-auto w-full max-w-3xl px-5 pb-20 pt-10 sm:px-6 md:pb-28 md:pt-16">
+    <h1
+      class="font-extrabold tracking-headline text-[2rem] leading-[1.06] text-ink sm:text-[2.5rem]"
+    >
+      {t.h1}
+    </h1>
+    <p class="mt-6 text-[17px] leading-relaxed text-ink/80">{t.lead}</p>
+
+    <dl class="mt-10 grid gap-6 sm:grid-cols-2">
+      <div>
+        <dt class="text-xs font-bold uppercase tracking-caps text-ink/55">
+          {t.emailLabel}
+        </dt>
+        <dd class="mt-2 text-[17px] font-semibold text-ink">
+          <a
+            href={`mailto:${t.email}`}
+            class="underline underline-offset-4 hover:no-underline">{t.email}</a
+          >
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs font-bold uppercase tracking-caps text-ink/55">
+          {t.placeLabel}
+        </dt>
+        <dd class="mt-2 text-[17px] text-ink">{t.place}</dd>
+      </div>
+    </dl>
+
+    <section class="mt-14">
+      <h2
+        class="font-extrabold tracking-headline text-[1.25rem] leading-tight text-ink"
+      >
+        {t.formHeading}
+      </h2>
+      <div class="mt-6">
+        <iframe
+          data-tally-src={`https://tally.so/embed/${formId}?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1`}
+          loading="lazy"
+          width="100%"
+          height="600"
+          title={t.formTitle}
+          class="w-full rounded-2xl border-0"></iframe>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script is:inline src="https://tally.so/widgets/embed.js" async></script>
