@@ -325,11 +325,14 @@ That cost is the point: adding one is a decision.
 
 **Four refusals it enforces.** Read #38 before relaxing any of them:
 
-1. **It shows the fare and nothing else about money.** `estimateFares` also returns
-   `appCharges`/`appChargesTotal`, and `ServiceEstimate` deliberately does not declare
-   them, so no page can render them by accident. They are the *driver's* cost in both
-   payment flows — itemising them beside a rider's fare would claim the rider pays
-   money they do not (copy map §3.5, amended under #47).
+1. **It shows the fare and nothing else about money.** `estimateFares` used to also
+   return `appCharges`/`appChargesTotal`, and `ServiceEstimate` deliberately did not
+   declare them, so no page could render them by accident. They are the *driver's* cost
+   in both payment flows — itemising them beside a rider's fare would claim the rider
+   pays money they do not (copy map §3.5, amended under #47). The endpoint has since
+   withdrawn the fields entirely (yeride-functions#47), on the strength of this
+   refusal: they had no reader anywhere. The refusal stays as the standing rule for
+   whatever the endpoint returns next.
 2. **A fare that is not a positive finite number renders as a gap (`—`) — never
    `$0.00`.** This is reachable: `calculateFare` coalesces all four rates to `0`, so a
    `rideServices` document with holes quotes zero, and a published zero says the ride is
