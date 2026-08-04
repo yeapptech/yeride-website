@@ -42,21 +42,30 @@ export const PATTERNS = [
   { re: /\bupfront (price|pricing)\b/i, why: "never claimed: fares are metered, not locked" },
   { re: /\bprecio (fijo|cerrado|garantizado)\b/i, why: "never claimed: fares are metered, not locked" },
   // Spanish has ONE noun where English has two: "tarifa" is both the metered
-  // fare and a charge, so a bare "tarifas fijas" reads as fixed FARES on a
-  // metered service — and "tarifa fija" is the taxi trade's own term for a
-  // flat, meter-free price in this market (#75). The noun is never needed for
-  // a YeRide charge: § 3.4 calls every one of them a "cargo", and so does the
-  // rest of the ES site. Deliberately NOT the qualified form "tarifas de
-  // tecnología fijas" — that is true and unambiguous, and § 5 forbids claims,
-  // not correct copy.
-  { re: /\btarifas? (fija|cerrada|garantizada|plana)s?\b/i, why: "never claimed: fares are metered, not locked" },
-  // The EN mirror. English is safe by vocabulary — "fee" and "fare" are
-  // separate words and this site keeps them apart — but that safety was
-  // assumed rather than enforced, which is this map's recurring failure. On
-  // this site "fare" always means the meter, so a flat or fixed one is always
-  // the claim. "flat rate" is deliberately absent: "rate" is legitimate fee
-  // vocabulary, and "a flat rate per trip" is a true statement about a charge.
-  { re: /\b(flat|fixed) fares?\b/i, why: "never claimed: fares are metered, not locked" },
+  // fare and a charge, so "tarifas fijas" reads as fixed FARES on a metered
+  // service, and "tarifa fija" is the taxi trade's own term for a flat,
+  // meter-free price in this market (#75). Windowed, not adjacent, because
+  // "la tarifa es fija" is the same claim; adjectives are feminine, which is
+  // both correct agreement and what keeps "segundo plano" out. "acordada" and
+  // "pactada" are deliberately absent, and so is EN "agreed": the Terms make
+  // the honest DENIAL in exactly those words ("no se pactan de antemano" /
+  // "not agreed in advance"), so gating them would fire on the copy the rule
+  // exists to protect. There is no exemption for "tarifas de tecnología
+  // fijas" — under § 5's vocabulary rule a YeRide charge is a "cargo", so the
+  // qualified form is the wrong noun too, not a safe variant of it.
+  {
+    re: /\btarifas?\b[^.]{0,25}(?<![A-Za-zÀ-ÿ])(fija(?:da)?s?|planas?|cerradas?|garantizadas?|[úu]nicas?|preestablecidas?|predeterminadas?)\b/i,
+    why: 'never claimed: a fare is metered, never fixed — and a YeRide charge is a "cargo", never a "tarifa"',
+  },
+  // The EN mirror, in both word orders so it covers what the ES pattern does.
+  // English is safe by vocabulary — "fee" and "fare" are separate words and
+  // this site keeps them apart — but that safety was assumed rather than
+  // enforced, which is this map's recurring failure. "rate" and "price" are in
+  // scope alongside "fare": on this site "rates" names the METER ("Published
+  // rates — base, miles, minutes"), so "flat rate" is the same claim, not
+  // innocent fee vocabulary.
+  { re: /\b(flat|fixed|guaranteed)[- ]?(fares?|prices?|rates?)\b/i, why: "never claimed: fares are metered, not locked" },
+  { re: /\b(fares?|prices?|rates?)\b[^.]{0,25}\b(flat|fixed|guaranteed)\b/i, why: "never claimed: fares are metered, not locked" },
   { re: /\bno surprises\b/i, why: "never claimed: fares are metered, not locked" },
   { re: /\bsin sorpresas\b/i, why: "never claimed: fares are metered, not locked" },
   { re: /\bno surge\b(?![ \t]+today)/i, why: 'never claimed: only "no surge today" is permitted (§3.4)' },
