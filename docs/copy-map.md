@@ -807,10 +807,19 @@ connected account — but never with a YeRide-published amount, since YeRide doe
 **Never claimed** — these never run, gate or no gate:
 
 - `locked` / upfront-price language · `no surprises`
-- `tarifa fija` / `tarifa plana` / `tarifa cerrada` / `tarifa garantizada`, and their EN
-  mirror `flat fare` / `fixed fare` *(added 2026-08-04, #75)* — see the vocabulary rule
-  below. The **qualified** form "tarifas de tecnología fijas" is true and stays legal;
-  the bare one does not.
+- `tarifa` + a settled-in-advance adjective — `fija` · `fijada` · `plana` · `cerrada` ·
+  `garantizada` · `única` · `preestablecida` · `predeterminada` — and its EN mirror,
+  `flat` / `fixed` / `guaranteed` before or after `fare` / `price` / `rate`
+  *(added 2026-08-04, #75; widened the same day after review)*. Matched **anywhere in the
+  sentence, not only adjacent**, because "la tarifa es fija" is the same claim. `rate` is
+  in scope on the EN side because on this site "rates" names the **meter** ("Published
+  rates — base, miles, minutes"), so "flat rate" is the claim and not innocent fee
+  vocabulary. **`acordada`, `pactada` and EN `agreed` are deliberately excluded**: the
+  Terms make the honest *denial* in exactly those words ("no se pactan de antemano" /
+  "not agreed in advance"), so gating them would fire on the copy this rule exists to
+  protect. There is **no exemption for the qualified form** "tarifas de tecnología fijas" —
+  under the vocabulary rule below a YeRide charge is a `cargo`, so that is the wrong noun
+  too, not a safe variant of it.
 - `no surge ever` / `nunca habrá recargo` (note: "no surge **today**" is permitted, § 3.4)
 - `cheapest` / `lowest fees` / `más barato`
 - any earnings dollar figure
