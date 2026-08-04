@@ -301,7 +301,7 @@ moved **up into the hero** and `/fees` demoted to the nav and the paper strip.
 |---|---|---|
 | Eyebrow, left (Cab Yellow text — legal on Ink only) | For drivers | Para quien maneja |
 | H2 left **(canonical)** | Keep what you earn. | Lo que ganas es tuyo. |
-| Support left | No commission. Flat, published tech fees — never a percentage of the fare. | Sin comisión. Tarifas de tecnología fijas y publicadas — nunca un porcentaje de la tarifa. |
+| Support left | No commission. Flat, published tech fees — never a percentage of the fare. | Sin comisión. Cargos de tecnología fijos y publicados — nunca un porcentaje de la tarifa. |
 | Eyebrow, right | For riders | Para quien viaja |
 | H2 right **(canonical)** | Pay what the ride is worth. | Paga lo justo. |
 | Support right | Your fare goes to the person driving — not to a percentage cut. | Tu tarifa es para la persona que maneja — no para la comisión de una app. |
@@ -311,7 +311,7 @@ moved **up into the hero** and `/fees` demoted to the nav and the paper strip.
 | Slot | EN | ES |
 |---|---|---|
 | Fact 1 | No commission. | Sin comisión. |
-| Fact 2 | Flat, published fees. | Tarifas fijas y publicadas. |
+| Fact 2 | Flat, published fees. | Cargos fijos y publicados. |
 | Fact 3 | Card or cash. | Tarjeta o efectivo. |
 | Limit note | Estimates are estimates — the meter decides. | Un estimado es un estimado — el taxímetro decide. |
 | Link → `/fees` | See the fee schedule | Ver el tarifario |
@@ -328,11 +328,11 @@ its slot placement was decided in
 |---|---|---|
 | Eyebrow | For drivers | Para quien maneja |
 | H1 **(canonical, pillar 1)** | Keep what you earn. | Lo que ganas es tuyo. |
-| Support | YeRide takes no commission. You pay flat, published tech fees — never a percentage of the fare. No subscriptions, no hidden fees. | YeRide no cobra comisión. Pagas tarifas de tecnología fijas y publicadas — nunca un porcentaje de la tarifa. Sin suscripciones, sin cargos escondidos. |
+| Support | YeRide takes no commission. You pay flat, published tech fees — never a percentage of the fare. No subscriptions, no hidden fees. | YeRide no cobra comisión. Pagas cargos de tecnología fijos y publicados — nunca un porcentaje de la tarifa. Sin suscripciones, sin cargos escondidos. |
 | *(gated pillar-2 slot — #43)* | — | — |
 | H2 **(canonical, pillar 3)** | Trying costs nothing. | Probar no cuesta nada. |
 | Support | Run YeRide alongside Uber and Lyft. You were driving anyway. | Usa YeRide junto a Uber y Lyft. Igual ya estabas manejando. |
-| Fee pointer H3 | Flat, published fees. No commission. | Tarifas fijas y publicadas. Sin comisión. |
+| Fee pointer H3 | Flat, published fees. No commission. | Cargos fijos y publicados. Sin comisión. |
 | Fee pointer link → `/fees` | See exactly what you pay | Mira exactamente lo que pagas |
 | Form heading | Pre-register as a driver | Pre-regístrate para manejar |
 | Form sub | Takes a minute. | Toma un minuto. |
@@ -761,7 +761,7 @@ structured data, and analytics remain out of scope for this ticket.
 | Route | `<title>` | `meta description` |
 |---|---|---|
 | `/` | Your ride, fair and clear. \| YeRide | Rideshare built in South Florida. No commission, flat published fees, and a rate card anyone can read. |
-| `/es/` | Tu viaje, justo y claro. \| YeRide | Transporte compartido hecho en el Sur de la Florida. Sin comisión, tarifas fijas y publicadas, y un tarifario que cualquiera puede leer. |
+| `/es/` | Tu viaje, justo y claro. \| YeRide | Transporte compartido hecho en el Sur de la Florida. Sin comisión, cargos fijos y publicados, y un tarifario que cualquiera puede leer. |
 | `/drivers` | Keep what you earn. \| YeRide for drivers | No commission — YeRide's fees are flat, published, and never a percentage of the fare. Run YeRide alongside Uber and Lyft. |
 | `/es/drivers` | Lo que ganas es tuyo. \| YeRide | Sin comisión — los cargos de YeRide son fijos, publicados y nunca un porcentaje de la tarifa. Usa YeRide junto a Uber y Lyft. |
 | `/riders` | Pay what the ride is worth. \| YeRide for riders | Published rates — base, miles, minutes. The same math every trip, and every fee published. Card or cash. |
@@ -807,11 +807,25 @@ connected account — but never with a YeRide-published amount, since YeRide doe
 **Never claimed** — these never run, gate or no gate:
 
 - `locked` / upfront-price language · `no surprises`
+- `tarifa fija` / `tarifa plana` / `tarifa cerrada` / `tarifa garantizada`, and their EN
+  mirror `flat fare` / `fixed fare` *(added 2026-08-04, #75)* — see the vocabulary rule
+  below. The **qualified** form "tarifas de tecnología fijas" is true and stays legal;
+  the bare one does not.
 - `no surge ever` / `nunca habrá recargo` (note: "no surge **today**" is permitted, § 3.4)
 - `cheapest` / `lowest fees` / `más barato`
 - any earnings dollar figure
 - any invented per-trip price or earnings comparison against Uber or Lyft
 - safety claims beyond Fla. Stat. § 627.748
+
+**ES vocabulary rule — a YeRide charge is a `cargo`, never a `tarifa`** *(added 2026-08-04,
+#75)*. English has two nouns where Spanish has one: `tarifa` is both the metered fare and a
+charge, so a bare "tarifas fijas" reads as fixed **fares** on a metered service — and
+`tarifa fija` is the taxi trade's own term for a flat, meter-free price in this market.
+§ 3.4 already calls every YeRide charge a `cargo` ("Cada cargo que cobra YeRide", "Cargos
+de tecnología de YeRide", "Otros cargos", "Cargo por cancelación"), and reserves `tarifa`
+for the meter ("Tarifa mínima", "Tarifa del taxímetro", "de la tarifa"). Keeping the two
+nouns apart is what keeps the claim honest; a qualifier bolted onto the wrong noun is not
+a substitute for the right one.
 
 Rider pillar 2 ("Same math every trip." / "Las mismas cuentas en cada viaje.") is **not gated**
 — it claims published rates, not fee breakdowns, and runs at launch on `/riders`.
