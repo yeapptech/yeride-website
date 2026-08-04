@@ -31,12 +31,12 @@ export const homeCopy = {
     driverEyebrow: "Para quien maneja",
     driverH2: "Lo que ganas es tuyo.",
     driverSupport:
-      "Sin comisión. Tarifas de tecnología fijas y publicadas — nunca un porcentaje de la tarifa.",
+      "Sin comisión. Cargos de tecnología fijos y publicados — nunca un porcentaje de la tarifa.",
     riderEyebrow: "Para quien viaja",
     riderH2: "Paga lo justo.",
     riderSupport:
       "Tu tarifa es para la persona que maneja — no para la comisión de una app.",
-    facts: ["Sin comisión.", "Tarifas fijas y publicadas.", "Tarjeta o efectivo."],
+    facts: ["Sin comisión.", "Cargos fijos y publicados.", "Tarjeta o efectivo."],
     limitNote: "Un estimado es un estimado — el taxímetro decide.",
     feesLink: "Ver el tarifario",
   },

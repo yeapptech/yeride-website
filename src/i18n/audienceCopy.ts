@@ -26,11 +26,11 @@ export const driversCopy = {
     eyebrow: "Para quien maneja",
     h1: "Lo que ganas es tuyo.",
     support:
-      "YeRide no cobra comisión. Pagas tarifas de tecnología fijas y publicadas — nunca un porcentaje de la tarifa. Sin suscripciones, sin cargos escondidos.",
+      "YeRide no cobra comisión. Pagas cargos de tecnología fijos y publicados — nunca un porcentaje de la tarifa. Sin suscripciones, sin cargos escondidos.",
     pillar3H2: "Probar no cuesta nada.",
     pillar3Support:
       "Usa YeRide junto a Uber y Lyft. Igual ya estabas manejando.",
-    feeH3: "Tarifas fijas y publicadas. Sin comisión.",
+    feeH3: "Cargos fijos y publicados. Sin comisión.",
     feeLink: "Mira exactamente lo que pagas",
     formHeading: "Pre-regístrate para manejar",
     formSub: "Toma un minuto.",
