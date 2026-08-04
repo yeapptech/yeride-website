@@ -308,9 +308,9 @@ either document asks for and plain text would make it unclickable. Everything el
 plain, so the copy in `src/i18n/legalCopy.ts` remains strings rather than markup.
 
 **The four `copy-gate-allow` pragmas.** `legalCopy.ts` states that YeRide provides no
-insurance. Copy-map §5 gates that word on #48 and the gate is a line matcher, so it cannot
-tell that denial from a claim — hence the pragmas, which print on every build. When #48
-lands the statements become *false* and must be rewritten, not merely un-pragma'd.
+insurance. Copy-map §5 gates that word on #48 and the gate matches patterns, not meaning,
+so it cannot tell that denial from a claim — hence the pragmas, which print on every build.
+When #48 lands the statements become *false* and must be rewritten, not merely un-pragma'd.
 
 Those pragmas are stripped by the build, so the same sentences are blessed a **second** time
 in `scripts/check-dist-copy-gate.mjs`'s `ALLOWED` list, keyed to the built pages (#57).
