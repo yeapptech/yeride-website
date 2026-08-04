@@ -5,8 +5,11 @@
 // or re-punctuate.
 //
 // WHAT IS NOT HERE, deliberately: the fee block. §3.5 used to have this page
-// itemise the `appCharges` the estimate returns; that row was CUT (copy-map
-// `8b66cfe`, #47) once `yeride-functions lib/payments.js` was read. Those
+// itemise the `appCharges` the estimate returned; that row was CUT (copy-map
+// `8b66cfe`, #47) once `yeride-functions lib/payments.js` was read. The
+// endpoint has since stopped returning those charges altogether
+// (yeride-functions#47), so there is nothing left to itemise even if §3.5
+// changed its mind. Those
 // charges are the DRIVER's cost in both payment flows — on card the rider is
 // charged `priceFare` and nothing more, on cash the rider pays the driver and
 // YeRide bills the driver after. Listing them beside a rider's fare would tell

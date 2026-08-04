@@ -7,11 +7,13 @@
 // an Ink close pointing at /fees. No wordmark on yellow — only the app-icon
 // scheme is legal there — so the hero leads with the H1 and nothing else.
 //
-// THE PAGE SHOWS THE FARE AND NOTHING ELSE ABOUT MONEY. `estimateFares` also
-// returns `appCharges`/`appChargesTotal`; those are the DRIVER's cost, never
-// the rider's (see src/i18n/fareEstimateCopy.ts and src/lib/fareEstimate.ts),
-// so they are not declared on the type and cannot be rendered here by
-// accident. /fees is where the charges are explained.
+// THE PAGE SHOWS THE FARE AND NOTHING ELSE ABOUT MONEY. `estimateFares` used
+// to also return `appCharges`/`appChargesTotal`; those are the DRIVER's cost,
+// never the rider's (see src/i18n/fareEstimateCopy.ts and
+// src/lib/fareEstimate.ts), so they were never declared on the type and could
+// not be rendered here by accident. The endpoint no longer returns them at all
+// (yeride-functions#47) — this page's refusal to declare them is what that
+// decision was built on. /fees is where the charges are explained.
 //
 // The stack is unchanged: Firebase callable `estimateFares` + the Google Maps
 // loader (maps, places, marker, routes).
