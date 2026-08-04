@@ -29,7 +29,9 @@ export interface ServiceEstimate {
   //
   // The reasoning stands and is why this note survives the withdrawal. They
   // are the DRIVER's cost in both payment flows (`yeride-functions
-  // lib/payments.js` L268–310): on card YeRide takes the total from the
+  // lib/payments.js` L370–400 and L682–708 — the two `/charges-create` call
+  // sites; the L268–310 this used to cite is retry handling, not the charge):
+  // on card YeRide takes the total from the
   // driver's connected account as the application fee; on cash it bills the
   // driver's account after the trip. Nothing in that total is added to what
   // the rider pays, so showing it beside a rider's fare would claim they pay
