@@ -1,0 +1,48 @@
+---
+// The body of /redirect (wayfinder #39). Copy VERBATIM from copy-map §3.11.
+// Takes no props, for the reason given in NotFoundPage.astro.
+//
+// KNOWN, and said rather than glossed: the Spanish half here is currently
+// UNREACHABLE. §3.11 prescribes the same path-based switch /404 uses, but the
+// mobile app opens `yeride.com/redirect` directly and nothing links an /es/
+// variant, so `location.pathname` is always `/redirect` and the ES copy never
+// reveals. It is shipped because §3.11 authors it and because the switch is the
+// mechanism §3.11 specifies — not because it does anything today. If the app
+// ever links a Spanish entry point, that URL is what makes this live.
+import { BILINGUAL_LANGS, redirectCopy } from "../i18n/utilityCopy";
+---
+
+<main class="bg-paper">
+  <div class="mx-auto w-full max-w-3xl px-5 pb-24 pt-16 sm:px-6 md:pb-32 md:pt-24">
+    {
+      BILINGUAL_LANGS.map((lang) => {
+        const t = redirectCopy[lang];
+        return (
+          <div data-lang={lang}>
+            <p class="text-[17px] leading-relaxed text-ink/80">{t.body}</p>
+            {/* Hidden until the bounce has had time to fail. Both language
+                copies carry the class; the wrapper above keeps the wrong one
+                out of view regardless. */}
+            <a
+              href="yeride://register"
+              data-manual-link
+              class="mt-4 hidden text-[15px] font-semibold underline underline-offset-4 hover:no-underline"
+            >
+              {t.fallback}
+            </a>
+          </div>
+        );
+      })
+    }
+  </div>
+</main>
+
+<script>
+  window.location.href = "yeride://register";
+
+  setTimeout(() => {
+    document
+      .querySelectorAll("[data-manual-link]")
+      .forEach((link) => link.classList.remove("hidden"));
+  }, 2000);
+</script>

@@ -1,49 +1,15 @@
 ---
-// /redirect — bounces to the yeride://register deep link. ONE file for both
-// languages (copy-map §3.11), same client-side switch as /404: the app opens
-// this URL directly, so there is no /es/ twin to send anyone to.
+// /redirect (wayfinder #39). Title per docs/copy-map.md §4.
 //
-// Exempt from the route-parity check by name (§6.1). §4 authors one title,
-// English, and no meta description — see the note in 404.astro.
+// Bounces to the yeride://register deep link. ONE file for both languages
+// (§3.11), same client-side switch as /404. Exempt from the route-parity check
+// by name (§6.1). §4 authors one title, English, and no meta description — see
+// the note in 404.astro. RedirectPage.astro records why the Spanish half of
+// this particular page is unreachable today.
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { redirectCopy } from "../i18n/utilityCopy";
-
-const LANGS = ["en", "es"] as const;
+import RedirectPage from "../components/RedirectPage.astro";
 ---
 
-<BaseLayout title="Opening YeRide…" alternates={false} bilingual>
-  <main class="bg-paper">
-    <div class="mx-auto w-full max-w-3xl px-5 pb-24 pt-16 sm:px-6 md:pb-32 md:pt-24">
-      {
-        LANGS.map((lang) => {
-          const t = redirectCopy[lang];
-          return (
-            <div data-lang={lang}>
-              <p class="text-[17px] leading-relaxed text-ink/80">{t.body}</p>
-              {/* Hidden until the bounce has had time to fail. Both language
-                  copies carry the class; the wrapper above keeps the wrong one
-                  out of view regardless. */}
-              <a
-                href="yeride://register"
-                data-manual-link
-                class="mt-4 hidden text-[15px] font-semibold underline underline-offset-4 hover:no-underline"
-              >
-                {t.fallback}
-              </a>
-            </div>
-          );
-        })
-      }
-    </div>
-  </main>
-
-  <script>
-    window.location.href = "yeride://register";
-
-    setTimeout(() => {
-      document
-        .querySelectorAll("[data-manual-link]")
-        .forEach((link) => link.classList.remove("hidden"));
-    }, 2000);
-  </script>
+<BaseLayout title="Opening YeRide…" bilingual>
+  <RedirectPage />
 </BaseLayout>

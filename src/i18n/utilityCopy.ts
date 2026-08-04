@@ -10,6 +10,10 @@
 // shipped HTML at the same time.
 import type { Lang } from "./feesCopy";
 
+/** The render order for a bilingual page's halves. Shared by NotFoundPage and
+ *  RedirectPage so the two cannot disagree about which languages ship. */
+export const BILINGUAL_LANGS = ["en", "es"] as const satisfies readonly Lang[];
+
 export const contactCopy = {
   en: {
     h1: "Contact us",
@@ -19,7 +23,6 @@ export const contactCopy = {
     placeLabel: "Where we are",
     place: "Built in South Florida.",
     formHeading: "Send us a message",
-    formTitle: "Contact form",
   },
   es: {
     h1: "Contáctanos",
@@ -29,7 +32,6 @@ export const contactCopy = {
     placeLabel: "Dónde estamos",
     place: "Hecho en el Sur de la Florida.",
     formHeading: "Mándanos un mensaje",
-    formTitle: "Formulario de contacto",
   },
 } satisfies Record<Lang, unknown>;
 

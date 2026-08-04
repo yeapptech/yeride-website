@@ -43,7 +43,9 @@ offending line.
    new finding.
 4. **Copy lives in `src/i18n/`,** not in the component and not in the page. The
    body component takes `lang` alone and resolves its own copy; a page that
-   passes resolved copy down as a prop is a finding.
+   passes resolved copy down as a prop is a finding. `NotFoundPage` and
+   `RedirectPage` take **no** props — they render both languages at once — and
+   that is the only exception.
 5. **`title` and `description`** are on the page file (not the component) and
    match `docs/copy-map.md` §4 **character for character**. The old
    `"... - YeRide"` form is stale; §4 uses `"... | YeRide"`. `about.astro` and

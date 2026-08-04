@@ -17,7 +17,8 @@ export interface Props {
    *  the ink-ground /fees page passes "ink". */
   headerGround?: "paper" | "yellow" | "ink";
   /** /404 and /redirect are single-file with a client-side language switch
-   *  (copy-map §3.10–3.11) — they carry no hreflang alternates. */
+   *  (copy-map §3.10–3.11) — they carry no hreflang alternates. Implied by
+   *  `bilingual`; pass it only to suppress alternates without the switch. */
   alternates?: boolean;
   /** Those same two pages, and only those two: ship BOTH languages of the
    *  chrome and reveal one client-side. GitHub Pages serves a single root
@@ -32,9 +33,24 @@ const {
   description,
   lang = "en",
   headerGround = "paper",
-  alternates = true,
+  alternates: alternatesProp = true,
   bilingual = false,
 } = Astro.props;
+
+// A bilingual page is one URL serving both languages, so there is no second URL
+// for an alternate to name. These were two independent props for one commit and
+// an independent review caught it at once: `bilingual` alone would have emitted
+// hreflang pointing at a twin that does not exist.
+const alternates = alternatesProp && !bilingual;
+
+// Chrome renders once per language in bilingual mode, twice-in-one-page, and the
+// halves are marked for the stylesheet below. Written as a list rather than two
+// near-identical ternaries so header and footer cannot drift apart.
+const chromeLangs = bilingual ? (["en", "es"] as const) : null;
+// On these pages the toggle goes to the other language's HOME, not to this path
+// in the other language: the path a visitor is on here either does not exist
+// (/404) or is a bounce stub (/redirect), so mirroring it is a second dead end.
+const bilingualToggle = { en: "/es/", es: "/" } as const;
 
 // Routes are mirrored with English slugs: /fees ⇄ /es/fees (copy-map §0.3).
 const path = Astro.url.pathname;
@@ -98,34 +114,28 @@ const toggleHref = lang === "es" ? enPath : esPath;
   </head>
   <body class="bg-paper font-brand text-ink">
     {
-      bilingual ? (
-        /* Both toggles point at the other language's HOME, not at this path in
-           the other language: the path a visitor is on here either does not
-           exist (/404) or is a bounce stub (/redirect), so mirroring it would
-           hand them a second dead end. */
-        <>
-          <div data-lang="en">
-            <Header lang="en" ground={headerGround} toggleHref="/es/" />
+      chromeLangs ? (
+        chromeLangs.map((l) => (
+          <div data-lang={l}>
+            <Header
+              lang={l}
+              ground={headerGround}
+              toggleHref={bilingualToggle[l]}
+            />
           </div>
-          <div data-lang="es">
-            <Header lang="es" ground={headerGround} toggleHref="/" />
-          </div>
-        </>
+        ))
       ) : (
         <Header lang={lang} ground={headerGround} toggleHref={toggleHref} />
       )
     }
     <slot />
     {
-      bilingual ? (
-        <>
-          <div data-lang="en">
-            <Footer lang="en" />
+      chromeLangs ? (
+        chromeLangs.map((l) => (
+          <div data-lang={l}>
+            <Footer lang={l} />
           </div>
-          <div data-lang="es">
-            <Footer lang="es" />
-          </div>
-        </>
+        ))
       ) : (
         <Footer lang={lang} />
       )

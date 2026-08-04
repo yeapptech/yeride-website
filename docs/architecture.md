@@ -27,6 +27,8 @@ yeride-website/
 │   │   ├── FareEstimatePage.astro  # /fare-estimate — Maps + estimateFares
 │   │   ├── LegalDocument.astro     # /privacy-policy and /terms, both languages
 │   │   ├── ContactPage.astro
+│   │   ├── NotFoundPage.astro      # /404 — renders EN and ES at once
+│   │   ├── RedirectPage.astro      # /redirect — same
 │   │   ├── AvailabilityBlock.astro # Shared block (copy-map §2.1)
 │   │   └── PreRegistrationForm.astro
 │   │
@@ -153,7 +155,8 @@ picks the mark that is legal on that ground, and `alternates`/`bilingual` are fo
 3. **Body components** — one per route (`HomePage`, `DriversPage`, `RidersPage`,
    `FeeSchedule`, `FareEstimatePage`, `LegalDocument`, `ContactPage`). Each takes
    `lang` **alone** and resolves its own copy from `src/i18n/`. A page that
-   passes resolved copy down as a prop breaks the contract.
+   passes resolved copy down as a prop breaks the contract. `NotFoundPage` and
+   `RedirectPage` take no props at all — they render both languages at once.
 4. **Shared blocks** — `AvailabilityBlock`, `PreRegistrationForm`, used by more
    than one body component.
 

@@ -43,9 +43,11 @@ expressions inside `<script>`/`<style>` bodies, so their content is written lite
 `{\`…\`}` wrapper ships as text, which silently disables both and renders every page in both
 languages at once, off a green build.
 
-A page in this mode marks its own halves with `data-lang="en"` / `data-lang="es"` on a wrapper
-carrying **no display utility** (Tailwind's preflight `[hidden]`/`display` rules would
-out-specify nothing, but a `flex` on the wrapper itself would win over the rule above).
+A page in this mode marks its own halves with `data-lang="en"` / `data-lang="es"` on a
+wrapper. A display utility on that wrapper is safe: `html:not([data-lang="es"])
+[data-lang="es"]` scores (0,2,1) against `.flex`'s (0,1,0) and the preset sets no
+`important`, so the hiding rule wins — **measured**, after a first draft of this document
+claimed the opposite.
 
 The language toggle in this mode points at the **other language's home**, not at this path in
 the other language: the path a visitor is on here either does not exist (`/404`) or is a
@@ -399,9 +401,35 @@ fetched value is the fallback, not the switch.
 (`serviceAreaNames`, read in the frontmatter for the area's bilingual name; ride tier
 labels, read in the result list).
 
+### NotFoundPage / RedirectPage
+
+The bodies of `/404` and `/redirect` (wayfinder #39).
+
+**Location:** `src/components/NotFoundPage.astro`, `src/components/RedirectPage.astro`
+
+**Props: none** — and they are the only page components without `lang`. They render **both**
+languages and let `BaseLayout`'s `bilingual` mode reveal one, so there is no second render to
+pass a language to. Both iterate `BILINGUAL_LANGS` from `src/i18n/utilityCopy.ts`, one shared
+constant, so they cannot disagree about which languages ship.
+
+Copy: `notFoundCopy` and `redirectCopy` in `src/i18n/utilityCopy.ts`, verbatim from
+copy-map §3.10 and §3.11.
+
+**`RedirectPage`'s Spanish half is unreachable today**, and the file says so rather than
+implying otherwise: §3.11 prescribes the same path-based switch `/404` uses, but the mobile
+app opens `yeride.com/redirect` directly and nothing links an `/es/` variant, so
+`location.pathname` is always `/redirect`. The ES copy ships because §3.11 authors it, not
+because it renders.
+
+`RedirectPage` reveals its manual fallback link after 2s by clearing `hidden` from **every**
+`[data-manual-link]` — both language copies — which is safe because the wrapper keeps the
+wrong language out of view regardless.
+
 ### ContactPage
 
-The body of `/contact` and `/es/contact` (wayfinder #39).
+The body of `/contact` (wayfinder #39). `/es/contact` **does not exist yet** — it is blocked
+on a Spanish Tally form that has not been created (copy-map §6.5), and `scripts/check-route-parity.mjs`
+carries `contact` in `PENDING` until it does.
 
 **Location:** `src/components/ContactPage.astro`
 
@@ -422,11 +450,25 @@ linkifies it: it is the only action the page offers besides the form.
 
 **Two Tally forms, not one.** `TALLY_FORM_ID` maps language → form id. Tally has no runtime
 localisation and §3.7 requires the Spanish questions to be **authored**, not translated, so
-`/es/contact` embeds its own form; embedding the English `mJa5J7` under Spanish chrome is the
-half-translated page #65 was re-opened over. An unset or English-falling-back id **throws at
-build time** rather than rendering — the failure is silent by nature, since a wrong-language
-form looks perfectly healthy, and this site's standing rule is that a missing value stops the
-build instead of becoming a plausible default (#40's `$0.00`, #62's humanised area id).
+`/es/contact` will embed its own form; embedding the English `mJa5J7` under Spanish chrome is
+the half-translated page #65 was re-opened over.
+
+Three build-time throws guard it, because the failure is silent by nature — a wrong-language
+form looks perfectly healthy:
+
+1. **The route must agree with `lang`.** This one an independent review had to teach the
+   file: the first version keyed only on the `lang` prop, and nothing ties an `/es/` route
+   to `lang="es"`. Measured — `src/pages/es/contact.astro` rendering `<ContactPage lang="en" />`
+   built **green** and shipped the English form under Spanish chrome, the exact failure the
+   guard claimed to prevent. Route-parity only checks that a *file* exists, so the route is
+   the fact worth checking.
+2. **The id must be shaped like a Tally id** (`/^[A-Za-z0-9]{4,12}$/`). Absent, still the
+   `"PENDING"` sentinel, or empty all fail — an empty one would embed `tally.so/embed/?…`,
+   a blank panel rather than an error.
+3. **No two languages may share an id.**
+
+What none of them catch, stated rather than left to be found: a well-formed id that is simply
+the wrong form. Nothing in the build can tell `mJa5J7` from `mJa5J8`.
 
 ## Page-Specific Components
 

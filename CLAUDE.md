@@ -98,9 +98,11 @@ and bury your real change in a full-file diff.
 - **Tally.so** — embedded contact form, **one per language**, mapped in
   `src/components/ContactPage.astro` (`/contact` is `mJa5J7`). Tally has no runtime
   localisation and copy-map §3.7 requires the Spanish questions authored rather than
-  translated, so `/es/contact` embeds its own form; an id that is unset, or that falls back to
-  the English one, throws at build time rather than shipping a healthy-looking form in the
-  wrong language
+  translated, so `/es/contact` will embed its own form once it exists (it does not yet —
+  copy-map §6.5). Three build-time throws guard it: the **route** must agree with the `lang`
+  prop (keying on `lang` alone let an `/es/` page render `lang="en"` and ship the English form
+  off a green build), the id must be shaped like a Tally id, and no two languages may share
+  one. None of them can catch a well-formed id that is simply the wrong form
 - **Nunito** — the brand typeface, self-hosted via `@fontsource-variable/nunito` and imported once in `BaseLayout`; exposed as `font-brand`. The old per-page Google Fonts link to Inter is gone (#35)
 - `src/pages/redirect.astro` — bounces to the `yeride://register` deep link. Not bare HTML:
   it renders through `BaseLayout` like everything else (#35), in `bilingual` mode (#39)
