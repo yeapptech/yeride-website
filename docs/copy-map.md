@@ -686,16 +686,40 @@ Also drop the unused `firebase-admin` dependency (already in ticket #38).
 | Email value | support@yeride.com | support@yeride.com |
 | Place label | Where we are | Dónde estamos |
 | Place value | Built in South Florida. | Hecho en el Sur de la Florida. |
-| Form heading | Send us a message | Mándanos un mensaje |
+
+The page is these four slots and nothing else. **It carries no form.**
 
 **Removed:** the "Response Time — Within 24 hours" block (an unbacked service promise) and
 "Location — United States" (replaced by the brand's own South Florida line).
 
 **Corrected:** the address was `support@yeride.app`; it is `support@yeride.com`.
 
-**Tally:** `/contact` keeps form `mJa5J7`. `/es/contact` embeds a **Spanish twin form that does
-not yet exist** — it must be created and its id recorded before the page ships. Fields mirror
-the English form; question text is authored ES, not translated.
+**No form** *(amended 2026-08-06, #39; supersedes the Tally entry and cuts the "Form
+heading" row, "Send us a message" / "Mándanos un mensaje")*. `/contact` embedded Tally form
+`mJa5J7`, and this section used to require a **Spanish twin form** before the page could
+ship. The form is dropped instead, for three reasons:
+
+1. **Its questions were never in this document.** They lived inside Tally — the last
+   user-facing copy on the site outside the repo, unreadable by both copy gates. This section
+   specified a "Form heading" and stopped; § 2.2 by contrast authors every label and
+   placeholder of the pre-registration form in both languages. The map had no authority over
+   the words people actually answered.
+2. **Tally has no runtime localisation**, so honouring § 0.2 meant a second form, authored in
+   Spanish and hand-synced forever, and under § 0.1 that blocked `/contact` in **both**
+   languages. An English form under Spanish chrome is the leak § 2.3 and § 3.5 were amended
+   over.
+3. It **deleted a named processor** from the privacy policy (§ 3.8), which is a simpler
+   change than swapping vendors — a hosted alternative that keeps the markup in-repo was
+   considered and rejected on the same ground: it still needs the legal edit, and buys only
+   what an endpoint YeRide owns would buy without a processor at all.
+
+`support@yeride.com` was already a live `mailto:` in both legal documents, so publishing it
+here exposes nothing new, and yeride-mobile's store obligation is a reachable support **URL**
+(§ 6), not a form.
+
+**If structured intake is ever wanted**, it is a new ticket and it comes back here first:
+§ 3.7 gains per-field EN/ES cells in the shape of § 2.2, and the form is built like
+`PreRegistrationForm` against an endpoint YeRide owns — not as a third-party embed.
 
 ### 3.8 `/privacy-policy` and `/es/privacy-policy`
 
@@ -873,7 +897,10 @@ Rider pillar 2 ("Same math every trip." / "Las mismas cuentas en cada viaje.") i
    documents.
 3. **`/es/about` is blocked** on the yeride-brand ES identity paragraph.
 4. **`/privacy-policy` and `/terms`** are blocked on the legal-rewrite ticket.
-5. **The ES Tally form** does not exist yet; `/es/contact` cannot ship without its id.
+5. ~~**The ES Tally form** does not exist yet; `/es/contact` cannot ship without its id.~~ —
+   **dissolved 2026-08-06 (#39).** There is no form on either contact page; § 3.7 records
+   why. `/es/contact` shipped with its English twin, and `/es/support` joined the redirect
+   block in `astro.config.mjs`.
 6. ~~**Driver pillar-2 slot placement** is #43's decision, not this map's~~ — decided
    ([#43](https://github.com/yeapptech/yeride-website/issues/43)) and written into § 3.2:
    the slot sits between pillar 1 and pillar 3 on `/drivers` only, reserved at launch by a
