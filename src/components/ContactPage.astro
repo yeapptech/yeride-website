@@ -8,7 +8,23 @@
 // This is the URL yeride-mobile submits to the app stores as its support
 // contact (/support redirects here, wayfinder #44), so the address on it is
 // load-bearing: it was support@yeride.app, which nobody reads, and §3.7
-// corrects it to support@yeride.com.
+// corrects it to support@yeride.com. The store requirement is a reachable
+// support URL, not a form.
+//
+// THERE IS NO FORM, and that is the decision rather than an omission (#39).
+// The page carried an embedded Tally form; §3.7 was amended to drop it. Three
+// things settled it. The form's questions lived inside Tally — the last
+// user-facing copy on this site outside the repo, invisible to the copy map and
+// to both copy gates, and unauthored in Spanish because Tally has no runtime
+// localisation, so shipping /es/contact meant a SECOND form kept in sync by
+// hand forever. Removing it deletes a named processor from a privacy policy
+// that is held for legal sign-off, which is a simpler edit than swapping one
+// vendor for another. And the address is already a live mailto: in both legal
+// documents, so publishing it here exposes nothing new.
+//
+// If structured intake is wanted later, the shape to copy is
+// PreRegistrationForm.astro — markup and per-field EN/ES copy in src/i18n,
+// posting to an endpoint YeRide owns — not a third-party embed.
 //
 // Removed by §3.7 and not to be restored: the "Response Time — Within 24
 // hours" card, an unbacked service promise, and "Location — United States",
@@ -21,73 +37,6 @@ export interface Props {
 }
 const { lang } = Astro.props;
 const t = contactCopy[lang];
-
-// Two Tally forms, not one embed with a language parameter: Tally has no
-// runtime localisation, and §3.7 requires the ES questions to be AUTHORED
-// rather than translated. Embedding mJa5J7 under Spanish chrome would ship the
-// half-translated page #65 was re-opened over — an English form under a
-// Spanish heading, on a money-adjacent surface.
-// An id is ABSENT rather than a sentinel. A first pass used the string
-// "PENDING" and paired it with a shape rule — and "PENDING" is seven
-// alphanumerics, so the shape rule accepted it and the build went green ready
-// to embed `tally.so/embed/PENDING`. A sentinel that has to be remembered
-// separately is exactly what the shape rule was supposed to make unnecessary.
-const TALLY_FORM_ID: Partial<Record<Lang, string>> = {
-  en: "mJa5J7",
-  // es: not created yet — copy-map §6.5. Adding /es/contact without it fails
-  // the build below, by design.
-};
-
-// Fail the BUILD, not the page. The failure this guards is silent by nature —
-// a form in the wrong language renders perfectly healthily, and nothing
-// downstream notices. Same rule the rest of this site runs on: a missing value
-// is a gap that stops the build, never a plausible-looking default (#40's
-// $0.00, #62's humanised area id).
-//
-// The FIRST check is the one an independent review had to teach this file. The
-// guard originally keyed on `lang` alone, and nothing ties an /es/ route to
-// lang="es" — measured, a page at src/pages/es/contact.astro rendering
-// <ContactPage lang="en" /> built GREEN and shipped the English form under
-// Spanish chrome, the exact failure the guard claimed to make impossible.
-// Route-parity only checks that a file exists, so the route is the fact to
-// check against, not the prop.
-const path = Astro.url.pathname;
-const routeLang: Lang = path === "/es" || path.startsWith("/es/") ? "es" : "en";
-if (routeLang !== lang) {
-  throw new Error(
-    `ContactPage at "${path}" was rendered with lang="${lang}", but that route ` +
-      `is "${routeLang}". The route decides the language; a mismatch ships one ` +
-      `language's copy and Tally form under the other's chrome.`,
-  );
-}
-
-const formId = TALLY_FORM_ID[lang];
-// Absent or malformed. Tally ids are short alphanumerics; the shape rule is
-// what stops an empty string embedding `tally.so/embed/?…`, which renders as a
-// blank panel rather than an error. The typeof test comes FIRST and is not
-// decoration: `.test(undefined)` coerces to the string "undefined", nine
-// lowercase letters, which the pattern would happily accept.
-if (typeof formId !== "string" || !/^[A-Za-z0-9]{4,12}$/.test(formId)) {
-  throw new Error(
-    `ContactPage: TALLY_FORM_ID.${lang} is ${JSON.stringify(formId)}, which is ` +
-      `not a Tally form id. /es/contact cannot ship until its Spanish form ` +
-      `exists (copy-map §3.7, §6.5). Set it in src/components/ContactPage.astro.`,
-  );
-}
-// Every language needs its OWN form; a shared id is the half-translated page.
-const duplicate = Object.entries(TALLY_FORM_ID).find(
-  ([other, id]) => other !== lang && id === formId,
-);
-if (duplicate) {
-  throw new Error(
-    `ContactPage: TALLY_FORM_ID.${lang} is the same id as ` +
-      `TALLY_FORM_ID.${duplicate[0]} ("${formId}"). §3.7 requires the Spanish ` +
-      `questions AUTHORED, not the English form under Spanish chrome.`,
-  );
-}
-// What this CANNOT catch, said rather than left to be found: a well-formed id
-// that is simply the wrong form. Nothing here can tell mJa5J7 from mJa5J8 —
-// only opening the page can.
 ---
 
 <main class="bg-paper">
@@ -99,12 +48,12 @@ if (duplicate) {
     </h1>
     <p class="mt-6 text-[17px] leading-relaxed text-ink/80">{t.lead}</p>
 
-    <dl class="mt-10 grid gap-6 sm:grid-cols-2">
+    <dl class="mt-10 grid gap-8 sm:grid-cols-2">
       <div>
         <dt class="text-xs font-bold uppercase tracking-caps text-ink/55">
           {t.emailLabel}
         </dt>
-        <dd class="mt-2 text-[17px] font-semibold text-ink">
+        <dd class="mt-2 text-[19px] font-semibold text-ink">
           <a
             href={`mailto:${t.email}`}
             class="underline underline-offset-4 hover:no-underline">{t.email}</a
@@ -115,27 +64,8 @@ if (duplicate) {
         <dt class="text-xs font-bold uppercase tracking-caps text-ink/55">
           {t.placeLabel}
         </dt>
-        <dd class="mt-2 text-[17px] text-ink">{t.place}</dd>
+        <dd class="mt-2 text-[19px] text-ink">{t.place}</dd>
       </div>
     </dl>
-
-    <section class="mt-14">
-      <h2
-        class="font-extrabold tracking-headline text-[1.25rem] leading-tight text-ink"
-      >
-        {t.formHeading}
-      </h2>
-      <div class="mt-6">
-        <iframe
-          data-tally-src={`https://tally.so/embed/${formId}?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1`}
-          loading="lazy"
-          width="100%"
-          height="600"
-          title={t.formHeading}
-          class="w-full rounded-2xl border-0"></iframe>
-      </div>
-    </section>
   </div>
 </main>
-
-<script is:inline src="https://tally.so/widgets/embed.js" async></script>

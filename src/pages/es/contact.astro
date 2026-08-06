@@ -1,0 +1,14 @@
+---
+// /es/contact — the ES twin. Routes are mirrored with English slugs
+// (copy-map §0.3). Title and meta description per §4.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ContactPage from "../../components/ContactPage.astro";
+---
+
+<BaseLayout
+  title="Contáctanos | YeRide"
+  description="Preguntas, problemas o algo que hicimos mal — escríbele al equipo de YeRide."
+  lang="es"
+>
+  <ContactPage lang="es" />
+</BaseLayout>

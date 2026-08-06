@@ -99,7 +99,7 @@ English one with **English slugs** (`/fees` → `/es/fees`, never `/es/tarifas`)
 | `src/pages/fare-estimate.astro` | `/fare-estimate` | `/es/fare-estimate` |
 | `src/pages/privacy-policy.astro` | `/privacy-policy` | `/es/privacy-policy` |
 | `src/pages/terms.astro` | `/terms` | `/es/terms` |
-| `src/pages/contact.astro` | `/contact` | pending (#39) |
+| `src/pages/contact.astro` | `/contact` | `/es/contact` |
 | `src/pages/about.astro` | `/about` | pending (#85) |
 | `src/pages/404.astro` | `/404` | **same file** |
 | `src/pages/redirect.astro` | `/redirect` | **same file** |
@@ -110,9 +110,9 @@ path with a single root `404.html`, so `/es/404` is unreachable; both pages ship
 `location.pathname` (`BaseLayout`'s `bilingual` mode). They are exempt from the
 parity check by name.
 
-Three further routes are **redirects declared in `astro.config.mjs`**, not files:
-`/privacy` → `/privacy-policy`, `/es/privacy` → `/es/privacy-policy`, and
-`/support` → `/contact`. The mobile app depends on them — it links
+Four further routes are **redirects declared in `astro.config.mjs`**, not files:
+`/privacy` → `/privacy-policy`, `/es/privacy` → `/es/privacy-policy`,
+`/support` → `/contact` and `/es/support` → `/es/contact`. The mobile app depends on them — it links
 `yeride.com/privacy` in-app and submits it as the store-listing privacy URL, and
 a missing `/support` was a 2025 App Store rejection. Do not remove or rename
 them without changing the app first.
@@ -293,6 +293,7 @@ export default defineConfig({
     '/privacy': '/privacy-policy',
     '/es/privacy': '/es/privacy-policy',
     '/support': '/contact',
+    '/es/support': '/es/contact',
   },
 });
 ```

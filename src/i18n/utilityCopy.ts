@@ -22,7 +22,6 @@ export const contactCopy = {
     email: "support@yeride.com",
     placeLabel: "Where we are",
     place: "Built in South Florida.",
-    formHeading: "Send us a message",
   },
   es: {
     h1: "Contáctanos",
@@ -31,7 +30,6 @@ export const contactCopy = {
     email: "support@yeride.com",
     placeLabel: "Dónde estamos",
     place: "Hecho en el Sur de la Florida.",
-    formHeading: "Mándanos un mensaje",
   },
 } satisfies Record<Lang, unknown>;
 

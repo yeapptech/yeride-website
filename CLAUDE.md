@@ -95,14 +95,14 @@ and bury your real change in a full-file diff.
 
 ### Other integrations
 
-- **Tally.so** — embedded contact form, **one per language**, mapped in
-  `src/components/ContactPage.astro` (`/contact` is `mJa5J7`). Tally has no runtime
-  localisation and copy-map §3.7 requires the Spanish questions authored rather than
-  translated, so `/es/contact` will embed its own form once it exists (it does not yet —
-  copy-map §6.5). Three build-time throws guard it: the **route** must agree with the `lang`
-  prop (keying on `lang` alone let an `/es/` page render `lang="en"` and ship the English form
-  off a green build), the id must be shaped like a Tally id, and no two languages may share
-  one. None of them can catch a well-formed id that is simply the wrong form
+- **No contact form, and no Tally** — `/contact` publishes `support@yeride.com` and nothing
+  else (#39 amended copy-map §3.7). The embedded Tally form was dropped: its questions lived
+  inside Tally, the last user-facing copy on this site outside the repo and invisible to both
+  copy gates, and Tally has no runtime localisation, so `/es/contact` would have needed a
+  second form authored and kept in sync by hand forever. Removing it also deleted a named
+  processor from the privacy policy. **Do not re-add a third-party form embed.** If
+  structured intake is wanted, copy `PreRegistrationForm.astro` — markup and per-field EN/ES
+  copy in `src/i18n/`, posting to an endpoint YeRide owns
 - **Nunito** — the brand typeface, self-hosted via `@fontsource-variable/nunito` and imported once in `BaseLayout`; exposed as `font-brand`. The old per-page Google Fonts link to Inter is gone (#35)
 - `src/pages/redirect.astro` — bounces to the `yeride://register` deep link. Not bare HTML:
   it renders through `BaseLayout` like everything else (#35), in `bilingual` mode (#39)

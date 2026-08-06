@@ -24,7 +24,6 @@ const PENDING = {
   // ES twin is blocked OUTSIDE this repo, on yeapptech/yeride-brand#22's
   // authored ES identity paragraph. Nothing here can retire it.
   about: "#85 — the identity page",
-  contact: "#39 — utility pages",
 };
 
 function walk(dir) {

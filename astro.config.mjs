@@ -21,11 +21,14 @@ export default defineConfig({
   // than as files under src/pages so #41's route-parity check — which reads
   // src/pages filenames — is not asked to find an /es/ twin for an alias.
   //
-  // There is no /es/support: its target, /es/contact, does not exist yet (#39).
+  // /es/support joins them now that /es/contact exists (#39). The route-parity
+  // check fails the build the moment src/pages/es/contact.astro is present
+  // without it, so this pair cannot drift apart.
   redirects: {
     "/privacy": "/privacy-policy",
     "/es/privacy": "/es/privacy-policy",
     "/support": "/contact",
+    "/es/support": "/es/contact",
   },
   //output: "server",
   // adapter: node({

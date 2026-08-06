@@ -427,48 +427,47 @@ wrong language out of view regardless.
 
 ### ContactPage
 
-The body of `/contact` (wayfinder #39). `/es/contact` **does not exist yet** — it is blocked
-on a Spanish Tally form that has not been created (copy-map §6.5), and `scripts/check-route-parity.mjs`
-carries `contact` in `PENDING` until it does.
+The body of `/contact` and `/es/contact` (wayfinder #39).
 
 **Location:** `src/components/ContactPage.astro`
 
 **Props:**
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
-| `lang` | `"en" \| "es"` | **yes** | Selects the copy and the Tally form |
+| `lang` | `"en" \| "es"` | **yes** | Selects the copy |
 
 Copy: `src/i18n/utilityCopy.ts` (`contactCopy`), verbatim from copy-map §3.7. Takes `lang`
 alone and resolves its own copy, the contract every page component here follows.
 
-**This page is load-bearing beyond its own content.** `/support` redirects here
-(`astro.config.mjs`, wayfinder #44), and that is the URL yeride-mobile submits to the app
-stores as its support contact — a missing one was a 2025 App Store rejection. The address on
-it was `support@yeride.app`, which nobody reads; §3.7 corrects it to `support@yeride.com`,
-and it is a `mailto:` link rather than plain text for the same reason `LegalDocument`
-linkifies it: it is the only action the page offers besides the form.
+**This page is load-bearing beyond its own content.** `/support` redirects here and
+`/es/support` to its twin (`astro.config.mjs`, wayfinder #44), and that is the URL
+yeride-mobile submits to the app stores as its support contact — a missing one was a 2025
+App Store rejection. The address on it was `support@yeride.app`, which nobody reads; §3.7
+corrects it to `support@yeride.com`, and it is a `mailto:` link rather than plain text
+because it is the only action the page offers.
 
-**Two Tally forms, not one.** `TALLY_FORM_ID` maps language → form id. Tally has no runtime
-localisation and §3.7 requires the Spanish questions to be **authored**, not translated, so
-`/es/contact` will embed its own form; embedding the English `mJa5J7` under Spanish chrome is
-the half-translated page #65 was re-opened over.
+**There is no form, and that is a decision — do not re-add a third-party embed.** The page
+carried an embedded Tally form until #39 amended §3.7 to drop it. Three things settled it:
 
-Three build-time throws guard it, because the failure is silent by nature — a wrong-language
-form looks perfectly healthy:
+- The form's **questions lived inside Tally** — the last user-facing copy on this site
+  outside the repo, invisible to the copy map and to both copy gates. §3.7 had no cells for
+  them at all, where §2.2 specifies every label and placeholder of the pre-registration form
+  in both languages.
+- **Tally has no runtime localisation**, so `/es/contact` needed a *second* form, authored
+  in Spanish and kept in sync by hand forever. That blocked the page in both languages under
+  §0.1, and an English form under Spanish chrome is the half-translated page #65 was
+  re-opened over.
+- Removing it **deleted a named processor** from a privacy policy held for legal sign-off —
+  a simpler edit than swapping one vendor for another, which is why a Formspree-class
+  replacement was rejected too: it keeps a processor and buys only what an owned endpoint
+  would.
 
-1. **The route must agree with `lang`.** This one an independent review had to teach the
-   file: the first version keyed only on the `lang` prop, and nothing ties an `/es/` route
-   to `lang="es"`. Measured — `src/pages/es/contact.astro` rendering `<ContactPage lang="en" />`
-   built **green** and shipped the English form under Spanish chrome, the exact failure the
-   guard claimed to prevent. Route-parity only checks that a *file* exists, so the route is
-   the fact worth checking.
-2. **The id must be shaped like a Tally id** (`/^[A-Za-z0-9]{4,12}$/`). Absent, still the
-   `"PENDING"` sentinel, or empty all fail — an empty one would embed `tally.so/embed/?…`,
-   a blank panel rather than an error.
-3. **No two languages may share an id.**
+The address was already a live `mailto:` in both legal documents, so publishing it here
+exposed nothing new, and the store requirement is a reachable support **URL**, not a form.
 
-What none of them catch, stated rather than left to be found: a well-formed id that is simply
-the wrong form. Nothing in the build can tell `mJa5J7` from `mJa5J8`.
+If structured intake is wanted later, the shape to copy is **`PreRegistrationForm`** —
+markup and per-field EN/ES copy in `src/i18n/`, posting to an endpoint YeRide owns — with a
+copy-map amendment giving §3.7 the field cells §2.2 has.
 
 ## Page-Specific Components
 
