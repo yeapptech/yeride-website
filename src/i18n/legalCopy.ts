@@ -90,8 +90,13 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "estimate uses Google Maps and Firebase. Those companies can store data " +
             "in your browser, and what they do with it is governed by their own " +
             "privacy policies.",
-          "Our contact page carries no form. It gives you an email address, and " +
-            "mail you send us arrives with us directly.",
+          // Says only what a reader can check. An earlier draft added "and mail
+          // you send us arrives with us directly", which claims there is no
+          // intermediary — and support@yeride.com necessarily resolves through
+          // a mail provider that handles the message. Who that is, and whether
+          // §4 should name them, is a real question this policy has never
+          // answered; it is not one to settle by asserting the opposite here.
+          "Our contact page carries no form; it gives you an email address instead.",
           "The site itself is served by GitHub Pages, which records the usual " +
             "web-server information — such as your IP address and browser — in " +
             "order to deliver the page to you. Those logs are GitHub's; we do not " +
@@ -293,8 +298,8 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "estimador de tarifa usa Google Maps y Firebase. Esas empresas pueden " +
             "guardar datos en su navegador, y lo que hagan con ellos se rige por sus " +
             "propias políticas de privacidad.",
-          "Nuestra página de contacto no tiene formulario. Le damos una dirección de " +
-            "correo, y lo que usted nos escriba llega directamente a nosotros.",
+          "Nuestra página de contacto no tiene formulario; en su lugar le damos " +
+            "una dirección de correo.",
           "El sitio en sí lo sirve GitHub Pages, que registra la información " +
             "habitual de un servidor web —como su dirección IP y su navegador— para " +
             "poder entregarle la página. Esos registros son de GitHub; nosotros no " +
