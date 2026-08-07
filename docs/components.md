@@ -18,6 +18,44 @@ The base layout template for all pages.
 | `lang` | `"en" \| "es"` | no (`"en"`) | Sets `<html lang>` and the chrome's language |
 | `headerGround` | `"paper" \| "yellow" \| "ink"` | no (`"paper"`) | The ground the header sits on, so it merges with the page's first section |
 | `alternates` | `boolean` | no (`true`) | EN/ES `hreflang` pair + `x-default`. Only `/404` and `/redirect` pass `false` — they are single-file by design (copy-map §3.10–§3.11) |
+| `bilingual` | `boolean` | no (`false`) | Ships **both** languages of the header and footer and reveals one client-side. The same two pages that pass `alternates={false}` pass this, and no others (wayfinder #39) |
+
+**`bilingual` mode.** GitHub Pages serves one root `404.html` for every missing path, so a
+Spanish visitor at `/es/anything` lands on the English build of `/404`. Header and footer are
+page copy like everything else, and leaving them English under Spanish content is the
+half-translated page #62 and #65 were re-opened over — so in this mode `BaseLayout` renders
+both and lets the page pick.
+
+The mechanism is a stamp plus a stylesheet, not a DOM rewrite:
+
+- an inline `<head>` script sets `data-lang="es"` on `<html>` when `location.pathname` is
+  `/es` or starts with `/es/`, and fixes `<html lang>` to match. It runs **before the body is
+  parsed**, so the right language is chosen before the first paint — a switch on
+  `DOMContentLoaded` would flash English at every Spanish visitor.
+- an inline `<style>` hides the halves: `html:not([data-lang="es"]) [data-lang="es"]` and
+  `html[data-lang="es"] [data-lang="en"]`. Written as `:not`, so the **default state — no
+  `data-lang`, which is what a visitor with JavaScript off gets — shows English and hides
+  Spanish**, matching copy-map §3.10's "renders English by default".
+
+Both must stay `is:inline`. A scoped `<style>` is keyed to this component's own elements and
+cannot reach through `<slot>` into the page's halves; and Astro does **not** evaluate
+expressions inside `<script>`/`<style>` bodies, so their content is written literally — a
+`{\`…\`}` wrapper ships as text, which silently disables both and renders every page in both
+languages at once, off a green build.
+
+A page in this mode marks its own halves with `data-lang="en"` / `data-lang="es"` on a
+wrapper. A display utility on that wrapper is safe: `html:not([data-lang="es"])
+[data-lang="es"]` scores (0,2,1) against `.flex`'s (0,1,0) and the preset sets no
+`important`, so the hiding rule wins — **measured**, after a first draft of this document
+claimed the opposite.
+
+The language toggle in this mode points at the **other language's home**, not at this path in
+the other language: the path a visitor is on here either does not exist (`/404`) or is a
+bounce stub (`/redirect`), so mirroring it would hand them a second dead end.
+
+**What does not switch:** the `<title>`. Copy-map §4 authors one title for each of these two
+routes, in English, and no meta description — switching it would mean inventing Spanish the
+copy map has not authored.
 
 **Usage:**
 
@@ -363,6 +401,74 @@ fetched value is the fallback, not the switch.
 (`serviceAreaNames`, read in the frontmatter for the area's bilingual name; ride tier
 labels, read in the result list).
 
+### NotFoundPage / RedirectPage
+
+The bodies of `/404` and `/redirect` (wayfinder #39).
+
+**Location:** `src/components/NotFoundPage.astro`, `src/components/RedirectPage.astro`
+
+**Props: none** — and they are the only page components without `lang`. They render **both**
+languages and let `BaseLayout`'s `bilingual` mode reveal one, so there is no second render to
+pass a language to. Both iterate `BILINGUAL_LANGS` from `src/i18n/utilityCopy.ts`, one shared
+constant, so they cannot disagree about which languages ship.
+
+Copy: `notFoundCopy` and `redirectCopy` in `src/i18n/utilityCopy.ts`, verbatim from
+copy-map §3.10 and §3.11.
+
+**`RedirectPage`'s Spanish half is unreachable today**, and the file says so rather than
+implying otherwise: §3.11 prescribes the same path-based switch `/404` uses, but the mobile
+app opens `yeride.com/redirect` directly and nothing links an `/es/` variant, so
+`location.pathname` is always `/redirect`. The ES copy ships because §3.11 authors it, not
+because it renders.
+
+`RedirectPage` reveals its manual fallback link after 2s by clearing `hidden` from **every**
+`[data-manual-link]` — both language copies — which is safe because the wrapper keeps the
+wrong language out of view regardless.
+
+### ContactPage
+
+The body of `/contact` and `/es/contact` (wayfinder #39).
+
+**Location:** `src/components/ContactPage.astro`
+
+**Props:**
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `lang` | `"en" \| "es"` | **yes** | Selects the copy |
+
+Copy: `src/i18n/utilityCopy.ts` (`contactCopy`), verbatim from copy-map §3.7. Takes `lang`
+alone and resolves its own copy, the contract every page component here follows.
+
+**This page is load-bearing beyond its own content.** `/support` redirects here and
+`/es/support` to its twin (`astro.config.mjs`, wayfinder #44), and that is the URL
+yeride-mobile submits to the app stores as its support contact — a missing one was a 2025
+App Store rejection. The address on it was `support@yeride.app`, which nobody reads; §3.7
+corrects it to `support@yeride.com`, and it is a `mailto:` link rather than plain text
+because it is the only action the page offers.
+
+**There is no form, and that is a decision — do not re-add a third-party embed.** The page
+carried an embedded Tally form until #39 amended §3.7 to drop it. Three things settled it:
+
+- The form's **questions lived inside Tally** — the last user-facing copy on this site
+  outside the repo, invisible to the copy map and to both copy gates. §3.7 had no cells for
+  them at all, where §2.2 specifies every label and placeholder of the pre-registration form
+  in both languages.
+- **Tally has no runtime localisation**, so `/es/contact` needed a *second* form, authored
+  in Spanish and kept in sync by hand forever. That blocked the page in both languages under
+  §0.1, and an English form under Spanish chrome is the half-translated page #65 was
+  re-opened over.
+- Removing it **deleted a named processor** from a privacy policy held for legal sign-off —
+  a simpler edit than swapping one vendor for another, which is why a Formspree-class
+  replacement was rejected too: it keeps a processor and buys only what an owned endpoint
+  would.
+
+The address was already a live `mailto:` in both legal documents, so publishing it here
+exposed nothing new, and the store requirement is a reachable support **URL**, not a form.
+
+If structured intake is wanted later, the shape to copy is **`PreRegistrationForm`** —
+markup and per-field EN/ES copy in `src/i18n/`, posting to an endpoint YeRide owns — with a
+copy-map amendment giving §3.7 the field cells §2.2 has.
+
 ## Page-Specific Components
 
 ### Homepage (index.astro)
@@ -374,14 +480,10 @@ before are all gone.
 
 ### Contact Page (contact.astro)
 
-**Contact Cards**
-- Email contact information
-- Location information
-- Response time expectations
-
-**Tally Form Embed**
-- Embedded iframe from Tally.so
-- Contact form functionality
+Nothing page-specific any more: `contact.astro` is a thin `BaseLayout` + `ContactPage`
+wrapper (wayfinder #39). The three shadow cards documented here before are gone — §3.7 cut
+"Response Time — Within 24 hours" as an unbacked service promise and replaced "Location —
+United States" with the brand's South Florida line. See **ContactPage** above.
 
 ## Component Patterns
 

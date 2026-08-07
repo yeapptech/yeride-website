@@ -1,12 +1,18 @@
 ---
-// Single-file for every missing path (GitHub Pages serves one root 404.html);
-// the client-side language switch and copy-map content are ticket #39.
+// /404 (wayfinder #39). Title per docs/copy-map.md §4.
+//
+// ONE file for every missing path in both languages (§3.10): GitHub Pages
+// answers every missing path with a single root 404.html, so /es/404 is
+// unreachable. Exempt from the route-parity check by name (§6.1), and no
+// hreflang alternates — there is no pair of URLs to point them at.
+//
+// §4 authors ONE title for this route, English, and no meta description. That
+// is deliberate and stays: the tab title is the one string here that cannot
+// switch without inventing Spanish the copy map has not authored.
 import BaseLayout from "../layouts/BaseLayout.astro";
+import NotFoundPage from "../components/NotFoundPage.astro";
 ---
 
-<BaseLayout title="Page not found | YeRide" alternates={false}>
-  <main class="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6">
-    <h1 class="text-3xl font-bold tracking-headline">404 Not Found</h1>
-    <a href="/" class="mt-4 inline-block font-semibold underline underline-offset-4 hover:no-underline">Go Home</a>
-  </main>
+<BaseLayout title="Page not found | YeRide" bilingual>
+  <NotFoundPage />
 </BaseLayout>

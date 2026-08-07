@@ -1,0 +1,71 @@
+---
+// /contact and /es/contact (wayfinder #39). Copy VERBATIM from copy-map §3.7;
+// §4's title and meta description sit on the page files.
+//
+// Takes `lang` alone and resolves its own copy from src/i18n — the contract
+// docs/components.md sets for page components.
+//
+// This is the URL yeride-mobile submits to the app stores as its support
+// contact (/support redirects here, wayfinder #44), so the address on it is
+// load-bearing: it was support@yeride.app, which nobody reads, and §3.7
+// corrects it to support@yeride.com. The store requirement is a reachable
+// support URL, not a form.
+//
+// THERE IS NO FORM, and that is the decision rather than an omission (#39).
+// The page carried an embedded Tally form; §3.7 was amended to drop it. Three
+// things settled it. The form's questions lived inside Tally — the last
+// user-facing copy on this site outside the repo, invisible to the copy map and
+// to both copy gates, and unauthored in Spanish because Tally has no runtime
+// localisation, so shipping /es/contact meant a SECOND form kept in sync by
+// hand forever. Removing it deletes a named processor from a privacy policy
+// that is held for legal sign-off, which is a simpler edit than swapping one
+// vendor for another. And the address is already a live mailto: in both legal
+// documents, so publishing it here exposes nothing new.
+//
+// If structured intake is wanted later, the shape to copy is
+// PreRegistrationForm.astro — markup and per-field EN/ES copy in src/i18n,
+// posting to an endpoint YeRide owns — not a third-party embed.
+//
+// Removed by §3.7 and not to be restored: the "Response Time — Within 24
+// hours" card, an unbacked service promise, and "Location — United States",
+// replaced by the brand's own South Florida line.
+import { contactCopy } from "../i18n/utilityCopy";
+import type { Lang } from "../i18n/feesCopy";
+
+export interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = contactCopy[lang];
+---
+
+<main class="bg-paper">
+  <div class="mx-auto w-full max-w-3xl px-5 pb-20 pt-10 sm:px-6 md:pb-28 md:pt-16">
+    <h1
+      class="font-extrabold tracking-headline text-[2rem] leading-[1.06] text-ink sm:text-[2.5rem]"
+    >
+      {t.h1}
+    </h1>
+    <p class="mt-6 text-[17px] leading-relaxed text-ink/80">{t.lead}</p>
+
+    <dl class="mt-10 grid gap-8 sm:grid-cols-2">
+      <div>
+        <dt class="text-xs font-bold uppercase tracking-caps text-ink/55">
+          {t.emailLabel}
+        </dt>
+        <dd class="mt-2 text-[19px] font-semibold text-ink">
+          <a
+            href={`mailto:${t.email}`}
+            class="underline underline-offset-4 hover:no-underline">{t.email}</a
+          >
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs font-bold uppercase tracking-caps text-ink/55">
+          {t.placeLabel}
+        </dt>
+        <dd class="mt-2 text-[19px] text-ink">{t.place}</dd>
+      </div>
+    </dl>
+  </div>
+</main>

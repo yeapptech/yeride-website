@@ -5,28 +5,61 @@ description: Use when adding, removing, renaming, or re-pointing any navigation 
 
 # nav-sync
 
-Navigation markup is duplicated across four independent copies. A link must be
-added to all four, or it appears on some pages and not others.
+Navigation is **not** duplicated. `Header.astro` and `Footer.astro` have exactly
+one caller each — `BaseLayout.astro` — and every page renders through it
+(wayfinder #35). A nav or footer change is one edit, in one file.
 
-| Surface | File | Reaches |
+This skill described four duplicated copies until #39. The inline header and
+footer in `index.astro`, `navBar.astro` and `src/data/navData.ts` were all
+deleted by #35; none of them exist. If you are looking for a second copy to keep
+in sync, there isn't one.
+
+| Surface | File | Links today |
 |---|---|---|
-| Shared header | `src/components/Header.astro` | about, contact, privacy-policy, fare-estimate |
-| Shared footer | `src/components/Footer.astro` | same four pages |
-| Inline header | `src/pages/index.astro` (~95–130) | homepage only |
-| Inline footer | `src/pages/index.astro` (~345–395) | homepage only |
+| Header | `src/components/Header.astro` | `/drivers`, `/riders`, `/fees`, `/fare-estimate`, then the EN⇄ES toggle |
+| Footer | `src/components/Footer.astro` | `/about`, `/contact`, `/privacy-policy`, `/terms`, plus the X link |
 
-`src/components/navBar.astro` + `src/data/navData.ts` are a fifth, near-dead copy
-reached only by `BaseLayout.astro` → `404.astro`. Its entries (`ride`, `drive`,
-`register`) point at routes that do not exist.
+Both are rendered by `BaseLayout` on every page, so both reach the whole site.
 
-`BaseLayout.astro` renders `<Nav />` + `<slot />` and **no footer at all**, so
-`404.astro` has no footer to add a link to. Full-site footer coverage there is a
-structural change (import and render `Footer.astro`), not a link edit — treat it
-as out of scope unless asked.
+## Adding a link
 
-Inventory every surface before and after the change — the two lists must match:
+Each file holds a `t` object keyed `en`/`es` for the labels and builds every
+href as `` `${esPrefix}/route` ``, where `esPrefix` is `/es` when `lang === "es"`.
+So a link is **one href plus two labels** — you never write the Spanish URL, and
+an EN entry cannot ship without its ES twin.
+
+Labels are copy. Take them from `docs/copy-map.md` §1.1 (header) and §1.2
+(footer) rather than authoring them here.
+
+Order is fixed in the header — audience pages, then the two proof pages, then
+the toggle (§1.1). Don't reorder it to fit a new entry.
+
+## What the build enforces
+
+- **The route must exist in both languages.** `scripts/check-route-parity.mjs`
+  fails on an English page with no `/es/` twin, so linking a route that only
+  half-exists fails the build rather than 404ing in one language.
+- **Labels go through the copy gate** like any other string
+  (`scripts/check-copy-gate.mjs`, copy-map §5).
+
+## Two things that are not files under `src/pages`
+
+- **Redirect aliases** live in `astro.config.mjs` (`/privacy`, `/es/privacy`,
+  `/support`). They are routes a visitor can reach and the mobile app depends on
+  them (#44), but the parity check does not see them — it reads filenames. If you
+  add an alias, add its `/es/` counterpart in the same edit.
+- **`/404` and `/redirect`** are single files serving both languages
+  (`bilingual` mode, #39). In `bilingual` mode `BaseLayout` renders *two* copies
+  of the header and footer, one per language, and reveals one client-side — so
+  these pages do have a footer, and your one edit reaches both copies.
+
+## Check your work
+
+Both hrefs and both label sets, before and after:
 
 ```bash
 grep -n 'href=' src/components/Header.astro src/components/Footer.astro
-grep -n 'href="/\|href="#' src/pages/index.astro
+grep -n 'about:\|contact:\|privacy:\|terms:\|drivers:\|riders:\|fees:\|estimate:' \
+  src/components/Header.astro src/components/Footer.astro
+npm run checks
 ```

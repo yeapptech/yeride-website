@@ -9,129 +9,207 @@ This document describes the technical architecture of the YeRide website.
 | [Astro](https://astro.build) 5.x | Static site generator |
 | [TypeScript](https://www.typescriptlang.org) 5.x | Type safety |
 | [Tailwind CSS](https://tailwindcss.com) 3.x | Utility-first styling |
-| [Firebase](https://firebase.google.com) 11.x | Backend services |
+| [Firebase](https://firebase.google.com) 11.x | `firebase/functions` **only** — one callable, `estimateFares`. Auth and Firestore are not used |
+| `@yeapptech/yeride-brand` | The design system: Tailwind preset, tokens, marks. Private package; binding docs live in its repo |
 
 ## Directory Structure
 
 ```
 yeride-website/
 ├── src/
-│   ├── components/           # Reusable Astro components
-│   │   ├── Header.astro      # Navigation header with mobile menu
-│   │   ├── Footer.astro      # Site footer
-│   │   ├── navBar.astro      # Navigation bar
-│   │   └── PreRegistrationForm.astro  # User registration form
+│   ├── components/           # One body component per route, plus the chrome
+│   │   ├── Header.astro      # Site header — one caller, BaseLayout
+│   │   ├── Footer.astro      # Site footer — one caller, BaseLayout
+│   │   ├── HomePage.astro    # The whole body of / and /es/
+│   │   ├── DriversPage.astro
+│   │   ├── RidersPage.astro
+│   │   ├── FeeSchedule.astro       # /fees — fetches the live rate card
+│   │   ├── FareEstimatePage.astro  # /fare-estimate — Maps + estimateFares
+│   │   ├── LegalDocument.astro     # /privacy-policy and /terms, both languages
+│   │   ├── ContactPage.astro
+│   │   ├── NotFoundPage.astro      # /404 — renders EN and ES at once
+│   │   ├── RedirectPage.astro      # /redirect — same
+│   │   ├── AvailabilityBlock.astro # Shared block (copy-map §2.1)
+│   │   └── PreRegistrationForm.astro
+│   │
+│   ├── i18n/                 # ALL copy, EN/ES, verbatim from docs/copy-map.md
+│   │   ├── homeCopy.ts  audienceCopy.ts  feesCopy.ts
+│   │   ├── fareEstimateCopy.ts  legalCopy.ts  utilityCopy.ts
+│   │   ├── formCopy.ts
+│   │   └── feeLabels.ts      # Site-authored names for backend charge/area/tier ids
+│   │
+│   ├── lib/
+│   │   ├── firebase.ts       # firebase/functions only — no Auth, no Firestore
+│   │   ├── fareEstimate.ts   # estimateFares callable + its rider-facing contract
+│   │   ├── feeSchedule.ts    # getFeeSchedule fetch + response contract
+│   │   └── serviceArea.ts    # The one service-area constant /fare-estimate prices for
 │   │
 │   ├── layouts/
-│   │   └── BaseLayout.astro  # Base page layout template
+│   │   └── BaseLayout.astro  # The ONLY layout. Every page renders through it
 │   │
-│   ├── pages/                # File-based routing
-│   │   ├── index.astro       # Homepage
-│   │   ├── about.astro       # About page
-│   │   ├── contact.astro     # Contact page
-│   │   ├── privacy-policy.astro  # Privacy policy
-│   │   └── 404.astro         # Error page
-│   │
-│   ├── data/
-│   │   └── navData.ts        # Navigation menu configuration
-│   │
-│   └── styles/
-│       └── main.css          # Global styles
+│   └── pages/                # File-based routing — thin files, EN + /es/ twin
+│       ├── index.astro  drivers.astro  riders.astro  fees.astro
+│       ├── fare-estimate.astro  about.astro  contact.astro
+│       ├── privacy-policy.astro  terms.astro
+│       ├── 404.astro         # Both languages, one file
+│       ├── redirect.astro    # Both languages, one file
+│       └── es/               # The mirrored tree, English slugs
 │
 ├── public/                   # Static assets
-│   ├── favicon.svg           # Site favicon
 │   ├── CNAME                 # Custom domain configuration
 │   ├── .nojekyll             # Disable Jekyll on GitHub Pages
 │   └── images/               # Image assets
 │
+├── scripts/                  # The build gates — see CLAUDE.md
+│   ├── check-route-parity.mjs      check-copy-gate.mjs
+│   ├── check-env.mjs               check-dist-copy-gate.mjs
+│   ├── check-fee-labels.mjs        # Runs outside npm run build (needs network)
+│   ├── copy-gate-patterns.mjs      copy-gate-normalise.mjs
+│   └── copy-gate-patterns.test.mjs # Run by hand when the pattern list changes
+│
 ├── .github/
 │   └── workflows/
-│       └── deploy-all.yml    # CI/CD workflow
+│       ├── checks.yml        # Route parity + copy gate, every PR, no deps
+│       ├── deploy-all.yml    # Full chain + deploy, on main
+│       └── fee-label-drift.yml     # Daily fee-label check
 │
 └── Configuration files
-    ├── astro.config.mjs      # Astro configuration
-    ├── tailwind.config.mjs   # Tailwind configuration
+    ├── astro.config.mjs      # Astro configuration + the mobile-app redirects
+    ├── tailwind.config.mjs   # Brand preset
     ├── tsconfig.json         # TypeScript configuration
     └── package.json          # Dependencies and scripts
 ```
 
+Favicons and fonts are not in `public/` — they come from the
+`@yeapptech/yeride-brand` package and are imported in `BaseLayout`.
+
 ## Routing
 
-Astro uses **file-based routing**. Each `.astro` file in `src/pages/` becomes a route:
+Astro uses **file-based routing**. Each `.astro` file in `src/pages/` becomes a
+route, and **every route ships in both languages** — the `/es/` tree mirrors the
+English one with **English slugs** (`/fees` → `/es/fees`, never `/es/tarifas`).
+`scripts/check-route-parity.mjs` fails the build on a missing twin.
 
-| File | Route |
-|------|-------|
-| `src/pages/index.astro` | `/` |
-| `src/pages/about.astro` | `/about` |
-| `src/pages/contact.astro` | `/contact` |
-| `src/pages/privacy-policy.astro` | `/privacy-policy` |
-| `src/pages/404.astro` | `/404` (error page) |
+| File | Route | ES twin |
+|------|-------|---------|
+| `src/pages/index.astro` | `/` | `/es/` |
+| `src/pages/drivers.astro` | `/drivers` | `/es/drivers` |
+| `src/pages/riders.astro` | `/riders` | `/es/riders` |
+| `src/pages/fees.astro` | `/fees` | `/es/fees` |
+| `src/pages/fare-estimate.astro` | `/fare-estimate` | `/es/fare-estimate` |
+| `src/pages/privacy-policy.astro` | `/privacy-policy` | `/es/privacy-policy` |
+| `src/pages/terms.astro` | `/terms` | `/es/terms` |
+| `src/pages/contact.astro` | `/contact` | `/es/contact` |
+| `src/pages/about.astro` | `/about` | pending (#85) |
+| `src/pages/404.astro` | `/404` | **same file** |
+| `src/pages/redirect.astro` | `/redirect` | **same file** |
+
+`/404` and `/redirect` are the two exemptions. GitHub Pages answers every missing
+path with a single root `404.html`, so `/es/404` is unreachable; both pages ship
+**both** languages in one file and reveal one client-side from
+`location.pathname` (`BaseLayout`'s `bilingual` mode). They are exempt from the
+parity check by name.
+
+Four further routes are **redirects declared in `astro.config.mjs`**, not files:
+`/privacy` → `/privacy-policy`, `/es/privacy` → `/es/privacy-policy`,
+`/support` → `/contact` and `/es/support` → `/es/contact`. The mobile app depends on them — it links
+`yeride.com/privacy` in-app and submits it as the store-listing privacy URL, and
+a missing `/support` was a 2025 App Store rejection. Do not remove or rename
+them without changing the app first.
 
 ## Component Architecture
 
 ### Layout System
 
-The `BaseLayout.astro` component provides the HTML structure shared across pages:
+`BaseLayout.astro` is the **only** layout, and it owns everything above the page
+content: `<html>`, `<head>`, the title and meta description, the canonical link,
+the EN/ES `hreflang` alternates, the brand favicons, the Nunito import, and the
+header and footer. **No page declares any of it.**
 
 ```astro
 ---
-// BaseLayout.astro
-const { title } = Astro.props;
+// src/pages/riders.astro — the model. Nothing else belongs in a page file.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import RidersPage from "../components/RidersPage.astro";
 ---
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>{title}</title>
-  </head>
-  <body>
-    <Header />
-    <slot />  <!-- Page content inserted here -->
-    <Footer />
-  </body>
-</html>
+
+<BaseLayout
+  title="Pay what the ride is worth. | YeRide for riders"
+  description="Published rates — base, miles, minutes. The same math every trip, and every fee published. Card or cash."
+  lang="en"
+  headerGround="yellow"
+>
+  <RidersPage lang="en" />
+</BaseLayout>
 ```
+
+Its props are documented in [components.md](./components.md); `headerGround`
+picks the mark that is legal on that ground, and `alternates`/`bilingual` are for
+`/404` and `/redirect` alone.
 
 ### Component Types
 
-1. **Layout Components** - Define page structure (`BaseLayout.astro`)
-2. **UI Components** - Reusable interface elements (`Header`, `Footer`)
-3. **Feature Components** - Complex functionality (`PreRegistrationForm`)
-4. **Page Components** - Route-specific content (`index.astro`, `about.astro`)
+1. **The layout** — `BaseLayout.astro`. There is one.
+2. **Chrome** — `Header`, `Footer`. One caller each, `BaseLayout`; a nav change
+   is one edit.
+3. **Body components** — one per route (`HomePage`, `DriversPage`, `RidersPage`,
+   `FeeSchedule`, `FareEstimatePage`, `LegalDocument`, `ContactPage`). Each takes
+   `lang` **alone** and resolves its own copy from `src/i18n/`. A page that
+   passes resolved copy down as a prop breaks the contract. `NotFoundPage` and
+   `RedirectPage` take no props at all — they render both languages at once.
+4. **Shared blocks** — `AvailabilityBlock`, `PreRegistrationForm`, used by more
+   than one body component.
 
 ## Styling Approach
 
 ### Tailwind CSS
 
-The project uses Tailwind CSS for styling with utility classes:
+Utility classes directly, mobile-first. **Never `@apply`.** Colour, type and
+spacing come from the brand preset, so the tokens are the vocabulary —
+`bg-paper`, `text-ink`, `bg-cab-yellow`, `font-brand`, `tracking-headline`,
+`tracking-caps` — not raw greys:
 
 ```astro
-<div class="flex items-center justify-between p-4 bg-white shadow-md">
-  <h1 class="text-2xl font-bold text-gray-900">YeRide</h1>
+<div class="mx-auto w-full max-w-3xl px-5 py-16 sm:px-6">
+  <h1 class="font-extrabold tracking-headline text-[2rem] text-ink sm:text-[2.5rem]">
+    Pay what the ride is worth.
+  </h1>
 </div>
 ```
 
 ### Global Styles
 
-Global styles are defined in `src/styles/main.css`:
+There is no global stylesheet. `src/styles/main.css` and its Open Props import
+were deleted in wayfinder #35, along with the `cdn.tailwindcss.com` script tags
+and the Google Fonts link to Inter — **do not re-add any of them**; each is
+duplicate CSS and a flash of unstyled content.
 
-```css
-@import "open-props/style";
-/* Additional global styles */
+What `BaseLayout` imports once, for the whole site:
+
+```astro
+import "@fontsource-variable/nunito";        // the brand typeface, self-hosted
+import "@yeapptech/yeride-brand/tokens.css";  // the brand's CSS custom properties
 ```
 
 ### Configuration
 
-Tailwind is configured in `tailwind.config.mjs`:
+Tailwind takes its theme from the brand package's preset — this repo defines no
+colours or type scale of its own:
 
 ```javascript
+import brandPreset from '@yeapptech/yeride-brand/tailwind-preset';
+
 export default {
-  content: ['./src/**/*.{astro,html,js,jsx,md,mdx,ts,tsx}'],
-  theme: {
-    extend: {},
-  },
+  presets: [brandPreset],
+  content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
+  theme: { extend: {} },
   plugins: [],
 }
 ```
+
+`@yeapptech/yeride-brand` is a **private package** on GitHub Packages. Installing
+needs the committed `.npmrc` plus an `NPM_TOKEN` (a classic PAT with
+`read:packages`); CI reads it from an Actions secret.
 
 ## Data Flow
 
@@ -141,11 +219,25 @@ Astro generates static HTML at build time. The site has no server-side rendering
 
 ### API Integration
 
-The pre-registration form submits data to an external API:
+The site talks to **two unrelated backends** — yeride-admin-api and
+yeride-functions — across three flows. Don't conflate the first with the others:
 
 ```
-User Input → PreRegistrationForm → POST /v1/auth/register → API Response
+Pre-registration   PreRegistrationForm → POST ${PUBLIC_API_URL}v1/auth/register
+                   → yeride-admin-api. Writes a `whitelist` row; creates no account.
+
+Fare estimates     FareEstimatePage → Google Maps (maps, places, marker, routes)
+                   → Firebase callable `estimateFares` (us-east1) → yeride-functions
+
+Fee schedule       FeeSchedule → GET ${PUBLIC_FEE_SCHEDULE_URL}
+                   → yeride-functions. Plain fetch, no Firebase SDK.
 ```
+
+Two contracts are written into `src/lib/` and should be read before changing
+either page: `fareEstimate.ts` records why `ServiceEstimate` deliberately does
+**not** declare `appCharges`/`appChargesTotal` (they are the *driver's* cost in
+both payment flows, never the rider's), and `feeSchedule.ts` records that the
+site is **never a third evaluator** of the backend's charge expressions.
 
 See [API Integration](./api-integration.md) for details.
 
@@ -161,10 +253,28 @@ All six are required; `npm run build` fails on a missing one. The full list is i
 
 ## Build Process
 
-1. **Type Checking** - TypeScript validation via `astro check`
-2. **Asset Processing** - Tailwind CSS compilation
-3. **Static Generation** - HTML pages generated from Astro components
-4. **Output** - Static files written to `./dist/`
+There is no test runner and no linter. **`npm run build` is the verification
+gate**, and it runs five things in order — any one of them fails the build:
+
+1. **Route parity** (`check-route-parity.mjs`) — every route has its `/es/` twin.
+2. **Copy gate** (`check-copy-gate.mjs`) — gated and never-claimed strings
+   (copy-map §5) must not reach `src/` or `public/`.
+3. **Env check** (`check-env.mjs`) — all six `PUBLIC_*` present, non-empty and
+   printable ASCII. Astro inlines them at build time, so an empty one becomes a
+   falsy literal and Rollup deletes the branch that tested it.
+4. **`astro check`** — a type error fails the build.
+5. **Dist copy gate** (`check-dist-copy-gate.mjs`) — §5 again, over `dist/`,
+   after `astro build`. This is the layer that measures the actual promise.
+
+Items 1–2 are dependency-free and run on every PR (`checks.yml`); 3–5 need
+`npm ci` against the private registry and run on `main` (`deploy-all.yml`).
+
+A sixth gate, **`check-fee-labels.mjs`**, runs *outside* the build because it
+needs the network: it asks the live `getFeeSchedule` whether the site can name
+every charge, service-area and ride-tier id it publishes. It fails on drift and
+**skips** when it cannot ask. Deploy-time plus daily on a schedule.
+
+Full detail for each is in CLAUDE.md.
 
 ## Configuration Files
 
@@ -176,7 +286,15 @@ import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
   integrations: [tailwind()],
-  site: 'https://yeride.com',
+  // must match public/CNAME — canonical and hreflang URLs derive from it
+  site: 'https://www.yeride.com',
+  // routes the MOBILE APP promises; see Routing above before touching these
+  redirects: {
+    '/privacy': '/privacy-policy',
+    '/es/privacy': '/es/privacy-policy',
+    '/support': '/contact',
+    '/es/support': '/es/contact',
+  },
 });
 ```
 

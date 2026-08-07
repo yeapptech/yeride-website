@@ -1,22 +1,15 @@
 ---
-// Bounces to the yeride://register deep link. Single-file, no /es/ twin;
-// the client-side language switch and copy-map content are ticket #39.
+// /redirect (wayfinder #39). Title per docs/copy-map.md §4.
+//
+// Bounces to the yeride://register deep link. ONE file for both languages
+// (§3.11), same client-side switch as /404. Exempt from the route-parity check
+// by name (§6.1). §4 authors one title, English, and no meta description — see
+// the note in 404.astro. RedirectPage.astro records why the Spanish half of
+// this particular page is unreachable today.
 import BaseLayout from "../layouts/BaseLayout.astro";
+import RedirectPage from "../components/RedirectPage.astro";
 ---
 
-<BaseLayout title="Redirecting..." alternates={false}>
-  <main class="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6">
-    <p>Redirecting to the app...</p>
-    <a id="manualLink" href="yeride://register" class="mt-4 hidden font-semibold underline underline-offset-4 hover:no-underline"
-      >Click here if you are not redirected</a
-    >
-  </main>
-
-  <script>
-    window.location.href = "yeride://register";
-
-    setTimeout(() => {
-      document.getElementById("manualLink")?.classList.remove("hidden");
-    }, 2000);
-  </script>
+<BaseLayout title="Opening YeRide…" bilingual>
+  <RedirectPage />
 </BaseLayout>

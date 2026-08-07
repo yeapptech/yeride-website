@@ -86,12 +86,23 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "and the service area — never where you are going.",
           "YeRide sets no cookies on this site, runs no analytics and shows no " +
             "advertising. We add no tracking of our own to any page.",
-          "Two pages do load code from other companies in order to work: the fare " +
-            "estimate uses Google Maps and Firebase, and the contact page embeds " +
-            "Tally's form. Those companies can store data in your browser, and what " +
-            "they do with it is governed by their own privacy policies.",
-          "The message form on our contact page is hosted by Tally. What you type " +
-            "into it goes to Tally, who deliver it to us.",
+          "One page does load code from other companies in order to work: the fare " +
+            "estimate uses Google Maps and Firebase. Those companies can store data " +
+            "in your browser, and what they do with it is governed by their own " +
+            "privacy policies.",
+          // Says only what a reader can check, and deliberately says no more.
+          //
+          // An earlier draft added "and mail you send us arrives with us
+          // directly", which asserts there is no intermediary —
+          // support@yeride.com resolves through a mail provider that handles
+          // the message, so that was a claim this policy cannot support. Cut.
+          //
+          // DECIDED 2026-08-06: §4 does not name the mail host. So this line
+          // must stay silent on the subject rather than swing to either side —
+          // it neither names a provider nor denies one. Do not "improve" it by
+          // adding reassurance about where mail goes; that is the claim that
+          // was removed, and the silence is deliberate, not an omission.
+          "Our contact page carries no form; it gives you an email address instead.",
           "The site itself is served by GitHub Pages, which records the usual " +
             "web-server information — such as your IP address and browser — in " +
             "order to deliver the page to you. Those logs are GitHub's; we do not " +
@@ -166,7 +177,6 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "Google — Firebase holds our accounts, database, files and crash " +
               "reports; Google Maps provides place suggestions, routes and navigation.",
             "Stripe — card payments and driver payouts.",
-            "Tally — the message form on our contact page.",
             "Expo — push notifications are sent through Expo, which receives your " +
               "device's notification token and the text of the notification. That " +
               "text can name a person, such as the driver assigned to your trip. " +
@@ -290,13 +300,12 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "duración y el área de servicio, nunca a dónde va usted.",
           "YeRide no coloca cookies en este sitio, no ejecuta analítica y no " +
             "muestra publicidad. No añadimos rastreo propio a ninguna página.",
-          "Dos páginas sí cargan código de otras empresas para poder funcionar: el " +
-            "estimador de tarifa usa Google Maps y Firebase, y la página de contacto " +
-            "incrusta el formulario de Tally. Esas empresas pueden guardar datos en " +
-            "su navegador, y lo que hagan con ellos se rige por sus propias " +
-            "políticas de privacidad.",
-          "El formulario de mensajes de nuestra página de contacto está alojado por " +
-            "Tally. Lo que usted escriba allí llega a Tally, que nos lo entrega.",
+          "Una página sí carga código de otras empresas para poder funcionar: el " +
+            "estimador de tarifa usa Google Maps y Firebase. Esas empresas pueden " +
+            "guardar datos en su navegador, y lo que hagan con ellos se rige por sus " +
+            "propias políticas de privacidad.",
+          "Nuestra página de contacto no tiene formulario; en su lugar le damos " +
+            "una dirección de correo.",
           "El sitio en sí lo sirve GitHub Pages, que registra la información " +
             "habitual de un servidor web —como su dirección IP y su navegador— para " +
             "poder entregarle la página. Esos registros son de GitHub; nosotros no " +
@@ -379,7 +388,6 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
               "y los informes de error; Google Maps aporta las sugerencias de " +
               "lugares, las rutas y la navegación.",
             "Stripe: los pagos con tarjeta y los pagos a los conductores.",
-            "Tally: el formulario de mensajes de nuestra página de contacto.",
             "Expo: las notificaciones se envían a través de Expo, que recibe el " +
               "token de notificación de su dispositivo y el texto de la " +
               "notificación. Ese texto puede nombrar a una persona, como el " +

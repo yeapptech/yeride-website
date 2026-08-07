@@ -72,9 +72,18 @@ or footer change is therefore one edit, in one place.
 
 Redesigned routes keep the page file thin — `BaseLayout` plus one component that holds the
 whole body (`HomePage`, `DriversPage`, `RidersPage`, `FeeSchedule`, `FareEstimatePage`) — with
-the copy in `src/i18n/`. Follow that shape when adding a page. The pages still awaiting
-their redesign ticket (`about`, `contact`) sit on `BaseLayout` with their
-pre-redesign bodies inline.
+the copy in `src/i18n/`. Follow that shape when adding a page. One page still awaits its
+redesign ticket — `about` — and sits on `BaseLayout` with its pre-redesign body inline; it is
+[#85](https://github.com/yeapptech/yeride-website/issues/85), blocked outside this repo on
+yeapptech/yeride-brand#22's authored ES identity paragraph.
+
+`/404` and `/redirect` are the two exceptions to "every route ships EN and ES": they are one
+file each, serving **both** languages, because GitHub Pages answers every missing path with a
+single root `404.html` and `/es/404` is therefore unreachable. `BaseLayout`'s `bilingual`
+prop ships both languages of the header and footer alongside the page's own two halves and
+reveals one from `location.pathname` — chrome included, since Spanish content under English
+navigation is the half-translated page #62 and #65 were re-opened over. The mechanism, and
+the two ways it fails silently, are in `docs/components.md` under `BaseLayout`.
 
 `navBar.astro`, `src/data/navData.ts`, `src/styles/main.css` (Open Props from unpkg) and the
 `https://cdn.tailwindcss.com` script tags were all removed by #35. Tailwind comes from the
@@ -86,9 +95,17 @@ and bury your real change in a full-file diff.
 
 ### Other integrations
 
-- **Tally.so** — embedded contact form on `/contact` (form ID `mJa5J7`)
+- **No contact form, and no Tally** — `/contact` publishes `support@yeride.com` and nothing
+  else (#39 amended copy-map §3.7). The embedded Tally form was dropped: its questions lived
+  inside Tally, the last user-facing copy on this site outside the repo and invisible to both
+  copy gates, and Tally has no runtime localisation, so `/es/contact` would have needed a
+  second form authored and kept in sync by hand forever. Removing it also deleted a named
+  processor from the privacy policy. **Do not re-add a third-party form embed.** If
+  structured intake is wanted, copy `PreRegistrationForm.astro` — markup and per-field EN/ES
+  copy in `src/i18n/`, posting to an endpoint YeRide owns
 - **Nunito** — the brand typeface, self-hosted via `@fontsource-variable/nunito` and imported once in `BaseLayout`; exposed as `font-brand`. The old per-page Google Fonts link to Inter is gone (#35)
-- `src/pages/redirect.astro` — bare HTML that bounces to the `yeride://register` deep link
+- `src/pages/redirect.astro` — bounces to the `yeride://register` deep link. Not bare HTML:
+  it renders through `BaseLayout` like everything else (#35), in `bilingual` mode (#39)
 - **URL aliases the mobile app depends on** — `redirects` in `astro.config.mjs` maps `/privacy`
   → `/privacy-policy`, `/es/privacy` → `/es/privacy-policy` and `/support` → `/contact`
   (wayfinder #44). These are not cosmetic: yeride-mobile links `yeride.com/privacy` in-app and
