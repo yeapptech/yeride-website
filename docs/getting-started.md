@@ -25,12 +25,21 @@ This guide will help you set up the YeRide website for local development.
 
 3. **Set up environment variables**
 
-   Create a `.env` file in the root directory:
+   Copy the committed example and fill in the values:
 
    ```bash
-   PUBLIC_API_URL=https://your-api-url.com/
-   # ...and the other five — see CLAUDE.md for the full list
+   cp .env.example .env
    ```
+
+   `.env.example` is the list — all six variables, each with a comment saying what
+   it is for. Only `PUBLIC_API_URL` carries a real value there; the other five are
+   secrets. Ask for the real ones, or read them from the repository secrets.
+
+   Fill them in before judging anything on a page. The placeholders are invalid but
+   well-formed, and `scripts/check-env.mjs` checks that a value exists, never that
+   it works — so the build stays **green** with them in place and the failures show
+   up in the browser: no map on `/fare-estimate`, no fare, and `/fees` in its error
+   state.
 
    > **Note:** The `PUBLIC_API_URL` must end with a trailing slash. This variable is used by the pre-registration form to submit user data.
 

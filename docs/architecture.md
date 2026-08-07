@@ -63,6 +63,7 @@ yeride-website/
 ├── scripts/                  # The build gates — see CLAUDE.md
 │   ├── check-route-parity.mjs      check-copy-gate.mjs
 │   ├── check-env.mjs               check-dist-copy-gate.mjs
+│   ├── check-env-example.mjs       env-required.mjs
 │   ├── check-fee-labels.mjs        # Runs outside npm run build (needs network)
 │   ├── copy-gate-patterns.mjs      copy-gate-normalise.mjs
 │   └── copy-gate-patterns.test.mjs # Run by hand when the pattern list changes
@@ -243,33 +244,37 @@ See [API Integration](./api-integration.md) for details.
 
 ### Environment Variables
 
-Public environment variables are prefixed with `PUBLIC_`:
+Public environment variables are prefixed with `PUBLIC_`. All six are required;
+`npm run build` fails on a missing or empty one.
 
-| Variable | Purpose |
-|----------|---------|
-| `PUBLIC_API_URL` | Base URL for API requests |
-
-All six are required; `npm run build` fails on a missing one. The full list is in CLAUDE.md.
+The list is [`.env.example`](../.env.example), which is committed — copy it to `.env`
+and fill in the values. Its names are asserted against `scripts/env-required.mjs` on
+every pull request, so the two cannot drift. What each variable is for, and what
+specifically breaks without it, is in CLAUDE.md and in the `breaks` strings in
+`scripts/env-required.mjs`.
 
 ## Build Process
 
 There is no test runner and no linter. **`npm run build` is the verification
-gate**, and it runs five things in order — any one of them fails the build:
+gate**, and it runs six things in order — any one of them fails the build:
 
 1. **Route parity** (`check-route-parity.mjs`) — every route has its `/es/` twin.
 2. **Copy gate** (`check-copy-gate.mjs`) — gated and never-claimed strings
    (copy-map §5) must not reach `src/` or `public/`.
-3. **Env check** (`check-env.mjs`) — all six `PUBLIC_*` present, non-empty and
+3. **Env example parity** (`check-env-example.mjs`) — `.env.example` and
+   `scripts/env-required.mjs` must name the same six variables. It reads names
+   only, never a value, so it needs neither dependencies nor secrets.
+4. **Env check** (`check-env.mjs`) — all six `PUBLIC_*` present, non-empty and
    printable ASCII. Astro inlines them at build time, so an empty one becomes a
    falsy literal and Rollup deletes the branch that tested it.
-4. **`astro check`** — a type error fails the build.
-5. **Dist copy gate** (`check-dist-copy-gate.mjs`) — §5 again, over `dist/`,
+5. **`astro check`** — a type error fails the build.
+6. **Dist copy gate** (`check-dist-copy-gate.mjs`) — §5 again, over `dist/`,
    after `astro build`. This is the layer that measures the actual promise.
 
-Items 1–2 are dependency-free and run on every PR (`checks.yml`); 3–5 need
+Items 1–3 are dependency-free and run on every PR (`checks.yml`); 4–6 need
 `npm ci` against the private registry and run on `main` (`deploy-all.yml`).
 
-A sixth gate, **`check-fee-labels.mjs`**, runs *outside* the build because it
+A seventh gate, **`check-fee-labels.mjs`**, runs *outside* the build because it
 needs the network: it asks the live `getFeeSchedule` whether the site can name
 every charge, service-area and ride-tier id it publishes. It fails on drift and
 **skips** when it cannot ask. Deploy-time plus daily on a schedule.

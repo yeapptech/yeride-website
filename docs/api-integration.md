@@ -10,21 +10,20 @@ The website integrates with the YeRide backend API for user pre-registration. Th
 
 ### Environment Variable
 
-The API base URL is configured via environment variable:
+The API base URL is configured via `PUBLIC_API_URL`. Its real value is in
+[`.env.example`](../.env.example) — this page deliberately does not restate it, so
+there is only one place for it to be wrong.
 
-```bash
-PUBLIC_API_URL=https://your-api-url.com/
-```
-
-> **Important:** The URL must end with a trailing slash (`/`).
+> **Important:** The URL must end with a trailing slash (`/`). `scripts/check-env.mjs`
+> fails the build without it, because the form appends `v1/auth/register` straight
+> onto the value.
 
 ### Setting Up Locally
 
-Create a `.env` file in the project root:
+Copy the committed example, which carries the real value for this variable:
 
 ```bash
-# .env
-PUBLIC_API_URL=https://api.yeride.com/
+cp .env.example .env
 ```
 
 ### Production Configuration
@@ -35,7 +34,7 @@ For production (GitHub Actions), set the `PUBLIC_API_URL` secret in the reposito
 2. Add `PUBLIC_API_URL` as a repository secret
 
 `PUBLIC_API_URL` is one of six required `PUBLIC_*` secrets; the build fails on any
-missing or empty one (`scripts/check-env.mjs`). The full list is in CLAUDE.md.
+missing or empty one (`scripts/check-env.mjs`). The list is `.env.example`.
 
 ## API Endpoints
 

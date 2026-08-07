@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # PostToolUse hook: catch PUBLIC_ env vars that the deploy workflow never writes.
 #
-# Adding a client env var is a four-place change: .env, the "Create env file"
-# step in deploy-all.yml, a GitHub Secret, and REQUIRED in scripts/check-env.mjs
-# if the var is required. Miss the workflow and the var is an empty string in
-# production; since #59 that fails the build rather than shipping silently, but
-# only for vars listed in REQUIRED — this hook catches the rest.
+# Adding a client env var is a four-place change: .env.example, the "Create env
+# file" step in deploy-all.yml, a GitHub Secret, and REQUIRED in
+# scripts/env-required.mjs if the var is required. Miss the workflow and the var
+# is an empty string in production; since #59 that fails the build rather than
+# shipping silently, but only for vars listed in REQUIRED — this hook catches
+# the rest. Miss .env.example and `npm run checks` fails on the PR (#70).
 set -uo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

@@ -57,6 +57,15 @@
 // `vite.envDir` or `vite.envPrefix`, and `npm run build` passes no --mode. If
 // any of those four ever changes, change this call with it — otherwise the
 // check starts reading a different environment than the build does, silently.
+//
+// THE LIST ITSELF LIVES IN scripts/env-required.mjs (#70), not here. It has a
+// second reader — check-env-example.mjs, which compares those names against
+// `.env.example` on every pull request and must stay dependency-free, so it
+// cannot import this file and drag Vite along. What stays here is how the
+// environment is READ and what each failure means; what moved is the list of
+// what to read.
+
+import { REQUIRED } from "./env-required.mjs";
 
 let loadEnv;
 try {
@@ -83,10 +92,6 @@ try {
 // neither, nor the "PUBLIC_" prefix.
 const env = loadEnv("production", process.cwd(), "PUBLIC_");
 
-// All three Firebase values feed one `initializeApp` call, so any one of them
-// missing has the same single consequence.
-const NO_CALLABLE = "the estimateFares callable cannot be reached, so no fare is ever quoted";
-
 // Every one of the six is a URL, a hostname, a project id or an API key, so
 // every legitimate value is printable ASCII with no spaces in it.
 //
@@ -105,42 +110,6 @@ const NO_CALLABLE = "the estimateFares callable cannot be reached, so no fare is
 // six can have one, and the failure would be loud and one line to fix, which is
 // the right direction for a gate to be wrong in.
 const PRINTABLE = /^[\x21-\x7e]+$/;
-
-const REQUIRED = [
-  {
-    name: "PUBLIC_API_URL",
-    breaks:
-      "pre-registration cannot submit — the fetch is eliminated from the bundle, so\n" +
-      "      /drivers and /riders ship a form whose button can never reach the API",
-    // A separate cause with a separate consequence, so it gets its own string
-    // rather than borrowing `breaks`: with a non-empty value the fetch is in
-    // the bundle, it just builds the wrong URL. One string covering both would
-    // have to describe an elimination that did not happen.
-    // Returns nothing when the value is fine, a {problem, breaks} pair when not.
-    shape: (v) =>
-      v.endsWith("/") ? undefined : {
-        problem: "must end with a trailing slash, because the form appends `v1/auth/register` to it",
-        breaks:
-          "the fetch ships, but `v1/auth/register` is concatenated straight onto this\n" +
-          "      value, so it builds a URL that never reaches the register endpoint",
-      },
-  },
-  {
-    name: "PUBLIC_GOOGLE_MAPS_API_KEY",
-    breaks:
-      "/fare-estimate cannot load Google Maps, so init() rejects and the page shows\n" +
-      "      its service-error line on arrival — no address can be entered at all",
-  },
-  { name: "PUBLIC_FIREBASE_API_KEY", breaks: NO_CALLABLE },
-  { name: "PUBLIC_FIREBASE_AUTH_DOMAIN", breaks: NO_CALLABLE },
-  { name: "PUBLIC_FIREBASE_PROJECT_ID", breaks: NO_CALLABLE },
-  {
-    name: "PUBLIC_FEE_SCHEDULE_URL",
-    breaks:
-      "getFeeSchedule throws before it fetches, so /fees and /es/fees render their\n" +
-      "      designed error state on every visit and publish no rate card",
-  },
-];
 
 const errors = [];
 // The footer explains the missing-secret case, so it is only printed when that
@@ -177,7 +146,7 @@ for (const { name, breaks, shape } of REQUIRED) {
 if (errors.length) {
   console.error(`✗ env (${errors.length} of ${REQUIRED.length} unusable)`);
   for (const e of errors) console.error(`  ${e}`);
-  console.error(`\n  Locally these come from .env — see CLAUDE.md for the full list.`);
+  console.error(`\n  Locally these come from .env — copy .env.example for the full list.`);
   console.error(`  On deploy they come from GitHub Secrets, written to .env by`);
   console.error(`  deploy-all.yml's "Create env file" step.`);
   if (anyEmpty) {
