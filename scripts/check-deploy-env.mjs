@@ -49,9 +49,13 @@
 // What that buys, and it is not a consolation prize: inside a `run:` block a
 // leading `#` is a SHELL comment, so a commented-out echo genuinely does not
 // write the line, and skipping those lines is correct behaviour rather than a
-// blind spot. Anchoring on the step is also what keeps a sample of this YAML
-// living elsewhere in the repo (#71) from being read as the real thing — only
-// this file, and only this step inside it, is ever looked at.
+// blind spot. Anchoring on the step also means no sample of this YAML living
+// elsewhere in the repo can be read as the real thing — only this file, and
+// only this step inside it, is ever looked at. #71 deleted the one that did
+// exist, in docs/deployment.md: unasserted, it had drifted from this file in
+// every one of the seven steps it showed, and its `.env` step used a single
+// `>` under a comment saying six lines. That is what an unchecked copy of an
+// asserted file becomes, which is why the doc now points here instead.
 //
 // The cost is that it recognises ONE way of writing the line. A line the regex
 // below does not match is reported as unrecognised, on its own line number,
