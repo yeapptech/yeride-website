@@ -23,9 +23,14 @@
 //
 // ADDING A VARIABLE is a four-place change: this list, the "Create env file"
 // step in .github/workflows/deploy-all.yml, the GitHub Secret, and
-// `.env.example`. Miss `.env.example` and `npm run checks` fails on the PR;
-// miss the workflow and `.claude/hooks/env-var-drift.sh` says so; miss the
-// secret and `check-env.mjs` fails the deploy on the empty string it becomes.
+// `.env.example`. Three of the four now fail on the pull request: miss
+// `.env.example` and check-env-example.mjs says so, miss the workflow line and
+// check-deploy-env.mjs says so (#90 — before it, only a PostToolUse hook did,
+// and a hook fires only for someone editing a reading file with a hook-aware
+// tool in a session where it is installed). The SECRET is the fourth and the
+// one nothing here can see; check-env.mjs fails the deploy on the empty string
+// it becomes, and with the other three asserted that failure now means the
+// secret.
 
 // All three Firebase values feed one `initializeApp` call, so any one of them
 // missing has the same single consequence.
