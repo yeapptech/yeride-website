@@ -138,8 +138,12 @@ jobs:
 npm ci
 
 # Create environment file — all six PUBLIC_* variables
-cp .env.example .env    # then fill in the five secret values
-# npm run build fails if any is missing or empty
+cp .env.example .env
+
+# Now fill in the five secret values. Not optional here: the placeholders are
+# non-empty and well-formed, so check-env.mjs passes them — it checks that a
+# value exists, never that it works — and the build goes green against five
+# fake keys, serving a site whose map, fare estimate and rate card are dead.
 
 # Build the site
 npm run build

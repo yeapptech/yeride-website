@@ -54,9 +54,8 @@ if (!existsSync(FILE)) {
 // see the header. `export ` is tolerated because a shell-sourceable env file is
 // a normal thing to write, and a name this failed to see would read as a
 // missing variable and fail for the wrong reason.
-const names = [];
 const seen = new Set();
-const duplicates = [];
+const duplicates = new Set();
 
 for (const raw of readFileSync(FILE, "utf8").split("\n")) {
   const line = raw.trim();
@@ -64,16 +63,20 @@ for (const raw of readFileSync(FILE, "utf8").split("\n")) {
   const eq = line.indexOf("=");
   if (eq === -1) continue;
   const name = line.slice(0, eq).replace(/^export\s+/, "").trim();
+  // A line that opens with `=` has no name to report; skipping it keeps the
+  // failure text from naming the empty string.
   if (!name) continue;
-  if (seen.has(name)) duplicates.push(name);
+  if (seen.has(name)) duplicates.add(name);
   seen.add(name);
-  names.push(name);
 }
 
 const expected = new Set(REQUIRED.map((v) => v.name));
 
+// Sets on both sides, so a name that is BOTH duplicated and unexpected is
+// reported once as unexpected and once as duplicated — two facts — rather than
+// once per occurrence, which made the same sentence appear twice.
 const missing = [...expected].filter((n) => !seen.has(n));
-const extra = names.filter((n) => !expected.has(n));
+const extra = [...seen].filter((n) => !expected.has(n));
 
 const errors = [];
 for (const n of missing) {
@@ -84,7 +87,7 @@ for (const n of extra) {
 }
 // dotenv keeps the last assignment, so a duplicated name is one variable
 // wearing two values — and the one a reader edits may not be the one that wins.
-for (const n of new Set(duplicates)) {
+for (const n of duplicates) {
   errors.push(`${n} is assigned more than once in ${FILE}`);
 }
 
