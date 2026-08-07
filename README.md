@@ -22,8 +22,8 @@ cd yeride-website
 # Install dependencies
 npm install
 
-# Set up environment variables (all six — see CLAUDE.md; npm run build needs them all)
-echo "PUBLIC_API_URL=https://api.yeride.com/" > .env
+# Set up environment variables — .env.example lists all six
+cp .env.example .env    # then fill in the five secret values
 
 # Start development server
 npm run dev
@@ -66,12 +66,12 @@ yeride-website/
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `PUBLIC_API_URL` | Backend API base URL (must end with `/`) |
+The list lives in [`.env.example`](.env.example) — copy it to `.env` and fill in the
+values. All six `PUBLIC_*` variables are required: `npm run build` fails on a missing
+or empty one. `npm run dev` needs none of them.
 
-All six `PUBLIC_*` variables are required — `npm run build` fails on a missing or
-empty one. The full list is in [CLAUDE.md](CLAUDE.md). `npm run dev` needs none of them.
+What each variable is for, and what specifically breaks without it, is in
+[CLAUDE.md](CLAUDE.md) and in `scripts/env-required.mjs`.
 
 ## Deployment
 

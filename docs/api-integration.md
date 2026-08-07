@@ -20,11 +20,10 @@ PUBLIC_API_URL=https://your-api-url.com/
 
 ### Setting Up Locally
 
-Create a `.env` file in the project root:
+Copy the committed example, which carries the real value for this variable:
 
 ```bash
-# .env
-PUBLIC_API_URL=https://api.yeride.com/
+cp .env.example .env
 ```
 
 ### Production Configuration
@@ -35,7 +34,7 @@ For production (GitHub Actions), set the `PUBLIC_API_URL` secret in the reposito
 2. Add `PUBLIC_API_URL` as a repository secret
 
 `PUBLIC_API_URL` is one of six required `PUBLIC_*` secrets; the build fails on any
-missing or empty one (`scripts/check-env.mjs`). The full list is in CLAUDE.md.
+missing or empty one (`scripts/check-env.mjs`). The list is `.env.example`.
 
 ## API Endpoints
 

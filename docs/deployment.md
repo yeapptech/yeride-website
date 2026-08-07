@@ -32,13 +32,15 @@ www.yeride.com
    - Go to **Settings** → **Secrets and variables** → **Actions**
    - Add the following secret:
 
-   | Secret | Description | Example |
-   |--------|-------------|---------|
-   | `PUBLIC_API_URL` | Backend API URL | `https://api.yeride.com/` |
+   The six secret names are exactly the six variable names in `.env.example`;
+   `npm run checks` fails on a pull request where that file and
+   `scripts/env-required.mjs` disagree.
 
-   All six `PUBLIC_*` secrets are required, not just this one — the build fails
-   on a missing or empty one (`scripts/check-env.mjs`). The full list is in
-   CLAUDE.md, and `deploy-all.yml`'s "Create env file" step must write each one.
+   All six are required, not just `PUBLIC_API_URL` — the build fails on a missing
+   or empty one (`scripts/check-env.mjs`), and `deploy-all.yml`'s "Create env
+   file" step must write each one. A secret that has been renamed or never
+   created interpolates to the empty string, which is the case that check exists
+   to catch.
 
 ### Custom Domain
 
@@ -135,9 +137,9 @@ jobs:
 # Install dependencies
 npm ci
 
-# Create environment file — all six PUBLIC_* variables, see CLAUDE.md
-echo "PUBLIC_API_URL=https://api.yeride.com/" > .env
-# ...and the other five; npm run build fails if any is missing or empty
+# Create environment file — all six PUBLIC_* variables
+cp .env.example .env    # then fill in the five secret values
+# npm run build fails if any is missing or empty
 
 # Build the site
 npm run build

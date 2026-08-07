@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "checks": "node scripts/check-route-parity.mjs && node scripts/check-copy-gate.mjs",
+    "checks": "node scripts/check-route-parity.mjs && node scripts/check-copy-gate.mjs && node scripts/check-env-example.mjs",
     "check:fee-labels": "node scripts/check-fee-labels.mjs",
     "check:dist": "node scripts/check-dist-copy-gate.mjs",
     "check:env": "node scripts/check-env.mjs",

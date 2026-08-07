@@ -1,9 +1,16 @@
-# The two build gates, run on every pull request.
+# The three dependency-free build gates, run on every pull request.
 #
 # deploy-all.yml only triggers on push to main, so without this the gates fire
 # after a merge — main goes red and undeployable, which is the wrong end of the
-# process to find out. Both scripts are dependency-free plain Node, so this needs
-# no npm ci, no private registry and no NPM_TOKEN; it finishes in seconds.
+# process to find out. All three scripts are dependency-free plain Node, so this
+# needs no npm ci, no private registry and no NPM_TOKEN; it finishes in seconds.
+#
+# The third, check-env-example.mjs (#70), is here for the same reason as the
+# other two and not by accident of being cheap: it is the ONLY env-aware gate
+# that can run on a pull request at all. check-env.mjs imports Vite and needs
+# the six secrets, so drift between .env.example and scripts/env-required.mjs
+# would otherwise be caught on main, after the merge. It reads names only,
+# never a value, which is what lets it live here.
 #
 # It deliberately does NOT run astro check or astro build — those need the
 # @yeapptech registry. deploy-all.yml still runs the full chain on main.
@@ -43,5 +50,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: EN/ES route parity + copy gate
+      - name: EN/ES route parity + copy gate + env-example parity
         run: npm run checks
