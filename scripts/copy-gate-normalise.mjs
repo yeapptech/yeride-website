@@ -135,7 +135,7 @@ const NAMED = {
 // The invisible class, as a Unicode PROPERTY rather than as eight of its members.
 // #59 settled the analogous question by inverting a blocklist into a positive
 // rule; copy here is not ASCII, so that inversion is not available, but the
-// principle is \u2014 name the class, do not enumerate it. The old set held eight code
+// principle is — name the class, do not enumerate it. The old set held eight code
 // points and 4,198 more passed: every variation selector (so "insur<U+FE0F>ance"
 // was green in both gates), most of the bidi block the set claimed to cover, the
 // invisible maths operators, and the combining grapheme joiner.
@@ -148,8 +148,8 @@ const NAMED = {
 //
 // One honest edge: the four Hangul fillers (U+115F, U+1160, U+3164, U+FFA0) are
 // Default_Ignorable yet render with width, so dropping one could weld two words a
-// reader sees apart. Dropping is still right \u2014 the alternative lets a filler split
-// a word invisibly, which is the whole subject of #80 \u2014 and neither language this
+// reader sees apart. Dropping is still right — the alternative lets a filler split
+// a word invisibly, which is the whole subject of #80 — and neither language this
 // site ships can contain one.
 //
 // U+FEFF is both Cf and JavaScript whitespace. It is tested here FIRST, exactly as
