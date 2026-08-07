@@ -54,82 +54,46 @@ The site uses a custom domain configured via:
 
 **File:** `.github/workflows/deploy-all.yml`
 
-### Workflow Triggers
+### What it runs, and where that is written
 
-```yaml
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:  # Manual trigger
-```
+`deploy-all.yml` is the authoritative description of the deploy, and this
+document does not restate it. It used to. A "Full Workflow" listing lived here
+until #71, and by then it had drifted from the real file in **every one of the
+seven steps it showed** — all four action versions, the Node version, four
+step names, the `NPM_TOKEN` the private registry needs — as well as in the
+workflow's own name and its missing `concurrency:` block, and it omitted the
+fee-label check entirely. The `.env` step was the one that bit: a single `echo`
+with `>` under a comment saying there are six lines, so a reader who followed
+the comment literally ended up with a `.env` holding only the last variable and
+then hit the failure the comment was warning them about. Nothing asserted the
+sample, which is why it drifted; the real step **is** asserted on every pull
+request (`scripts/check-deploy-env.mjs`, #90) and is one click away, so the copy
+bought nothing it did not also cost.
 
-### Workflow Steps
+Read it there. What is worth writing down here is what the steps are *for*.
 
-1. **Checkout** - Clone repository code
-2. **Setup Node.js** - Install Node.js 20 with npm caching
-3. **Create .env** - Inject secrets as environment variables
-4. **Install dependencies** - Run `npm ci`
-5. **Build** - Run `npm run build` (includes TypeScript checking)
-6. **Upload artifact** - Prepare build output for deployment
-7. **Deploy** - Publish to GitHub Pages
+- **Create env file** — one `echo` per secret into `.env`, the first redirecting
+  with `>` and the five after it appending with `>>`. Astro inlines these at
+  build time, so this step is the only thing that puts a value into the deploy's
+  environment. The step itself is checked on every pull request by
+  `scripts/check-deploy-env.mjs` (#90): the six names must agree with
+  `scripts/env-required.mjs`, each must come from its own same-named secret, and
+  a second `>` — which would truncate the file back to one variable — fails.
+  `.env.example` is held to that same one list by a separate gate,
+  `scripts/check-env-example.mjs` (#70). Both run in `npm run checks`.
+- **Fee-label coverage** — `scripts/check-fee-labels.mjs` (#56). It needs the
+  network, so it cannot live inside `npm run build`. It fails the deploy on a
+  charge, area or ride tier id the site cannot name, and skips loudly rather
+  than passing quietly when the endpoint is unreachable.
+- **Install dependencies** — `npm ci` with `NPM_TOKEN` in the environment. The
+  committed `.npmrc` routes `@yeapptech/*` through GitHub Packages, so without
+  that secret the install fails before anything is built.
+- **Build Astro site** — `npm run build`, which is the whole gate chain
+  (CLAUDE.md lists it). This is where a renamed or deleted secret becomes a red
+  deploy rather than a live site with a dead pre-registration form.
+- **Upload artifact**, then **Deploy to GitHub Pages** — publish `dist/`.
 
-### Full Workflow
-
-```yaml
-name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Create .env file
-        # All six PUBLIC_* secrets, one line each — the build fails on a missing
-        # or empty one. See deploy-all.yml for the authoritative version.
-        run: echo "PUBLIC_API_URL=${{ secrets.PUBLIC_API_URL }}" > .env
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './dist'
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-```
+Triggers: a push to `main`, or a manual run from the **Actions** tab.
 
 ## Manual Deployment
 
@@ -171,7 +135,7 @@ npm run preview
 ### Trigger Manual Deployment
 
 1. Go to **Actions** tab
-2. Select **Deploy to GitHub Pages** workflow
+2. Select the **Deploy Website** workflow (`deploy-all.yml`)
 3. Click **Run workflow**
 4. Select `main` branch
 5. Click **Run workflow**
