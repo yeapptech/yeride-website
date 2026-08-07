@@ -10,7 +10,7 @@ YeRide website — a static marketing, pre-registration, and fare-estimate site 
 
 ```bash
 npm run dev        # Dev server at http://localhost:4321
-npm run checks     # Route parity + copy gate + env name parity, x2 (all fast, no deps)
+npm run checks     # Route parity + copy gate + env-example + deploy-env parity (no deps)
 npm run build      # npm run checks + env check + astro check + astro build → dist/ + dist copy gate
 npm run preview    # Preview production build locally
 ```

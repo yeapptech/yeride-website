@@ -32,6 +32,15 @@
 // list of names, and that already lives in exactly one place, imported by both.
 // Two gates over one hub do not drift; two copies of six names do.
 //
+// The set-difference loop and the closing "four-place change" paragraph are
+// near-duplicates of that file's, and a review flagged it. Left duplicated on
+// purpose: what makes drift dangerous in #57's and #68's cases is that it
+// creates FALSE COVERAGE — a pattern in one gate and not the other reads as
+// checked when it is not. Two error epilogues drifting misleads a reader for as
+// long as it takes to read the other file; it cannot make either gate check
+// less. Sharing them would couple two scripts whose whole point is that they
+// have different constraints, to save a dozen lines.
+//
 // WHY IT IS DEPENDENCY-FREE, AND WHAT THAT COSTS. `npm run checks` installs
 // nothing by design (#41), and that is precisely the rule that keeps this gate
 // useful — the drift it catches is introduced on a pull request, which has no
@@ -57,6 +66,23 @@
 // that all exist — the same misleading failure, from the same file, for a
 // different reason. The operator is already in hand from the same parse, so a
 // gate that read it and looked away would be choosing not to know.
+//
+// THAT RULE IS OVER EVERY LINE THAT REDIRECTS INTO .env, not only the ones
+// naming a PUBLIC_ variable, and the first version of this gate got it wrong.
+// It skipped any line without `PUBLIC_` in it, so a trailing
+// `echo "NODE_ENV=production" > .env` passed green while truncating the file to
+// that one line — the deploy then failing on all SIX secrets, every one of
+// which exists. The discipline belongs to the file, not to the variables: a
+// line that writes .env matters whatever it writes. Name parity still comes
+// from the PUBLIC_ lines alone; the two questions are read off the same pass
+// but are not the same set.
+//
+// The residue, said plainly rather than implied away: this sees `>` and `>>`
+// redirects into `.env`. It does not see a heredoc, a `tee`, a `cp` over the
+// file, or an `rm` of it, and it cannot — recognising shell in general is not
+// something a 200-line gate does. Those would all fail the deploy loudly at
+// check-env.mjs rather than ship a bad site, which is the direction to be wrong
+// in; the case worth catching here was the one that looks correct in review.
 //
 // WHY IT CHECKS THE SECRET NAME. `echo "PUBLIC_FIREBASE_API_KEY=${{
 // secrets.PUBLIC_FIREBASE_AUTH_DOMAIN }}"` puts the name in the step and the
@@ -85,6 +111,11 @@ const STEP = "Create env file";
 // cannot reason about, and should be reported as unrecognised rather than read
 // past.
 const ECHO = /^echo\s+"(PUBLIC_[A-Z0-9_]+)=\$\{\{\s*secrets\.([A-Za-z0-9_]+)\s*\}\}"\s*(>>?)\s*(\S+)$/;
+
+// Any line that redirects into .env, whatever it writes. `2> .env` and the like
+// do not match, because the operator must be preceded by whitespace or start of
+// line — a stderr redirect is not writing variables.
+const REDIRECT = /(?:^|\s)(>>?)\s*\.env$/;
 
 const fail = (...lines) => {
   for (const l of lines) console.error(l);
@@ -124,14 +155,28 @@ for (let i = stepAt + 1; i < lines.length; i++) {
 
 const written = [];
 const unrecognised = [];
+// Every line that redirects into .env, in file order — the sequence the
+// truncate-then-append rule is judged over. A superset of `written`: it also
+// holds lines that write .env without naming a PUBLIC_ variable, which are
+// exactly the ones the first version of this gate walked past.
+const writers = [];
 
 for (const { text, lineNo } of block) {
   // A `#` inside a `run:` block is a shell comment: the line does not run, so
   // it does not write the variable, so it is right to skip. Outside the block's
   // scalar it is a YAML comment, which also does not run.
-  if (!text || text.startsWith("#") || !text.includes("PUBLIC_")) continue;
+  if (!text || text.startsWith("#")) continue;
+
+  const redirect = text.match(REDIRECT);
+  if (redirect) writers.push({ op: redirect[1], lineNo });
+
+  // Name parity is a question about the PUBLIC_ lines only; the redirection
+  // question above is about all of them.
+  if (!text.includes("PUBLIC_")) continue;
   const m = text.match(ECHO);
-  if (m) written.push({ name: m[1], secret: m[2], op: m[3], target: m[4], lineNo });
+  // The operator is captured but not kept here — `writers` above owns that
+  // question, over a wider set of lines than this one.
+  if (m) written.push({ name: m[1], secret: m[2], target: m[4], lineNo });
   // Deduped: a line that names the variable and its secret mentions it twice,
   // which is one fact, not two.
   else unrecognised.push({ names: [...new Set(text.match(/PUBLIC_[A-Z0-9_]+/g) ?? [])], lineNo });
@@ -200,22 +245,23 @@ for (const { name, secret, target, lineNo } of written) {
 }
 
 // `>` truncates, `>>` appends: the first line starts the file and every later
-// one adds to it. Judged on the first line ACTUALLY written, not on
-// PUBLIC_API_URL by name, because whichever variable comes first is the one
-// that has to start the file.
-if (written.length) {
-  const [first, ...rest] = written;
+// one adds to it. Judged over EVERY line that writes .env, not just the ones
+// naming a variable — a `>` on any of them discards what is above it — and on
+// the first such line by position, not on PUBLIC_API_URL by name, because
+// whichever line comes first is the one that has to start the file.
+if (writers.length) {
+  const [first, ...rest] = writers;
   if (first.op !== ">") {
     errors.push(
-      `line ${first.lineNo} is the step's first written variable and uses \`${first.op}\`, not \`>\`\n` +
+      `line ${first.lineNo} is the step's first write to .env and uses \`${first.op}\`, not \`>\`\n` +
         `      the first line must truncate, or .env keeps whatever was there before it`,
     );
   }
   for (const w of rest) {
     if (w.op !== ">>") {
       errors.push(
-        `line ${w.lineNo} uses \`${w.op}\`, not \`>>\`\n` +
-          `      it truncates .env, so every variable written above it is discarded and the\n` +
+        `line ${w.lineNo} writes .env with \`${w.op}\`, not \`>>\`\n` +
+          `      it truncates .env, so everything written above it is discarded and the\n` +
           `      deploy fails naming secrets that all exist`,
       );
     }

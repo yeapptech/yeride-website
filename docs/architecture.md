@@ -64,8 +64,7 @@ yeride-website/
 │   ├── check-route-parity.mjs      check-copy-gate.mjs
 │   ├── check-env.mjs               check-dist-copy-gate.mjs
 │   ├── check-env-example.mjs       check-deploy-env.mjs
-│   ├── env-required.mjs
-│   ├── check-fee-labels.mjs        # Runs outside npm run build (needs network)
+│   ├── env-required.mjs            check-fee-labels.mjs  # outside the build
 │   ├── copy-gate-patterns.mjs      copy-gate-normalise.mjs
 │   └── copy-gate-patterns.test.mjs # Run by hand when the pattern list changes
 │

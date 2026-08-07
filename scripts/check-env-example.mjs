@@ -13,8 +13,13 @@
 // secrets present, so it can only run on a deploy — it is not in `checks.yml`
 // for exactly that reason, and drift caught there is drift caught after the
 // merge. Comparing NAMES needs neither Vite nor secrets, so this runs in
-// `npm run checks` alongside route parity and the copy gate, dependency-free by
-// #41's design.
+// `npm run checks` alongside route parity, the copy gate and check-deploy-env.mjs,
+// dependency-free by #41's design.
+//
+// check-deploy-env.mjs (#90) is the sibling that asks this same question of the
+// THIRD place a required name must appear — deploy-all.yml's "Create env file"
+// step. Separate scripts over one shared REQUIRED list, not one script with two
+// legs: see that file's header for why the split is the safe one.
 //
 // WHY THIS IS NOT A THIRD ENV READER. #72 is open about the repo having two
 // readers of the same environment that can disagree: check-env.mjs through
