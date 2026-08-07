@@ -55,11 +55,14 @@
 //     "no surge today", is a same-line lookahead, so splitting it fails the build
 //     on copy §3.4 allows — pass 2 can see that it is permitted and is not asked.
 //     That is #82.
-//   - evasion through the finite tables in copy-gate-normalise.mjs: most of the
-//     invisible-character class, a numeric reference with leading zeros or no
-//     semicolon, a named reference outside NAMED, and a homoglyph written as an
-//     escape (the confusable check below reads RAW lines, so pass 2 decodes one
-//     and discards it). #80.
+//   - a NAMED reference outside copy-gate-normalise.mjs's table, which stays
+//     finite and is argued there. #80 closed the rest of that list: the invisible
+//     class is now a Unicode property rather than eight of its members, numeric
+//     references follow HTML5 (unbounded digits, optional semicolon), and the
+//     confusable check below reads every normalised view as well as the raw line,
+//     so a homoglyph written as an escape no longer survives being decoded.
+//     One residue: pass 2 reads comment-stripped text, so a confusable written as
+//     an ESCAPE inside a comment is seen by neither half. A literal one still is.
 //   - a tag-split phrase in a file type the tag views skip — .ts by design, but
 //     also .json, .txt, .yml and, in the dist gate, every .js bundle. #81.
 //   - anything in a file type SCAN_EXT does not list. Those are named on every
@@ -286,18 +289,52 @@ for (const file of files) {
     );
   }
 
-  // Homoglyphs are read from the RAW line, comments included: an HTML comment in
-  // an .astro file ships, and a confusable is worth catching wherever it is.
+  // Homoglyphs, from the RAW line first — comments included, because an HTML
+  // comment in an .astro file ships and a confusable is worth catching wherever it
+  // is — and then from each normalised view.
+  //
+  // The second half is #80. Pass 2 DECODES "ch&#1077;apest" into a Cyrillic "e"
+  // and then discarded it, because this check only ever read raw lines: the gate
+  // built the evidence and threw it away. Every confusable is now read from every
+  // view this gate takes.
+  //
+  // #57 kept confusables source-only because a vendored bundle may legitimately
+  // carry another script. That reasoning SURVIVES rather than being worked around:
+  // pass 2's views are views of source, so nothing vendored is in scope here, and
+  // the dist gate is left alone.
+  //
+  // A hit found only in a view is reported at the ESCAPE's line, not at some
+  // position in a derived string — the span map already points at the bytes an
+  // author has to edit, and telling them where the decoded character "is" would
+  // name a place that exists in no file.
+  const flagConfusable = (where, at, text, note) => {
+    const point = `U+${text.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`;
+    judge(
+      at,
+      `"${text}" (${point})${note}`,
+      "not a Latin letter, but shaped like one — a homoglyph hides a gated word from every pattern above",
+      where,
+    );
+  };
+
+  const confusables = new Set();
   raw.forEach((line, i) => {
     const hit = line.match(CONFUSABLE);
     if (!hit) return;
-    const point = `U+${hit[0].codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`;
-    judge(
-      i + 1,
-      `"${hit[0]}" (${point})`,
-      "not a Latin letter, but shaped like one — a homoglyph hides a gated word from every pattern above",
-    );
+    confusables.add(`${i + 1} ${hit[0]}`);
+    flagConfusable(`${file}:${i + 1}`, i + 1, hit[0], "");
   });
+
+  const global = new RegExp(CONFUSABLE.source, `${CONFUSABLE.flags}g`);
+  for (const { name, text, map } of views) {
+    for (const m of text.matchAll(global)) {
+      const line = lineAt(map[m.index]);
+      const id = `${line} ${m[0]}`;
+      if (confusables.has(id)) continue;
+      confusables.add(id);
+      flagConfusable(`${file}:${line}`, line, m[0], ` [${name}]`);
+    }
+  }
 }
 
 for (const p of pragmas.filter((p) => !p.used)) {
