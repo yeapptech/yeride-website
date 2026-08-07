@@ -5,8 +5,19 @@
 # file" step in deploy-all.yml, a GitHub Secret, and REQUIRED in
 # scripts/env-required.mjs if the var is required. Miss the workflow and the var
 # is an empty string in production; since #59 that fails the build rather than
-# shipping silently, but only for vars listed in REQUIRED — this hook catches
-# the rest. Miss .env.example and `npm run checks` fails on the PR (#70).
+# shipping silently, but only for vars listed in REQUIRED. Miss .env.example and
+# `npm run checks` fails on the PR (#70); miss the workflow line for a REQUIRED
+# var and it fails there too, since #90.
+#
+# WHAT IS LEFT FOR THIS HOOK after #90 gave the workflow step a real gate: a
+# PUBLIC_ var that source code READS but that is in neither REQUIRED nor the
+# workflow. No gate sees that one — check-deploy-env.mjs compares the step
+# against REQUIRED, and a var absent from REQUIRED is absent from both sides, so
+# the two agree about a variable that will be empty in production. This hook is
+# the only thing that starts from what the code reads. It is still an assumed
+# guard, not a gate — it fires only when someone edits a reading file, with a
+# hook-aware tool, in a session where it is installed — so the durable answer
+# for a var that matters is to put it in REQUIRED and let the gates take over.
 set -uo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

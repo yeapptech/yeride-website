@@ -152,6 +152,11 @@ if (errors.length) {
   if (anyEmpty) {
     console.error(`  A secret that has been renamed or never created interpolates to an empty`);
     console.error(`  string, which is what "missing or empty" above means on a deploy.`);
+    // Since #90 the workflow line is asserted on every pull request, so on a
+    // deploy this can no longer be the missing-line case. Saying so is the
+    // whole payoff of that gate: before it, "missing secret" here was a guess.
+    console.error(`  The step's line itself is checked on every pull request`);
+    console.error(`  (scripts/check-deploy-env.mjs), so on a deploy this is the secret.`);
   }
   process.exit(1);
 }

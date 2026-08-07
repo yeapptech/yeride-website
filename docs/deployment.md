@@ -32,15 +32,17 @@ www.yeride.com
    - Go to **Settings** → **Secrets and variables** → **Actions**
    - Add the following secret:
 
-   The six secret names are exactly the six variable names in `.env.example`;
-   `npm run checks` fails on a pull request where that file and
+   The six secret names are exactly the six variable names in `.env.example`,
+   and exactly the six written by `deploy-all.yml`'s "Create env file" step.
+   `npm run checks` fails on a pull request where any of those three and
    `scripts/env-required.mjs` disagree.
 
    All six are required, not just `PUBLIC_API_URL` — the build fails on a missing
-   or empty one (`scripts/check-env.mjs`), and `deploy-all.yml`'s "Create env
-   file" step must write each one. A secret that has been renamed or never
-   created interpolates to the empty string, which is the case that check exists
-   to catch.
+   or empty one (`scripts/check-env.mjs`). A secret that has been renamed or
+   never created interpolates to the empty string, which is the case that check
+   exists to catch — and since the workflow line is now asserted on every pull
+   request (`scripts/check-deploy-env.mjs`, #90), a failure there means the
+   secret rather than the line.
 
 ### Custom Domain
 

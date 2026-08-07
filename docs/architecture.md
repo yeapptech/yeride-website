@@ -63,7 +63,8 @@ yeride-website/
 ├── scripts/                  # The build gates — see CLAUDE.md
 │   ├── check-route-parity.mjs      check-copy-gate.mjs
 │   ├── check-env.mjs               check-dist-copy-gate.mjs
-│   ├── check-env-example.mjs       env-required.mjs
+│   ├── check-env-example.mjs       check-deploy-env.mjs
+│   ├── env-required.mjs
 │   ├── check-fee-labels.mjs        # Runs outside npm run build (needs network)
 │   ├── copy-gate-patterns.mjs      copy-gate-normalise.mjs
 │   └── copy-gate-patterns.test.mjs # Run by hand when the pattern list changes
@@ -249,14 +250,15 @@ Public environment variables are prefixed with `PUBLIC_`. All six are required;
 
 The list is [`.env.example`](../.env.example), which is committed — copy it to `.env`
 and fill in the values. Its names are asserted against `scripts/env-required.mjs` on
-every pull request, so the two cannot drift. What each variable is for, and what
+every pull request, and so is the "Create env file" step in `deploy-all.yml`, so all
+three places a required name must appear cannot drift. What each variable is for, and what
 specifically breaks without it, is in CLAUDE.md and in the `breaks` strings in
 `scripts/env-required.mjs`.
 
 ## Build Process
 
 There is no test runner and no linter. **`npm run build` is the verification
-gate**, and it runs six things in order — any one of them fails the build:
+gate**, and it runs seven things in order — any one of them fails the build:
 
 1. **Route parity** (`check-route-parity.mjs`) — every route has its `/es/` twin.
 2. **Copy gate** (`check-copy-gate.mjs`) — gated and never-claimed strings
@@ -264,17 +266,22 @@ gate**, and it runs six things in order — any one of them fails the build:
 3. **Env example parity** (`check-env-example.mjs`) — `.env.example` and
    `scripts/env-required.mjs` must name the same six variables. It reads names
    only, never a value, so it needs neither dependencies nor secrets.
-4. **Env check** (`check-env.mjs`) — all six `PUBLIC_*` present, non-empty and
+4. **Deploy env parity** (`check-deploy-env.mjs`) — the "Create env file" step in
+   `deploy-all.yml` writes exactly those names, each from its own same-named
+   secret, truncating once (`>`) and appending after (`>>`). That step is the
+   only thing that puts a value into the deploy's `.env`, and missing a line
+   there fails the deploy on `main` naming a *secret* that exists.
+5. **Env check** (`check-env.mjs`) — all six `PUBLIC_*` present, non-empty and
    printable ASCII. Astro inlines them at build time, so an empty one becomes a
    falsy literal and Rollup deletes the branch that tested it.
-5. **`astro check`** — a type error fails the build.
-6. **Dist copy gate** (`check-dist-copy-gate.mjs`) — §5 again, over `dist/`,
+6. **`astro check`** — a type error fails the build.
+7. **Dist copy gate** (`check-dist-copy-gate.mjs`) — §5 again, over `dist/`,
    after `astro build`. This is the layer that measures the actual promise.
 
-Items 1–3 are dependency-free and run on every PR (`checks.yml`); 4–6 need
+Items 1–4 are dependency-free and run on every PR (`checks.yml`); 5–7 need
 `npm ci` against the private registry and run on `main` (`deploy-all.yml`).
 
-A seventh gate, **`check-fee-labels.mjs`**, runs *outside* the build because it
+An eighth gate, **`check-fee-labels.mjs`**, runs *outside* the build because it
 needs the network: it asks the live `getFeeSchedule` whether the site can name
 every charge, service-area and ride-tier id it publishes. It fails on drift and
 **skips** when it cannot ask. Deploy-time plus daily on a schedule.
