@@ -306,6 +306,12 @@ function decodeEscape(raw, i, css = false) {
 // the character after the name, before tagEnd is ever called, and the "<" is
 // emitted as ordinary text, which is what a browser does with it too.
 //
+// End-of-input is deliberately NOT a third terminator. It reads as though it should
+// be — a file ending mid-name — but it cannot change an outcome: with no ">" after
+// it, tagEnd returns -1 and the "<" is emitted as text whatever this test says. It
+// was written in and then removed rather than left in as an unfalsifiable bound,
+// because the controls could not tell the two versions apart.
+//
 // Two deliberate narrowings, both places where HTML5 is MORE permissive than this
 // and being more permissive would discriminate nothing:
 //
@@ -331,7 +337,16 @@ function decodeEscape(raw, i, css = false) {
 // This can only ever make the tag views read LESS as a tag. A real tag it declined
 // would be a miss, not a fabrication, and the fixture in copy-gate-normalise.test.mjs
 // carries the shapes this repo's own output actually contains.
-const TAG_OPEN = /<(?:!--|!\[CDATA\[|!doctype|\?[a-z]|\/?[a-z][a-z0-9:._-]*(?=[\s/>]|$))/iy;
+//
+// WHAT IT DOES NOT SEPARATE, because the claim "every span is now a real tag" is a
+// property of this build and not of this rule, and an independent review had to
+// point that out: a ONE-LETTER tag name is genuinely ambiguous. "a<i>b" and
+// "x=a<b>c" are valid minified JavaScript and valid markup alike, so the span is
+// still taken and the identifiers either side still weld. No syntactic rule can
+// tell those apart — a browser cannot either — and the built tree contains none
+// today. That is a measurement, not a guarantee, and it is the reason the tag views
+// remain something the dist gate's ALLOWED list has to be able to answer for.
+const TAG_OPEN = /<(?:!--|!\[CDATA\[|!doctype|\?[a-z]|\/?[a-z][a-z0-9:._-]*(?=[\s/>]))/iy;
 
 /** Whether a tag, comment or CDATA section opens at `raw[i]`. Sticky rather than
  *  applied to a slice: the name run is unbounded, and slicing a fixed two
