@@ -82,11 +82,12 @@
 // Three §5 rules are judgement, not regex, and are NOT checked here — they stay
 // human review at copy time. The list lives with the patterns.
 
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import { PATTERNS } from "./copy-gate-patterns.mjs";
 import { matchesIn, viewsOf } from "./copy-gate-normalise.mjs";
+import { passthroughFiling } from "./copy-gate-suspension.mjs";
 
 // public/ is copied verbatim into dist/, so it ships exactly as written.
 const ROOTS = ["src", "public"];
@@ -388,12 +389,27 @@ const SUSPENSION = /^src[/\\](i18n[/\\]fee(Labels|sCopy)\.ts|components[/\\]FeeS
 const suspended = pragmas.filter(
   (p) => /#48(?!\w)/.test(p.reason) && SUSPENSION.test(p.file),
 );
-if (suspended.length && /family:\s*"passthrough"/.test(stripComments(readFileSync(LABELS, "utf8")))) {
-  errors.push(
-    `${LABELS}  a charge is now filed into the "passthrough" family, so the family-2 copy ` +
-      `renders on /fees — #48 has landed, so retire its ${suspended.length} copy-gate-allow ` +
-      `pragma(s) and the §3.4 suspension with it`,
+// The reading itself is scripts/copy-gate-suspension.mjs, so it can be proved to
+// fire (#83 found it enforced §3.4 against double quotes only, and nothing had
+// ever asked it to). It answers "cannot tell" separately from "not filed": a
+// renamed or deleted charge map must fail here, not silently un-arm the guard.
+if (suspended.length) {
+  const filing = passthroughFiling(
+    existsSync(LABELS) ? stripComments(readFileSync(LABELS, "utf8")) : null,
   );
+  if (!filing.readable) {
+    errors.push(
+      `${LABELS}  the §3.4 suspension guard cannot read this file — ${filing.why}. ` +
+        `Until it can, nothing checks whether the suspended family-2 copy has gone live; ` +
+        `point scripts/copy-gate-suspension.mjs at the charge map's new home`,
+    );
+  } else if (filing.filed) {
+    errors.push(
+      `${LABELS}  a charge is now filed into the "passthrough" family, so the family-2 copy ` +
+        `renders on /fees — #48 has landed, so retire its ${suspended.length} copy-gate-allow ` +
+        `pragma(s) and the §3.4 suspension with it`,
+    );
+  }
 }
 
 if (errors.length) {
