@@ -27,8 +27,8 @@ import { PATTERNS } from "./copy-gate-patterns.mjs";
 // The source gate's reading — the non-fabricating views. Deliberately not the
 // dist gate's: a control that passes only under a view documented as able to
 // invent phrases proves nothing about what the source gate sees.
-const fires = (raw, markup = true) =>
-  matchesIn(viewsOf(raw, { markup, includeFabricating: false }), PATTERNS).length > 0;
+const fires = (raw) =>
+  matchesIn(viewsOf(raw, { markup: true, includeFabricating: false }), PATTERNS).length > 0;
 
 /** A word split at the "|" by one invisible character, named by code point.
  *
@@ -104,11 +104,10 @@ let failures = 0;
 
 const check = (label, cases, want) => {
   for (const [name, raw] of cases) {
-    const got = fires(raw);
-    if (got === want) continue;
+    if (fires(raw) === want) continue;
+    console.log(`FAIL  ${label} — ${want ? "nothing matched" : "false positive"}: ${name}`);
+    console.log(`      ${JSON.stringify(raw)}`);
     failures++;
-    console.error(`  ✗ ${label}: ${name}`);
-    console.error(`      ${JSON.stringify(raw)}`);
   }
 };
 
@@ -124,21 +123,20 @@ check("should stay quiet", MUST_NOT_FIRE, false);
 for (const [name, raw] of [...MUST_FIRE, ...MUST_NOT_FIRE]) {
   for (const view of viewsOf(raw, { markup: true, includeFabricating: true })) {
     if (view.map.length !== view.text.length) {
+      console.log(`FAIL  span map — ${name} [${view.name}]`);
+      console.log(`      ${view.map.length} offsets for ${view.text.length} characters`);
       failures++;
-      console.error(`  ✗ span map: ${name} [${view.name}] — ${view.map.length} offsets for ${view.text.length} characters`);
     }
     for (const offset of view.map) {
       if (!Number.isInteger(offset) || offset < 0 || offset >= raw.length) {
+        console.log(`FAIL  span map — ${name} [${view.name}]: offset ${offset} is outside the source`);
         failures++;
-        console.error(`  ✗ span map: ${name} [${view.name}] — offset ${offset} is outside the source`);
         break;
       }
     }
   }
 }
 
-if (failures) {
-  console.error(`\n✗ copy-gate normaliser: ${failures} failure(s)`);
-  process.exit(1);
-}
-console.log(`✓ copy-gate normaliser (${MUST_FIRE.length + MUST_NOT_FIRE.length} controls)`);
+const total = MUST_FIRE.length + MUST_NOT_FIRE.length;
+console.log(`${failures ? "✗" : "✓"} copy-gate normaliser: ${total} controls, ${failures} failure${failures === 1 ? "" : "s"}`);
+process.exit(failures ? 1 : 0);
