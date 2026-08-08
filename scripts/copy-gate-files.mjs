@@ -9,12 +9,6 @@
 // nothing compared the lists. Importing one constant makes them comparable by
 // construction rather than by review.
 //
-// The union is the right shape, not a compromise. An extension that never occurs
-// in a tree costs that gate nothing, and the alternative — two lists, each
-// trimmed to what its tree holds today — is exactly what drifted. src/ holds no
-// .xml today and dist/ holds no .yml; the day either changes, neither gate has
-// to be edited.
-//
 // ---------------------------------------------------------------------------
 // THE MARKUP QUESTION, which is what #81 was filed about.
 //
@@ -42,20 +36,56 @@
 //   fetchable, and everything under public/ is copied into dist/ byte for byte.
 //   A "<" in those is markup a browser will read, whatever the extension says —
 //   which is precisely #81's two cases: a bundle assigning tag-split markup to
-//   innerHTML, and an HTML fragment inside public/content.json. The swallowed
-//   bytes are the price, and the dist gate already has the machinery for the
-//   phantom that eventually falls out of it: one blessed ALLOWED entry, named
-//   and counted. Its header says the same thing about a regex backreference in a
-//   vendor chunk — loud failure, one entry, no narrowing of the rule.
+//   innerHTML, and an HTML fragment inside public/content.json.
 //
 //   AUTHORING SOURCE does not, beyond the file types where tags are the syntax
-//   (.astro, .html, .svg, .md). A .ts file under src/ is compiled, not served;
-//   its "<" is a generic. And the benefit that would justify the noise is not
-//   there: every innerHTML assignment in this repo is written inside a .astro
-//   component, which already gets the tag views at authorship time. The .ts
-//   exclusion #68 made was right, and it is kept here for a measured reason
+//   (.astro, .html, .svg, .md). A .ts file under src/ is compiled, not served,
+//   and its "<" is a generic. The benefit that would justify the noise is not
+//   there either: every innerHTML assignment in this repo is written inside a
+//   .astro component, which already gets the tag views at authorship time. The
+//   .ts exclusion #68 made was right, and it is kept here for a measured reason
 //   rather than an assumed one — with scripts/copy-gate-files.test.mjs holding
 //   the generic that must not fail the build.
+//
+//   The same exclusion catches .json and .yml under src/, and that half is NOT
+//   carried by the generics argument — in a .json a "<" IS a tag, which is the
+//   ticket's own case. It rests on something narrower: nothing under src/ is
+//   served, so such a file reaches a reader only through a .astro component
+//   (which is read as markup here) or through the build (where the dist gate
+//   reads the result as markup). It is a lost authorship-time backstop, not a
+//   production hole, and it is written down rather than implied because the
+//   measurement below says nothing about it: all 13 non-markup files in src/ are
+//   .ts, so no .json or .yml was ever weighed.
+//
+// ---------------------------------------------------------------------------
+// WHAT READING SERVED BYTES AS MARKUP DOES NOT BUY, stated because the obvious
+// reading of the paragraph above overstates it.
+//
+// In minified JavaScript the tag scan is wrong far more often than it is right:
+// "r<t.length" opens a span that runs to the next ">", which can be four
+// functions away. A claim that lands INSIDE such a span is invisible to the tag
+// views — and the plain view does not rescue it, because to the plain view the
+// claim is still split by its tag. So the hole #81 was filed over is NARROWED,
+// not closed. Measured on this build:
+//
+//   dist/_astro/FareEstimatePage…js   40.1% of bytes inside a false span
+//   dist/_astro/FeeSchedule…js        17.8%
+//
+// An adversarial review demonstrated it rather than deduced it: the same
+// tag-split claim injected into the real FareEstimatePage bundle fails the gate
+// at offset 1000 and passes green at offsets 3000 and 12000.
+//
+// The mirror of that miss is a false failure — a long span DELETED welds the
+// identifiers either side into a phrase nobody wrote, and the same review built
+// a plausible minified fixture that fails on "rates=i0)flat". That direction is
+// at least loud, and one ALLOWED entry retires it, which is the trade this gate
+// already takes on a vendor chunk's regex backreference.
+//
+// Both would be fixed by bounding the tag scan, and that was left undone rather
+// than overlooked: the longest GENUINE tag in this repo's own output is 2,825
+// bytes of SVG path data, so no length bound cleanly separates a real tag from a
+// JavaScript comparison, and choosing one is a change to the shared normaliser
+// affecting every markup file. It is its own decision, filed as its own ticket.
 //
 // #81's other two candidate answers were considered and are recorded as
 // rejected, because the measurement is what rejects them:
@@ -69,8 +99,7 @@
 //   what the gate checks invisible to the author, which a filename is not.
 //
 //   ONE RULE FOR EVERYTHING, markup views on every scanned type in both gates,
-//   buys nothing in src/ (no .ts here carries markup) at the price of the
-//   fabrication surface above.
+//   buys nothing in src/ at the price of the fabrication surface measured above.
 
 // Case-insensitive throughout: #57 fixed exactly this in the dist gate after a
 // review found "evade.HTML" was never read at all.

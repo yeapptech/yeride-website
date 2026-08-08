@@ -17,10 +17,11 @@
 // Like scripts/copy-gate-patterns.test.mjs, this lives in scripts/, which
 // neither gate scans, so the forbidden phrases below are safe to write down.
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { BINARY, SCAN_EXT } from "./copy-gate-files.mjs";
 
 const SOURCE_GATE = fileURLToPath(new URL("./check-copy-gate.mjs", import.meta.url));
 const DIST_GATE = fileURLToPath(new URL("./check-dist-copy-gate.mjs", import.meta.url));
@@ -66,8 +67,19 @@ const src = (files) =>
 // shared table exists to prevent. Naming the fixture path AND the phrase is the
 // precise claim anyway: this file, read this way, yielded this match.
 const dist = (files) => runGate(DIST_GATE, files);
-const reported = (out, file, phrase) =>
-  out.includes(file.replace(/^dist\//, "")) && out.includes(phrase);
+// The assertion is ANCHORED on the gate's own output shape,
+//   <key>  "<matched text>" ×<n> [<view>] — <why>
+// and both of the looser forms were falsified rather than argued away. Two
+// independent `includes` over the whole output pass on a file the gate never
+// opened, because a stale-ALLOWED line carries "insurance" and
+// "privacy-policy/index.html" between them. Narrowing that to a single LINE is
+// still not enough — that same line carries both, and "index.html" is a
+// substring of "privacy-policy/index.html". Requiring the line to START with the
+// key removes the suffix match, which is what actually made it wrong.
+const reported = (out, file, phrase) => {
+  const key = file.replace(/^dist\//, "");
+  return out.split("\n").some((l) => l.trim().startsWith(`${key}  "`) && l.includes(`"${phrase}"`));
+};
 
 // ---------------------------------------------------------------------------
 // The fixtures are ONE claim written two ways. The contiguous form must fail
@@ -182,22 +194,29 @@ for (const [name, body] of [
 // other does not is now impossible by construction rather than by review. This
 // asserts the import wiring, which is the only way that property can break.
 {
-  const files = await import("./copy-gate-files.mjs");
-  const source = await import("node:fs").then((fs) =>
-    fs.readFileSync(SOURCE_GATE, "utf8") + fs.readFileSync(DIST_GATE, "utf8"),
-  );
   say(
-    files.SCAN_EXT instanceof RegExp && files.BINARY instanceof RegExp,
+    SCAN_EXT instanceof RegExp && BINARY instanceof RegExp,
     "copy-gate-files.mjs must export SCAN_EXT and BINARY",
   );
-  say(
-    !/const\s+SCAN_EXT\s*=/.test(source) && !/const\s+BINARY\s*=/.test(source),
-    "neither gate may declare its own SCAN_EXT or BINARY — they must import the shared table",
-  );
-  say(
-    /copy-gate-files\.mjs/.test(source),
-    "both gates must import scripts/copy-gate-files.mjs",
-  );
+  // PER FILE, and matching the IMPORT STATEMENT rather than the filename. Both
+  // weaker forms were falsified by review: tested against the two gates
+  // CONCATENATED, one gate satisfies the assertion for both, and a reviewer
+  // pointed the dist gate at a divergent copy of the table with all controls
+  // still green; and matching /copy-gate-files\.mjs/ anywhere passes on the
+  // prose "See scripts/copy-gate-files.mjs" that both gates carry in comments,
+  // so deleting both import lines left this green.
+  for (const gate of [SOURCE_GATE, DIST_GATE]) {
+    const text = readFileSync(gate, "utf8");
+    const name = basename(gate);
+    say(
+      /import\s*\{[^}]*\}\s*from\s*"\.\/copy-gate-files\.mjs"/.test(text),
+      `${name} must import the shared table from ./copy-gate-files.mjs`,
+    );
+    say(
+      !/const\s+SCAN_EXT\s*=/.test(text) && !/const\s+BINARY\s*=/.test(text),
+      `${name} may not declare its own SCAN_EXT or BINARY`,
+    );
+  }
 }
 
 console.log(

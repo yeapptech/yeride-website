@@ -244,12 +244,19 @@ for (const path of files) {
     // markup — the extension says nothing about whether a browser will parse the
     // bytes as tags. A bundle assigning "Insur<span>ance</span>" to innerHTML was
     // the hole #81 was filed over, and .js got character-reference decoding here
-    // while the tag views it names in the same breath skipped it. The cost is
-    // paid in minified code, where "r<t.length" swallows to the next ">": 35.5%
-    // of this build's bundle bytes. That buys nothing and loses nothing on its
-    // own — the plain view still reads every byte untransformed — but it does
-    // make a phantom possible, which is what ALLOWED is for. See
-    // scripts/copy-gate-files.mjs.
+    // while the tag views it names in the same breath skipped it.
+    //
+    // In minified code the scan is wrong more often than right — "r<t.length"
+    // swallows to the next ">", 35.5% of this build's bundle bytes — and that
+    // cuts BOTH ways: a claim inside a swallowed span is missed (the plain view
+    // does not rescue it, since to the plain view the claim is still split), and
+    // a swallowed span DELETED can weld two identifiers into a phrase nobody
+    // wrote. So this narrows #81's hole rather than closing it, and it makes a
+    // phantom possible, which is what ALLOWED is for. Bounding the scan is the
+    // fix for both and is its own ticket — the longest genuine tag in this
+    // repo's output is 2,825 bytes of SVG path data, so no length bound
+    // separates a real tag from a comparison for free. See
+    // scripts/copy-gate-files.mjs for the measurements.
     markup: true,
     includeFabricating: true,
     // CSS escape decoding is scoped to stylesheets; outside CSS the form is not

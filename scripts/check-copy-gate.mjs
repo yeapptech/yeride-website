@@ -12,6 +12,17 @@
 // The pragma must sit in a comment, must name a ticket, and one that stops
 // matching anything fails the build, so the allowlist cannot outlive its reason.
 //
+// ONE PLACE HAS NO ESCAPE HATCH, and #81 made it reachable: a file under public/
+// whose type has no comment syntax — .json, .webmanifest. Those are read as
+// markup now, because they ship byte for byte, so a legitimate phrase in one can
+// fail this gate with no way to bless it. That is deliberate rather than
+// unnoticed. The only pragma such a file could carry would sit inside a shipped
+// string value, which is precisely the "shipped data authorising itself" that
+// IN_COMMENT exists to refuse. Reword the copy, or move the file's text into a
+// .astro component where a pragma is possible. (A review noted IN_COMMENT is
+// itself loose — a "//" inside a URL satisfies it. Pre-existing, not #81's, and
+// not narrowed here on the way past.)
+//
 // HOW IT READS A FILE — two passes.
 //
 // 1. Line by line, raw. This is the pass that gives the gate its value: an exact
@@ -69,11 +80,16 @@
 //     because Astro emits it into the built page, so an escape in either of those
 //     still fails. A LITERAL confusable is caught in every comment, everywhere.
 //   - a tag-split phrase in a compiled file under src/ — a .ts, a .json, a .yml.
-//     #81 settled this deliberately rather than by omission: those files are not
-//     served, a "<" in them is a generic and not a tag, and every innerHTML
-//     assignment in this repo is written inside a .astro component, which IS read
-//     as markup here. Everything under public/ ships byte for byte and so IS read
-//     as markup whatever its extension. See scripts/copy-gate-files.mjs.
+//     #81 settled this deliberately rather than by omission, but on TWO different
+//     grounds and only one of them is the generics argument. For .ts: a "<" there
+//     is a generic and not a tag, and every innerHTML assignment in this repo is
+//     written inside a .astro component, which IS read as markup here. For .json
+//     and .yml, where a "<" really is a tag, the ground is narrower — nothing
+//     under src/ is served, so it reaches a reader only through a .astro
+//     component or through the build, and the dist gate reads that result as
+//     markup. A lost authorship-time backstop, not a production hole.
+//     Everything under public/ ships byte for byte and so IS read as markup
+//     whatever its extension. See scripts/copy-gate-files.mjs.
 //   - anything in a file type SCAN_EXT does not list. Those are named on every
 //     run as "not read:", success or failure, so the gap is visible rather than
 //     rediscovered.
