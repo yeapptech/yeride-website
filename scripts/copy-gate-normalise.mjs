@@ -102,7 +102,10 @@
 //     word the reader never sees — a fabrication, in the gate that declines those.
 //     The case that WOULD publish it, a bundle assigning that string to innerHTML,
 //     is not a reference question at all; it is which file types get the markup
-//     views, which is #81.
+//     views — settled by #81, which reads everything SERVED as markup (all of
+//     dist/, all of public/) and leaves compiled source under src/ as plain text.
+//     So that bundle IS read as markup now, at the dist gate, and the .ts under
+//     src/ it was compiled from still is not.
 //   - "entities-blanked" is marked non-fabricating on the tag argument (removing a
 //     separator removes the gap), which holds for a reference a BROWSER also drops
 //     and not for one it renders literally: "insur&foo;ance" is "insur&foo;ance" on
@@ -113,8 +116,9 @@
 //     "&Nbsp;" decodes here and renders literally in a browser. Left alone: it can
 //     only over-accuse, and this file's failures worth chasing are misses.
 //
-// Which FILE TYPES get the tag views at all is #81 — a .js bundle writing
-// tag-split markup into innerHTML is read by neither gate's tag views today.
+// Which FILE TYPES get the tag views at all is NOT decided here. Callers pass
+// `markup`, and scripts/copy-gate-files.mjs holds the rule they pass it from,
+// with the measurements #81 settled it on.
 
 // ---------------------------------------------------------------------------
 
