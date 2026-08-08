@@ -90,7 +90,13 @@ import { basename, join } from "node:path";
 
 import { PATTERNS } from "./copy-gate-patterns.mjs";
 import { BINARY, SCAN_EXT } from "./copy-gate-files.mjs";
-import { countOccurrences, matchesIn, viewsOf } from "./copy-gate-normalise.mjs";
+import {
+  countOccurrences,
+  isPermitted,
+  matchesIn,
+  permissionsIn,
+  viewsOf,
+} from "./copy-gate-normalise.mjs";
 
 const ROOT = "dist";
 
@@ -272,8 +278,22 @@ for (const path of files) {
   // unreadable. Spans are original-byte ranges, so within a key a match found by
   // several views is one occurrence, not several; `view` names the first one
   // that saw it, which is why matchesIn walks views outermost.
+  // §5's permitted exceptions (#82). Read from the NON-fabricating views only —
+  // permissionsIn enforces that, and it matters more here than in the source
+  // gate, because this is the gate that takes the two views which can invent a
+  // phrase. "no surge<td></td>today" reads as the permitted phrase under
+  // "tags-as-space" and as "no surgetoday" to a reader; a fabricating view may
+  // raise the alarm, never call it off.
+  const permissions = permissionsIn(views, PATTERNS);
+
   const found = new Map();
-  for (const { at, text, view: name, span } of matchesIn(views, PATTERNS)) {
+  for (const { at, text, view: name, span, offsets } of matchesIn(views, PATTERNS)) {
+    // Withdrawn per MATCH, before the counting — a permitted "no surge today" and
+    // a bare "no surge" elsewhere in the same file are two occurrences, and only
+    // one of them is excused. Judged on the bytes the match was read from rather
+    // than on its outer span: in a tag-dropping view the span covers markup the
+    // view removed, and a claim sitting in that markup would ride out on it.
+    if (isPermitted(permissions, at, offsets)) continue;
     const id = `${at}\u0000${text}`;
     const seen = found.get(id) ?? { at, spans: [], text, view: name };
     seen.spans.push(span);
