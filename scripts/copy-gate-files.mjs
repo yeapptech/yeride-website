@@ -58,34 +58,17 @@
 //   .ts, so no .json or .yml was ever weighed.
 //
 // ---------------------------------------------------------------------------
-// WHAT READING SERVED BYTES AS MARKUP DOES NOT BUY, stated because the obvious
-// reading of the paragraph above overstates it.
-//
-// In minified JavaScript the tag scan is wrong far more often than it is right:
-// "r<t.length" opens a span that runs to the next ">", which can be four
-// functions away. A claim that lands INSIDE such a span is invisible to the tag
-// views — and the plain view does not rescue it, because to the plain view the
-// claim is still split by its tag. So the hole #81 was filed over is NARROWED,
-// not closed. Measured on this build:
-//
-//   dist/_astro/FareEstimatePage…js   40.1% of bytes inside a false span
-//   dist/_astro/FeeSchedule…js        17.8%
-//
-// An adversarial review demonstrated it rather than deduced it: the same
-// tag-split claim injected into the real FareEstimatePage bundle fails the gate
-// at offset 1000 and passes green at offsets 3000 and 12000.
-//
-// The mirror of that miss is a false failure — a long span DELETED welds the
-// identifiers either side into a phrase nobody wrote, and the same review built
-// a plausible minified fixture that fails on "rates=i0)flat". That direction is
-// at least loud, and one ALLOWED entry retires it, which is the trade this gate
-// already takes on a vendor chunk's regex backreference.
-//
-// Both would be fixed by bounding the tag scan, and that was left undone rather
-// than overlooked: the longest GENUINE tag in this repo's own output is 2,825
-// bytes of SVG path data, so no length bound cleanly separates a real tag from a
-// JavaScript comparison, and choosing one is a change to the shared normaliser
-// affecting every markup file. It is its own decision, filed as its own ticket.
+// WHAT READING SERVED BYTES AS MARKUP COSTS. #81 shipped this list while the tag
+// scan was still wrong in minified JavaScript far more often than it was right —
+// "r<t.length" opened a span running to the next ">", four functions away, which
+// both hid a claim inside it and welded the identifiers either side of it when the
+// span was deleted. That was #81's own measured residual and it is now closed by
+// #99, in copy-gate-normalise.mjs, by tightening what counts as a tag OPENING
+// rather than by bounding the scan. The numbers and the argument live there, next
+// to the rule; what belongs here is only the consequence for this table: reading
+// served bytes as markup no longer carries a per-bundle false-span cost, so the
+// SERVED / AUTHORED split above rests on what a file IS rather than on a tolerance
+// for noise.
 //
 // #81's other two candidate answers were considered and are recorded as
 // rejected, because the measurement is what rejects them:

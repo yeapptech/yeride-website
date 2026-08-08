@@ -20,7 +20,7 @@ import { readFileSync } from "node:fs";
 import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BINARY, SCAN_EXT } from "./copy-gate-files.mjs";
-import { runGate } from "./copy-gate-fixture.mjs";
+import { reported, runGate } from "./copy-gate-fixture.mjs";
 
 const SOURCE_GATE = fileURLToPath(new URL("./check-copy-gate.mjs", import.meta.url));
 const DIST_GATE = fileURLToPath(new URL("./check-dist-copy-gate.mjs", import.meta.url));
@@ -42,27 +42,11 @@ const say = (ok, label, detail) => {
 const src = (files) =>
   runGate(SOURCE_GATE, { "src/.keep": "", "public/.nojekyll": "", ...files });
 
-// The dist gate is asserted on WHAT IT REPORTS, not on its exit code, and that is
-// deliberate. Its ALLOWED list is keyed to real built paths, so any synthetic
-// tree fails it with "allowed but no longer appears" — an exit code that would
-// be 1 whatever the fixture said, and therefore proves nothing. Rebuilding the
-// allowlist inside the fixture would duplicate it, which is the drift the one
-// shared table exists to prevent. Naming the fixture path AND the phrase is the
-// precise claim anyway: this file, read this way, yielded this match.
+// Asserted on what the gate REPORTS rather than on its exit code. `reported` in
+// copy-gate-fixture.mjs holds why, and holds it once — #99 moved the function and
+// its argument there together when the normaliser's own controls needed the same
+// assertion, rather than leaving a second copy of the reasoning here to drift.
 const dist = (files) => runGate(DIST_GATE, files);
-// The assertion is ANCHORED on the gate's own output shape,
-//   <key>  "<matched text>" ×<n> [<view>] — <why>
-// and both of the looser forms were falsified rather than argued away. Two
-// independent `includes` over the whole output pass on a file the gate never
-// opened, because a stale-ALLOWED line carries "insurance" and
-// "privacy-policy/index.html" between them. Narrowing that to a single LINE is
-// still not enough — that same line carries both, and "index.html" is a
-// substring of "privacy-policy/index.html". Requiring the line to START with the
-// key removes the suffix match, which is what actually made it wrong.
-const reported = (out, file, phrase) => {
-  const key = file.replace(/^dist\//, "");
-  return out.split("\n").some((l) => l.trim().startsWith(`${key}  "`) && l.includes(`"${phrase}"`));
-};
 
 // ---------------------------------------------------------------------------
 // The fixtures are ONE claim written two ways. The contiguous form must fail

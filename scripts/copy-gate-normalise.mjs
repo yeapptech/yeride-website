@@ -273,7 +273,88 @@ function decodeEscape(raw, i, css = false) {
 // as literal text, and so must this: an adversarial review hid
 // "Insur<span>ance</span>" behind an earlier bare "<" by making the scan below
 // swallow everything up to the next ">".
-const TAG_START = /^<[a-zA-Z!/?]/;
+//
+// #99. Testing only the NEXT CHARACTER was that rule at its weakest, and #81 made
+// it load-bearing by reading minified JavaScript as markup. "r<t.length" passes a
+// next-character test — "t" is a letter — and then tagEnd runs to a ">" four
+// functions away. Measured on the build at the time of #81, and reproduced to the
+// byte before this change:
+//
+//   dist/_astro/FareEstimatePage….js  61,608 B  38 spans  24,678 swallowed (40.1%)  longest 16,251
+//   dist/_astro/FeeSchedule….js       13,043 B  89 spans   2,327 swallowed (17.8%)
+//
+// It cuts both ways: a claim INSIDE such a span is invisible to the tag views (and
+// the plain view does not rescue it — there the claim is still split by its tag),
+// and the span DELETED welds the identifiers either side into a phrase nobody
+// wrote ("rates=i0)flat").
+//
+// THE INSTRUMENT IS THE OPENING TEST, NOT A LENGTH BOUND, and #99 weighed the
+// bound first because it is the obvious fix. It is a bad one here: the longest
+// GENUINE tag in this repo's own output is 2,825 bytes of SVG path data, with a
+// second at 1,273 B and then a cliff to 434 B, so a bound safe for real markup has
+// to sit above ~3 KB — which removes the two largest false spans and leaves the
+// rest, buying a partial fix at the price of a constant that silently stops
+// reading a real asset as markup the day the brand lockup grows. Length does not
+// separate the two things; SHAPE does. A JavaScript comparison is not shaped like
+// a tag and never was:
+//
+//   opens a tag        <div class="x">   <br/>   </p>   <Foo.Bar />   <!-- … -->
+//   does not           r<t.length   i<n;   x<a[i]   e<r&&t   i<len)
+//
+// So the rule below reads the tag NAME and requires it to end the way a tag name
+// ends — at whitespace, "/" or ">". Everything in the right-hand column fails on
+// the character after the name, before tagEnd is ever called, and the "<" is
+// emitted as ordinary text, which is what a browser does with it too.
+//
+// End-of-input is deliberately NOT a third terminator. It reads as though it should
+// be — a file ending mid-name — but it cannot change an outcome: with no ">" after
+// it, tagEnd returns -1 and the "<" is emitted as text whatever this test says. It
+// was written in and then removed rather than left in as an unfalsifiable bound,
+// because the controls could not tell the two versions apart.
+//
+// Two deliberate narrowings, both places where HTML5 is MORE permissive than this
+// and being more permissive would discriminate nothing:
+//
+//   - The name charset is what real markup uses, not HTML5's "anything until
+//     whitespace, / or >". Under HTML5's own rule "r<t.length)&&(x>y" has a tag
+//     name of "t.length)&&(x" — perfectly legal, and exactly the span this ticket
+//     exists to stop. A tag named "t.length)&&(x" does not appear in authored
+//     markup; letters, digits, "-", "_", ":" and "." are what does, "." and ":"
+//     because of Astro's <Namespace.Component> and XML's xml:lang.
+//   - After "<!" only the three forms that actually occur are accepted — a
+//     comment, CDATA and a doctype. HTML5 turns any other "<!x" into a bogus
+//     comment running to the next ">", and "a<!b" is ordinary JavaScript: the
+//     widened form welds "rates,n=id,flat" out of a minified comparison, which is
+//     the control that earns this clause.
+//
+// The processing-instruction clause is NOT narrowed the same way, and the residue
+// is stated rather than left to be discovered: "<?x" opens a span, so a contrived
+// "r<?t:v … a>b" would still weld. It is left alone because that sequence is not
+// valid JavaScript in the first place — unlike "a<!b", which is — and because the
+// only real writer of the form is an XML declaration, of which the built tree
+// contains none today. Narrow it to "<?xml" the day one of those changes.
+//
+// This can only ever make the tag views read LESS as a tag. A real tag it declined
+// would be a miss, not a fabrication, and the fixture in copy-gate-normalise.test.mjs
+// carries the shapes this repo's own output actually contains.
+//
+// WHAT IT DOES NOT SEPARATE, because the claim "every span is now a real tag" is a
+// property of this build and not of this rule, and an independent review had to
+// point that out: a ONE-LETTER tag name is genuinely ambiguous. "a<i>b" and
+// "x=a<b>c" are valid minified JavaScript and valid markup alike, so the span is
+// still taken and the identifiers either side still weld. No syntactic rule can
+// tell those apart — a browser cannot either — and the built tree contains none
+// today. That is a measurement, not a guarantee, and it is the reason the tag views
+// remain something the dist gate's ALLOWED list has to be able to answer for.
+const TAG_OPEN = /<(?:!--|!\[CDATA\[|!doctype|\?[a-z]|\/?[a-z][a-z0-9:._-]*(?=[\s/>]))/iy;
+
+/** Whether a tag, comment or CDATA section opens at `raw[i]`. Sticky rather than
+ *  applied to a slice: the name run is unbounded, and slicing a fixed two
+ *  characters is what made the old test read only the first of them. */
+function opensTag(raw, i) {
+  TAG_OPEN.lastIndex = i;
+  return TAG_OPEN.test(raw);
+}
 
 /** The index just past the tag, comment or CDATA section starting at `raw[i]`, or
  *  -1 if it never closes.
@@ -377,7 +458,7 @@ function view(
   for (let i = 0; i < raw.length; ) {
     const ch = raw[i];
 
-    if (tags !== "keep" && ch === "<" && TAG_START.test(raw.slice(i, i + 2))) {
+    if (tags !== "keep" && ch === "<" && opensTag(raw, i)) {
       const end = tagEnd(raw, i);
       if (end !== -1) {
         if (tags === "space") {
