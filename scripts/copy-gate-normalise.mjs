@@ -91,6 +91,18 @@
 //     design (#41), so there is no parser to borrow it from. #80's answer is that
 //     the class worth naming is the one an author reaches for — the space-like and
 //     the invisible — and NAMED holds those.
+//
+//     #80 asked a second half with it: does the SOURCE gate then need a
+//     non-fabricating "unknown reference blanked" view for NON-markup too? The
+//     answer is no, and it is recorded here because the behaviour alone does not
+//     say it. The reference views stay markupOnly, so a .ts file is read as plain
+//     text and escapes only. A "&" in a .ts string is not a reference: Astro
+//     escapes an interpolated string before it reaches the page, so `"insur&foo;
+//     ance"` renders with the ampersand intact and decoding it here would invent a
+//     word the reader never sees — a fabrication, in the gate that declines those.
+//     The case that WOULD publish it, a bundle assigning that string to innerHTML,
+//     is not a reference question at all; it is which file types get the markup
+//     views, which is #81.
 //   - "entities-blanked" is marked non-fabricating on the tag argument (removing a
 //     separator removes the gap), which holds for a reference a BROWSER also drops
 //     and not for one it renders literally: "insur&foo;ance" is "insur&foo;ance" on

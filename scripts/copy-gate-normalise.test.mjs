@@ -120,8 +120,10 @@ check("should stay quiet", MUST_NOT_FIRE, false);
 // came from slides every span after it, which is silent — the gate keeps working
 // and points at the wrong line. Astral characters are where that breaks, because
 // one code point is two UTF-16 units.
+let spanChecks = 0;
 for (const [name, raw] of [...MUST_FIRE, ...MUST_NOT_FIRE]) {
   for (const view of viewsOf(raw, { markup: true, includeFabricating: true })) {
+    spanChecks++;
     if (view.map.length !== view.text.length) {
       console.log(`FAIL  span map — ${name} [${view.name}]`);
       console.log(`      ${view.map.length} offsets for ${view.text.length} characters`);
@@ -137,6 +139,9 @@ for (const [name, raw] of [...MUST_FIRE, ...MUST_NOT_FIRE]) {
   }
 }
 
-const total = MUST_FIRE.length + MUST_NOT_FIRE.length;
+// Every list this file runs, the span-map sweep included — the sibling counts
+// PATHOLOGICAL the same way. A total that omits a check can only shrink when that
+// check is deleted, which is the one moment it needed to be loud.
+const total = MUST_FIRE.length + MUST_NOT_FIRE.length + spanChecks;
 console.log(`${failures ? "✗" : "✓"} copy-gate normaliser: ${total} controls, ${failures} failure${failures === 1 ? "" : "s"}`);
 process.exit(failures ? 1 : 0);

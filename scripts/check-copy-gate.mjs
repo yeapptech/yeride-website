@@ -150,17 +150,18 @@ const CONFUSABLE = new RegExp(
     "\\u2160-\\u217F" + // Roman numeral forms
     "\\uFF21-\\uFF3A\\uFF41-\\uFF5A" + // fullwidth Latin
     "]|[\\u{1D400}-\\u{1D7FF}]", // Mathematical Alphanumeric Symbols
-  "u",
+  // GLOBAL because both readers below want every hit on a line, not the first;
+  // see the raw pass for what a first-hit-only reading mislabelled. Safe to share
+  // even though a /g regex carries lastIndex, because matchAll is the ONLY thing
+  // that consumes this: it clones the regex and leaves the original's lastIndex
+  // alone. Calling .test() or .exec() on it would make it stateful across files —
+  // don't.
+  "gu",
 );
-
-// The same regex, global, for the passes that want every hit on a line rather
-// than the first. Built from CONFUSABLE rather than written twice, because two
-// spellings of one class is the fault #57 named about the pattern list.
-const CONFUSABLE_ALL = new RegExp(CONFUSABLE.source, `${CONFUSABLE.flags}g`);
 
 // One dedupe-key shape for every pass in this file. NUL separates because it
 // cannot occur in a line number, a pattern index, or matched copy — and writing
-// it ONCE is the point: three call sites each spelling their own separator is how
+// it ONCE is the point: four call sites each spelling their own separator is how
 // the two halves of a dedupe drift apart while both still look right.
 const key = (...parts) => parts.join("\u0000");
 
@@ -323,13 +324,14 @@ for (const file of files) {
   // position in a derived string — the span map already points at the bytes an
   // author has to edit, and telling them where the decoded character "is" would
   // name a place that exists in no file.
-  const flagConfusable = (where, at, text, note) => {
+  // No `where`: every caller passed exactly `${file}:${at}`, which is judge's own
+  // default, so the argument only gave two places for one fact to disagree.
+  const flagConfusable = (at, text, note) => {
     const point = `U+${text.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`;
     judge(
       at,
       `"${text}" (${point})${note}`,
       "not a Latin letter, but shaped like one — a homoglyph hides a gated word from every pattern above",
-      where,
     );
   };
 
@@ -339,21 +341,27 @@ for (const file of files) {
   // second as "[plain]" — a view finding, for a character sitting in plain sight
   // in the source. Naming the wrong cause is the fault the gates exist to remove,
   // and a label nobody can act on is the shape it takes here.
+  // Both passes dedupe on (line, character), and BOTH have to — the raw pass
+  // gained a `has` check the moment it went global. One line reads the same in
+  // both directions, so two occurrences of the SAME confusable on it produce two
+  // byte-identical error lines with no column to tell them apart: noise that
+  // reads as two defects. Two DIFFERENT confusables on one line still report
+  // twice, because they are two things to fix.
   const confusables = new Set();
+  const flagOnce = (line, text, note) => {
+    const id = key(line, text);
+    if (confusables.has(id)) return;
+    confusables.add(id);
+    flagConfusable(line, text, note);
+  };
+
   raw.forEach((line, i) => {
-    for (const m of line.matchAll(CONFUSABLE_ALL)) {
-      confusables.add(key(i + 1, m[0]));
-      flagConfusable(`${file}:${i + 1}`, i + 1, m[0], "");
-    }
+    for (const m of line.matchAll(CONFUSABLE)) flagOnce(i + 1, m[0], "");
   });
 
   for (const { name, text, map } of views) {
-    for (const m of text.matchAll(CONFUSABLE_ALL)) {
-      const line = lineAt(map[m.index]);
-      const id = key(line, m[0]);
-      if (confusables.has(id)) continue;
-      confusables.add(id);
-      flagConfusable(`${file}:${line}`, line, m[0], ` [${name}]`);
+    for (const m of text.matchAll(CONFUSABLE)) {
+      flagOnce(lineAt(map[m.index]), m[0], ` [${name}]`);
     }
   }
 }
