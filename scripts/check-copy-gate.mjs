@@ -62,10 +62,18 @@
 //   - copy assembled at runtime in the BROWSER, and copy that arrives from the
 //     fee-schedule endpoint — neither is in the source or the build. The first is
 //     beyond both gates; the second belongs to #56.
-//   - a normalised hit is only ever an ACCUSATION. §5's one permitted exception,
-//     "no surge today", is a same-line lookahead, so splitting it fails the build
-//     on copy §3.4 allows — pass 2 can see that it is permitted and is not asked.
-//     That is #82.
+//   - a normalised hit is very nearly always only an ACCUSATION, and #82 opened
+//     the single exception rather than removing the rule. §5 permits one phrase,
+//     "no surge today", which used to be a negative lookahead on the forbidden
+//     pattern and so held only for the exact bytes that lookahead saw: splitting
+//     it with an &nbsp;, a line wrap or a <b> failed the build on copy §3.4
+//     expressly allows, while every view could see it was permitted and none was
+//     asked. A pattern may now declare `permits`, and a hit is WITHDRAWN when a
+//     non-fabricating view reads that permitted phrase over the same bytes. It is
+//     the only thing in either gate that turns a failure into a pass; the bounds
+//     that keep it from becoming a hole are on permissionsIn in
+//     copy-gate-normalise.mjs, and both directions are proved end to end, through
+//     this script and through the dist gate, by copy-gate-patterns.test.mjs.
 //   - a NAMED reference outside copy-gate-normalise.mjs's table, which stays
 //     finite and is argued there. #80 closed the rest of that list: the invisible
 //     class is now a Unicode property rather than eight of its members, numeric
@@ -107,7 +115,7 @@ import { basename, join } from "node:path";
 
 import { PATTERNS } from "./copy-gate-patterns.mjs";
 import { BINARY, MARKUP_SYNTAX, SCAN_EXT } from "./copy-gate-files.mjs";
-import { matchesIn, viewsOf } from "./copy-gate-normalise.mjs";
+import { isPermitted, matchesIn, permissionsIn, viewsOf } from "./copy-gate-normalise.mjs";
 import { passthroughFiling } from "./copy-gate-suspension.mjs";
 
 // public/ is copied verbatim into dist/, so it ships exactly as written.
@@ -287,19 +295,6 @@ for (const file of files) {
     }
   };
 
-  // Pass 1 — raw, line by line. Reported exactly as it always was.
-  const reported = new Set();
-  code.forEach((line, i) => {
-    for (const [at, { re, why }] of PATTERNS.entries()) {
-      const hit = line.match(re);
-      if (!hit) continue;
-      reported.add(key(i + 1, at, hit[0].toLowerCase()));
-      judge(i + 1, `"${hit[0]}"`, why);
-    }
-  });
-
-  // Pass 2 — the same patterns over the normalised views. Only hits pass 1 could
-  // not see are printed, each naming the view that found it.
   const views = viewsOf(codeText, {
     markup: SERVED_VERBATIM.test(file) || MARKUP_SYNTAX.test(file),
     css: /\.css$/i.test(file),
@@ -308,7 +303,37 @@ for (const file of files) {
     // reader that this gate cries wolf.
     includeFabricating: false,
   });
+
+  // §5's permitted exceptions, as spans of this file's bytes (#82). This is the
+  // one thing a view may do that makes the gate say LESS, and it is read before
+  // either pass so that both consult it — pass 1 above all, because a raw line is
+  // exactly where the permitted phrase gets split by an &nbsp;, a line wrap or a
+  // <b>. permissionsIn holds the bounds; the short version is that only a pattern
+  // declaring `permits` is withdrawable, only a positive reading of §5's own
+  // permitted words withdraws it, only a non-fabricating view may read them, and
+  // only over the same bytes.
+  const permissions = permissionsIn(views, PATTERNS);
+
+  // Pass 1 — raw, line by line. Reported exactly as it always was.
+  const reported = new Set();
+  code.forEach((line, i) => {
+    for (const [at, { re, why }] of PATTERNS.entries()) {
+      const hit = line.match(re);
+      if (!hit) continue;
+      // lineStarts indexes codeText, which `code` was split from, so a line start
+      // plus the match index is an offset into the file — the same coordinates
+      // every view maps back to.
+      const from = lineStarts[i] + hit.index;
+      if (isPermitted(permissions, at, [from, from + hit[0].length])) continue;
+      reported.add(key(i + 1, at, hit[0].toLowerCase()));
+      judge(i + 1, `"${hit[0]}"`, why);
+    }
+  });
+
+  // Pass 2 — the same patterns over the normalised views. Only hits pass 1 could
+  // not see are printed, each naming the view that found it.
   for (const { at, text, view: viewName, span } of matchesIn(views, PATTERNS)) {
+    if (isPermitted(permissions, at, span)) continue;
     const start = lineAt(span[0]);
     const id = key(start, at, text);
     if (reported.has(id)) continue;

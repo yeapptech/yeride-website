@@ -464,6 +464,10 @@ export function viewsOf(raw, { markup, includeFabricating, css = false }) {
     (v) => (markup || !v.markupOnly) && (includeFabricating || !v.fabricates),
   ).map((v) => ({
     name: v.name,
+    // Carried out of VIEWS rather than left behind, because permissionsIn below
+    // has to tell an honest reading from an exaggerated one: a view that can
+    // invent a phrase may ACCUSE, never excuse.
+    fabricates: v.fabricates,
     ...view(raw, { ...v.opts, ...(markup ? {} : { tags: "keep" }), cssEscapes: css }),
   }));
 }
@@ -483,6 +487,68 @@ export function countOccurrences(spans) {
     }
   }
   return count;
+}
+
+/** The original-byte spans where a permitted phrase is READ, per pattern index —
+ *  the one direction in which a view is allowed to make a gate say less.
+ *
+ *  Wayfinder #82. §5 has one permitted exception, "no surge today", and it used
+ *  to be a negative lookahead on the forbidden pattern. That could only ever work
+ *  on the exact bytes the lookahead saw: both gates read normalised text purely to
+ *  ACCUSE — the raw verdict is final and a view can only add hits — so splitting
+ *  the permitted phrase any of the three ways this file exists to see through
+ *  ("no surge&nbsp;today", a wrapped line, "no surge <b>today</b>") failed the
+ *  build on copy §3.4 expressly allows, with every view able to see it was
+ *  permitted and none of them asked.
+ *
+ *  THREE BOUNDS, and they are the whole safety argument. A withdrawal is the only
+ *  thing in either gate that turns a failure into a pass, so it is deliberately
+ *  hard to reach:
+ *
+ *  1. Only a pattern that DECLARES `permits` can ever be withdrawn. Every other
+ *     pattern keeps the old contract exactly — the raw verdict is final.
+ *  2. A withdrawal needs a POSITIVE match of the permitted phrase, never the
+ *     absence of the forbidden one. That is the bound #82 asked for: normalisation
+ *     is lossy in places (#80 lists which), and "the pattern stopped matching once
+ *     normalised" would let a loss exonerate a real claim. Only §5's own permitted
+ *     words can excuse anything.
+ *  3. Only a NON-FABRICATING view may excuse. The dist gate reads the two views
+ *     that can invent a phrase, and letting one of those excuse would open a
+ *     laundering shape it exists to close — "no surge<td></td>today" reads as the
+ *     permitted phrase under "tags-as-space" and as "no surgetoday" to a reader.
+ *     Fabrication is allowed to raise the alarm; it is not allowed to call it off.
+ *
+ *  A fourth bound is isPermitted's, not this function's: the permitted span has to
+ *  OVERLAP the accused one in original bytes, so a permitted phrase elsewhere in
+ *  the file cannot excuse a bare claim here. */
+export function permissionsIn(views, patterns) {
+  const out = new Map();
+  for (const { text, map, fabricates } of views) {
+    if (fabricates) continue;
+    for (const [at, { permits }] of patterns.entries()) {
+      if (!permits) continue;
+      const global = new RegExp(
+        permits.source,
+        permits.flags.includes("g") ? permits.flags : `${permits.flags}g`,
+      );
+      for (const m of text.matchAll(global)) {
+        if (!m[0].length) continue;
+        const spans = out.get(at) ?? [];
+        spans.push([map[m.index], map[m.index + m[0].length - 1] + 1]);
+        out.set(at, spans);
+      }
+    }
+  }
+  return out;
+}
+
+/** Whether an accusation is covered by its own pattern's permitted phrase over
+ *  the same original bytes. Overlap, not equality: the accused span is a strict
+ *  substring of the permitted one ("no surge" inside "no surge today"), and the
+ *  two are found in different views, so they agree on bytes and on nothing else. */
+export function isPermitted(permissions, at, span) {
+  const spans = permissions.get(at);
+  return !!spans && spans.some(([start, end]) => start < span[1] && span[0] < end);
 }
 
 /** Every match of `patterns` in every view, as
