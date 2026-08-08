@@ -10,15 +10,17 @@ YeRide website — a static marketing, pre-registration, and fare-estimate site 
 
 ```bash
 npm run dev        # Dev server at http://localhost:4321
-npm run checks     # Route parity + copy gate + env-example + deploy-env parity (no deps)
+npm run checks     # Gate controls + route parity + copy gate + env-example + deploy-env parity (no deps)
+npm run test:gates # The three copy-gate control sets alone (also run first by npm run checks)
 npm run build      # npm run checks + env check + astro check + astro build → dist/ + dist copy gate
 npm run preview    # Preview production build locally
 ```
 
-No test runner and no linter are configured, and `npm run build` is the only automated verification gate. The exceptions are two sets of unit-style controls, plain Node, no deps, which nothing runs for you:
+No test runner and no linter are configured, and `npm run build` is the only automated verification gate. Alongside it sit three sets of unit-style controls, plain Node, no deps, collected under `npm run test:gates` — which **`npm run checks` now runs first** (#83), so they run on every PR rather than only when someone remembers. Run them alone with `npm run test:gates`; each still names the file whose change should make you read it:
 
-- `node scripts/copy-gate-patterns.test.mjs` — **run it by hand whenever `scripts/copy-gate-patterns.mjs` changes** (#75). Its second list is the valuable half: a locked-price pattern is easy to widen and easy to widen too far, and every "must not fire" entry is real copy from this site.
-- `node scripts/copy-gate-normalise.test.mjs` — **run it by hand whenever `scripts/copy-gate-normalise.mjs` changes** (#80). Same shape and the same reason the second list matters: a normalisation is easy to widen too far, and over-reach here fails the build on text nobody wrote. Every invisible character in it is built from a numeric code point rather than typed or escaped, because editors and agent tools rewrite a backslash-u escape into the character on save, which turns a control into an unreviewable byte — or, when the byte is lost, into a test that passes because it no longer tests anything.
+- `node scripts/copy-gate-patterns.test.mjs` — **read it whenever `scripts/copy-gate-patterns.mjs` changes** (#75). Its second list is the valuable half: a locked-price pattern is easy to widen and easy to widen too far, and every "must not fire" entry is real copy from this site.
+- `node scripts/copy-gate-normalise.test.mjs` — **read it whenever `scripts/copy-gate-normalise.mjs` changes** (#80). Same shape and the same reason the second list matters: a normalisation is easy to widen too far, and over-reach here fails the build on text nobody wrote. Every invisible character in it is built from a numeric code point rather than typed or escaped, because editors and agent tools rewrite a backslash-u escape into the character on save, which turns a control into an unreviewable byte — or, when the byte is lost, into a test that passes because it no longer tests anything.
+- `node scripts/copy-gate-suspension.test.mjs` — **read it whenever `scripts/copy-gate-suspension.mjs` changes** (#83). It covers the one rule in `check-copy-gate.mjs` that reads *data* rather than copy: whether a charge has been filed into the suspended pass-through family. That rule was written to match double quotes only, so `family: 'passthrough'` would have shipped copy-map §3.4's suspended "at cost" and insurance claims off a green build. Its first list is therefore the valuable half here — every string-literal syntax, in the quote styles this repo does not use — and its last controls assert the guard fails **closed**: a renamed or deleted `feeLabels.ts` is an error naming the cause, never a silent pass.
 
 `npm run build` runs seven things in order, and any one of them fails the build:
 
