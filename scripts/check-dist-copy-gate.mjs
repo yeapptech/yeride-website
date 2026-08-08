@@ -89,18 +89,10 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import { PATTERNS } from "./copy-gate-patterns.mjs";
+import { BINARY, SCAN_EXT } from "./copy-gate-files.mjs";
 import { countOccurrences, matchesIn, viewsOf } from "./copy-gate-normalise.mjs";
 
 const ROOT = "dist";
-// Case-insensitive: a page served as .HTML is still a page. GitHub Pages serves
-// .htm and .xhtml as text/html too.
-const SCAN_EXT = /\.(html?|xhtml|js|mjs|cjs|json|map|svg|css|txt|xml|webmanifest)$/i;
-const MARKUP_EXT = /\.(html?|xhtml|svg|xml)$/i;
-// Extensions that cannot carry readable copy. Everything else that is not
-// scanned gets named in the output, on the failure path as well as the success
-// one: a file type this gate silently ignored would otherwise read as a file type
-// it cleared.
-const BINARY = /\.(png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|eot|pdf|mp4|webm|zip|gz)$/i;
 
 // Rollup stamps a content hash into the assets it emits, so the filename changes
 // whenever the file does. The allowlist is keyed to the name with that segment
@@ -248,7 +240,24 @@ for (const path of files) {
   // a real claim, and ALLOWED is where each phantom gets blessed. The source gate
   // passes false; copy-gate-normalise.mjs explains the asymmetry.
   const views = viewsOf(readFileSync(path, "utf8"), {
-    markup: MARKUP_EXT.test(path),
+    // EVERYTHING under dist/ is served, so everything under dist/ is read as
+    // markup — the extension says nothing about whether a browser will parse the
+    // bytes as tags. A bundle assigning "Insur<span>ance</span>" to innerHTML was
+    // the hole #81 was filed over, and .js got character-reference decoding here
+    // while the tag views it names in the same breath skipped it.
+    //
+    // In minified code the scan is wrong more often than right — "r<t.length"
+    // swallows to the next ">", 35.5% of this build's bundle bytes — and that
+    // cuts BOTH ways: a claim inside a swallowed span is missed (the plain view
+    // does not rescue it, since to the plain view the claim is still split), and
+    // a swallowed span DELETED can weld two identifiers into a phrase nobody
+    // wrote. So this narrows #81's hole rather than closing it, and it makes a
+    // phantom possible, which is what ALLOWED is for. Bounding the scan is the
+    // fix for both and is its own ticket — the longest genuine tag in this
+    // repo's output is 2,825 bytes of SVG path data, so no length bound
+    // separates a real tag from a comparison for free. See
+    // scripts/copy-gate-files.mjs for the measurements.
+    markup: true,
     includeFabricating: true,
     // CSS escape decoding is scoped to stylesheets; outside CSS the form is not
     // syntax and reading it as one fabricates. #57 added it for a real CSS

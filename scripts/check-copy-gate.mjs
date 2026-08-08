@@ -12,6 +12,17 @@
 // The pragma must sit in a comment, must name a ticket, and one that stops
 // matching anything fails the build, so the allowlist cannot outlive its reason.
 //
+// ONE PLACE HAS NO ESCAPE HATCH, and #81 made it reachable: a file under public/
+// whose type has no comment syntax — .json, .webmanifest. Those are read as
+// markup now, because they ship byte for byte, so a legitimate phrase in one can
+// fail this gate with no way to bless it. That is deliberate rather than
+// unnoticed. The only pragma such a file could carry would sit inside a shipped
+// string value, which is precisely the "shipped data authorising itself" that
+// IN_COMMENT exists to refuse. Reword the copy, or move the file's text into a
+// .astro component where a pragma is possible. (A review noted IN_COMMENT is
+// itself loose — a "//" inside a URL satisfies it. Pre-existing, not #81's, and
+// not narrowed here on the way past.)
+//
 // HOW IT READS A FILE — two passes.
 //
 // 1. Line by line, raw. This is the pass that gives the gate its value: an exact
@@ -68,8 +79,17 @@
 //     more likely to be shipped text), and an HTML comment is not stripped at all
 //     because Astro emits it into the built page, so an escape in either of those
 //     still fails. A LITERAL confusable is caught in every comment, everywhere.
-//   - a tag-split phrase in a file type the tag views skip — .ts by design, but
-//     also .json, .txt, .yml and, in the dist gate, every .js bundle. #81.
+//   - a tag-split phrase in a compiled file under src/ — a .ts, a .json, a .yml.
+//     #81 settled this deliberately rather than by omission, but on TWO different
+//     grounds and only one of them is the generics argument. For .ts: a "<" there
+//     is a generic and not a tag, and every innerHTML assignment in this repo is
+//     written inside a .astro component, which IS read as markup here. For .json
+//     and .yml, where a "<" really is a tag, the ground is narrower — nothing
+//     under src/ is served, so it reaches a reader only through a .astro
+//     component or through the build, and the dist gate reads that result as
+//     markup. A lost authorship-time backstop, not a production hole.
+//     Everything under public/ ships byte for byte and so IS read as markup
+//     whatever its extension. See scripts/copy-gate-files.mjs.
 //   - anything in a file type SCAN_EXT does not list. Those are named on every
 //     run as "not read:", success or failure, so the gap is visible rather than
 //     rediscovered.
@@ -86,24 +106,19 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import { PATTERNS } from "./copy-gate-patterns.mjs";
+import { BINARY, MARKUP_SYNTAX, SCAN_EXT } from "./copy-gate-files.mjs";
 import { matchesIn, viewsOf } from "./copy-gate-normalise.mjs";
 import { passthroughFiling } from "./copy-gate-suspension.mjs";
 
 // public/ is copied verbatim into dist/, so it ships exactly as written.
 const ROOTS = ["src", "public"];
-// Case-insensitive, like the dist gate: #57 fixed exactly this bug there after a
-// review found "evade.HTML" was never read at all, and the source gate kept it.
-const SCAN_EXT = /\.(astro|ts|tsx|js|jsx|mjs|cjs|md|mdx|html|json|ya?ml|svg|css|txt)$/i;
-// Extensions that cannot carry readable copy. Anything else that goes unscanned
-// is NAMED in the output, on the failure path as well as the success one — the
-// same rule the dist gate follows, because a file type silently ignored reads as
-// a file type cleared.
-const BINARY = /\.(png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|eot|pdf|mp4|webm|zip|gz|map)$/i;
-// Which of those carry tags worth removing. .astro is the one that matters —
-// it is where prose gets typed straight into markup — but .md and .svg can hold
-// literal HTML too. A .ts file is read with its tags kept, because "a < b" is a
-// comparison and stripping to the next ">" would eat real code.
-const MARKUP_EXT = /\.(astro|html|svg|md|mdx)$/i;
+// Which of the two roots is SERVED rather than compiled. Everything under
+// public/ reaches the browser byte for byte, so a "<" in it opens a tag whatever
+// the extension says — an HTML fragment inside public/content.json ships as
+// written. Under src/ only the markup file types are read that way, because a
+// "<" in a .ts is a generic and reading it as a tag swallows real code. #81
+// measured both sides; scripts/copy-gate-files.mjs records the numbers.
+const SERVED_VERBATIM = /^public[/\\]/;
 
 const PRAGMA = /copy-gate-allow:[ \t]*(.+?)[ \t]*$/;
 // "#48ff00" is a colour, not a ticket.
@@ -286,7 +301,7 @@ for (const file of files) {
   // Pass 2 — the same patterns over the normalised views. Only hits pass 1 could
   // not see are printed, each naming the view that found it.
   const views = viewsOf(codeText, {
-    markup: MARKUP_EXT.test(file),
+    markup: SERVED_VERBATIM.test(file) || MARKUP_SYNTAX.test(file),
     css: /\.css$/i.test(file),
     // See copy-gate-normalise.mjs: the fabricating views belong to the dist gate,
     // because a per-line pragma blessing a phrase nobody wrote teaches the next
