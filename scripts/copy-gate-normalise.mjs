@@ -23,8 +23,9 @@
 //   - character references decoded in ONE left-to-right pass. One pass is the
 //     point: "&amp;#36;" renders as the literal text "&#36;", not "$", and a
 //     second pass would invent a hit the reader never sees.
-//   - invisible characters (zero-width space/joiner, soft hyphen, BOM) removed —
-//     they exist only to split a word without showing it.
+//   - invisible characters removed — they exist only to split a word without
+//     showing it. The whole class, by Unicode property (Default_Ignorable ∪ Cf):
+//     #80 replaced an eight-member list that let 4,198 others through.
 //   - whitespace collapsed to a single space, so a newline inside a phrase — the
 //     accidental case — reads as the space it renders as. A run of TWO or more
 //     newlines is a paragraph break instead, and collapses to a newline: it is
@@ -75,17 +76,47 @@
 // gate's reading, false is the source gate's.
 //
 // WHAT NEITHER SET FIXES, so that no reader takes "non-fabricating" for
-// "infallible": the tables below are still finite. NAMED holds a few dozen of
-// HTML5's ~2200 named references, and only the fabricating "spaced" view covers
-// the rest; REFERENCE bounds numeric references at 7 decimal / 6 hex digits and
-// requires the closing semicolon, which browsers do not; and INVISIBLE holds
-// eight code points out of a class of several thousand. All three are #80. Which
-// FILE TYPES get the tag views at all is #81 — a .js bundle writing tag-split
-// markup into innerHTML is read by neither gate's tag views today.
+// "infallible". #80 closed two of the three tables that were the EXAMPLES of a
+// class rather than the class — invisible characters are now the Unicode property
+// (4,206 code points, not 8) and numeric references now follow HTML5 (unbounded
+// digits, optional semicolon). What is left is ONE finite table and it is named
+// here rather than implied:
+//
+//   - NAMED holds a few dozen of HTML5's ~2200 named references. A reference
+//     outside it is UNKNOWN, not decoded, and only the fabricating "spaced" view
+//     covers it — so in the source gate, which declines that view, a browser-known
+//     separator this table does not know is a miss. The full table was declined
+//     rather than forgotten: it is ~2200 entries of generated data in a file whose
+//     value is that a human can read it, and both gates are dependency-free by
+//     design (#41), so there is no parser to borrow it from. #80's answer is that
+//     the class worth naming is the one an author reaches for — the space-like and
+//     the invisible — and NAMED holds those.
+//   - "entities-blanked" is marked non-fabricating on the tag argument (removing a
+//     separator removes the gap), which holds for a reference a BROWSER also drops
+//     and not for one it renders literally: "insur&foo;ance" is "insur&foo;ance" on
+//     screen and "insurance" under that view. Kept anyway, and the reason is not
+//     the tag reason: a bogus reference inside a word is never an authoring
+//     accident, so this cannot cry wolf the way "tags-as-space" does.
+//   - NAMED is matched case-INSENSITIVELY while HTML5 is case-sensitive, so
+//     "&Nbsp;" decodes here and renders literally in a browser. Left alone: it can
+//     only over-accuse, and this file's failures worth chasing are misses.
+//
+// Which FILE TYPES get the tag views at all is #81 — a .js bundle writing
+// tag-split markup into innerHTML is read by neither gate's tag views today.
 
 // ---------------------------------------------------------------------------
 
-const REFERENCE = /^&(#[xX][0-9a-fA-F]{1,6}|#\d{1,7}|[a-zA-Z][a-zA-Z0-9]{1,31});/;
+// HTML5's numeric forms: unbounded digits and an OPTIONAL closing semicolon,
+// because that is what a browser accepts. #80 measured the bounded, semicolon-
+// required version letting "&#00000105;nsurance", "&#x0000069;nsurance",
+// "&#105nsurance" and "&#x69nsurance" all through both gates green, every one of
+// which renders as the forbidden word — and leading zeros are not exotica, CMS
+// exports carry them routinely. Sticky rather than matched against a slice, so
+// "unbounded" is true rather than true-up-to-the-slice.
+const NUMERIC = /&#(?:([xX])([0-9a-fA-F]+)|(\d+));?/y;
+// The name run after "&". 31 characters is not a limit HTML5 imposes; it is
+// simply longer than any name in NAMED, which is all this file can resolve.
+const NAME_RUN = /&([a-zA-Z][a-zA-Z0-9]{0,30})/y;
 
 // The named references Astro emits, plus the ones that would be used to split or
 // disguise a word. This is NOT the full HTML5 set and does not try to be — the
@@ -101,26 +132,97 @@ const NAMED = {
   copy: "©", reg: "®", trade: "™", deg: "°", sect: "§", para: "¶",
 };
 
-// Written as escapes, not as the characters themselves: these are invisible, so a
-// literal class here would be unreviewable, would make this file read as binary
-// to grep and file(1), and one lost byte in an editor would silently narrow the
-// gate. Soft hyphen, the zero-width/bidi block, word joiner, BOM.
-const INVISIBLE = new Set([
-  "\u00AD", "\u200B", "\u200C", "\u200D", "\u200E", "\u200F", "\u2060", "\uFEFF",
+// The invisible class, as a Unicode PROPERTY rather than as eight of its members.
+// #59 settled the analogous question by inverting a blocklist into a positive
+// rule; copy here is not ASCII, so that inversion is not available, but the
+// principle is — name the class, do not enumerate it. The old set held eight code
+// points and 4,198 more passed: every variation selector (so "insur<U+FE0F>ance"
+// was green in both gates), most of the bidi block the set claimed to cover, the
+// invisible maths operators, and the combining grapheme joiner.
+//
+// A property test rather than a literal class for the same reason the old set was
+// written as escapes: these characters are invisible, so a literal would be
+// unreviewable, would make this file read as binary to grep and file(1), and one
+// byte lost in an editor would silently narrow the gate. A property cannot be
+// narrowed by an editor at all.
+//
+// One honest edge: the four Hangul fillers (U+115F, U+1160, U+3164, U+FFA0) are
+// Default_Ignorable yet render with width, so dropping one could weld two words a
+// reader sees apart. Dropping is still right — the alternative lets a filler split
+// a word invisibly, which is the whole subject of #80 — and neither language this
+// site ships can contain one.
+//
+// U+FEFF is both Cf and JavaScript whitespace. It is tested here FIRST, exactly as
+// the old set was, so it is still removed rather than collapsed to a space.
+const IGNORABLE = /^[\p{Default_Ignorable_Code_Point}\p{Cf}]$/u;
+
+// Which of NAMED a browser also accepts WITHOUT the closing semicolon. Not a
+// style choice and not all of NAMED: HTML5 fixes one historical list, and "&nbsp"
+// is on it while "&zwnj" is not. Both directions cost something real — omitting
+// "nbsp" leaves #80's "at&nbspcost" reading as "at cost" to every browser and as
+// nothing to this gate, and adding "mdash" would decode text no browser decodes,
+// which is fabrication inside a view this file documents as non-fabricating.
+const NAMED_LEGACY = new Set([
+  "amp", "lt", "gt", "quot", "nbsp", "shy",
+  "copy", "reg", "deg", "sect", "para", "cent", "pound", "yen", "middot",
 ]);
 
 const cp = (n) => (Number.isFinite(n) && n >= 0 && n <= 0x10ffff ? String.fromCodePoint(n) : "");
 
-/** The decoded value of one character reference, or null if this table cannot
- *  resolve it. Numeric references always resolve; named ones may not. */
-function decodeReference(body) {
-  if (body[0] === "#") {
-    const hex = body[1] === "x" || body[1] === "X";
-    const n = parseInt(hex ? body.slice(2) : body.slice(1), hex ? 16 : 10);
-    return Number.isNaN(n) ? null : cp(n);
+/** One numeric reference's value, by HTML5's rules rather than by clamping.
+ *
+ *  Out of range, a lone surrogate and a null all render as U+FFFD — a character
+ *  the reader SEES. Returning the empty string for those, as the clamp did, welded
+ *  the text either side together: "insur&#99999999;ance" read as the forbidden
+ *  word in a view documented as non-fabricating.
+ *
+ *  NOT applied: HTML5's windows-1252 mapping for 0x80-0x9F ("&#151;" as an em
+ *  dash). Declined rather than overlooked — to every §5 pattern a raw C1 control
+ *  and its cp1252 glyph are alike non-word characters, so the substitution cannot
+ *  change a verdict. Add the table if a pattern ever keys on a dash or a curly
+ *  quote as a literal. */
+function numericCodePoint(n) {
+  if (!Number.isFinite(n) || n === 0 || n > 0x10ffff || (n >= 0xd800 && n <= 0xdfff)) return "�";
+  return String.fromCodePoint(n);
+}
+
+/** The character reference at `raw[i]`, as { length, decoded } — where a null
+ *  `decoded` means "a reference this table cannot resolve", so the caller's
+ *  unknownReference policy applies, and a null RESULT means "not a reference at
+ *  all", so the ampersand is emitted as text.
+ *
+ *  The no-semicolon named form takes the LONGEST prefix that is a legacy name,
+ *  which is what a browser does: "at&nbspcost" is "at " followed by "cost", not
+ *  an unknown reference named "nbspcost".
+ *
+ *  Residue, stated rather than implied away: HTML5 suppresses that form inside an
+ *  ATTRIBUTE VALUE when the next character is "=" or alphanumeric, precisely so a
+ *  query string survives. This file has no attribute context, so it applies the
+ *  text-content rule everywhere and will over-decode href="?a=1&regs=2". That
+ *  direction is the safe one — over-decoding accuses, under-decoding misses. */
+function readReference(raw, i) {
+  NUMERIC.lastIndex = i;
+  const num = NUMERIC.exec(raw);
+  if (num) {
+    const digits = num[1] ? num[2] : num[3];
+    return { length: num[0].length, decoded: numericCodePoint(parseInt(digits, num[1] ? 16 : 10)) };
   }
-  const named = NAMED[body.toLowerCase()];
-  return named === undefined ? null : named;
+
+  NAME_RUN.lastIndex = i;
+  const run = NAME_RUN.exec(raw);
+  if (!run) return null;
+  const name = run[1];
+
+  if (raw[i + 1 + name.length] === ";") {
+    const named = NAMED[name.toLowerCase()];
+    return { length: name.length + 2, decoded: named === undefined ? null : named };
+  }
+
+  for (let len = name.length; len > 0; len--) {
+    const prefix = name.slice(0, len).toLowerCase();
+    if (NAMED_LEGACY.has(prefix)) return { length: len + 1, decoded: NAMED[prefix] };
+  }
+  return null;
 }
 
 /** A JS or CSS escape at `raw[i]`, as [decodedText, consumedLength], or null.
@@ -232,16 +334,24 @@ function view(
     pendingNewlines = 0;
   };
 
+  // `ch` is one CODE POINT, which may be two UTF-16 units. It is pushed unit by
+  // unit against the same origin offset so that `map` stays index-aligned with
+  // `text` — without that, an astral character would slide every span after it.
+  // The whole reason to work in code points is that the ignorable class reaches
+  // past the BMP (the tag characters at U+E0020-E007F, the variation selectors
+  // supplement), and a lone surrogate matches no Unicode property at all.
   const emit = (ch, at) => {
-    if (INVISIBLE.has(ch)) return;
+    if (IGNORABLE.test(ch)) return;
     if (/\s/.test(ch)) {
       if (pendingSpace < 0) pendingSpace = at;
       if (ch === "\n") pendingNewlines++;
       return;
     }
     flush();
-    out.push(ch);
-    map.push(at);
+    for (let k = 0; k < ch.length; k++) {
+      out.push(ch[k]);
+      map.push(at);
+    }
     textSinceTag = true;
   };
   const emitAll = (s, at) => {
@@ -274,14 +384,13 @@ function view(
     }
 
     if (ch === "&") {
-      const hit = REFERENCE.exec(raw.slice(i, i + 36));
-      if (hit) {
-        const decoded = decodeReference(hit[1]);
-        if (decoded !== null) emitAll(decoded, i);
+      const ref = readReference(raw, i);
+      if (ref) {
+        if (ref.decoded !== null) emitAll(ref.decoded, i);
         else if (unknownReference === "blank") void 0;
         else if (unknownReference === "space") emit(" ", i);
-        else emitAll(hit[0], i);
-        i += hit[0].length;
+        else emitAll(raw.slice(i, i + ref.length), i);
+        i += ref.length;
         continue;
       }
     }
@@ -295,8 +404,11 @@ function view(
       }
     }
 
-    emit(ch, i);
-    i++;
+    // By code point, not by code unit: see emit(). The three tests above are all
+    // on BMP characters, so reading raw[i] for them stays correct.
+    const point = String.fromCodePoint(raw.codePointAt(i));
+    emit(point, i);
+    i += point.length;
   }
 
   return { text: out.join(""), map };

@@ -55,11 +55,19 @@
 //     "no surge today", is a same-line lookahead, so splitting it fails the build
 //     on copy §3.4 allows — pass 2 can see that it is permitted and is not asked.
 //     That is #82.
-//   - evasion through the finite tables in copy-gate-normalise.mjs: most of the
-//     invisible-character class, a numeric reference with leading zeros or no
-//     semicolon, a named reference outside NAMED, and a homoglyph written as an
-//     escape (the confusable check below reads RAW lines, so pass 2 decodes one
-//     and discards it). #80.
+//   - a NAMED reference outside copy-gate-normalise.mjs's table, which stays
+//     finite and is argued there. #80 closed the rest of that list: the invisible
+//     class is now a Unicode property rather than eight of its members, numeric
+//     references follow HTML5 (unbounded digits, optional semicolon), and the
+//     confusable check below reads every normalised view as well as the raw line,
+//     so a homoglyph written as an escape no longer survives being decoded.
+//     One residue, and it is narrower than it first reads: pass 2 sees
+//     comment-stripped text, so a confusable written as an ESCAPE survives only
+//     inside the comments stripComments actually blanks — a LINE-LEADING "//" or
+//     "/* */". A trailing inline "//" is not stripped (mid-line openers are far
+//     more likely to be shipped text), and an HTML comment is not stripped at all
+//     because Astro emits it into the built page, so an escape in either of those
+//     still fails. A LITERAL confusable is caught in every comment, everywhere.
 //   - a tag-split phrase in a file type the tag views skip — .ts by design, but
 //     also .json, .txt, .yml and, in the dist gate, every .js bundle. #81.
 //   - anything in a file type SCAN_EXT does not list. Those are named on every
@@ -144,6 +152,17 @@ const CONFUSABLE = new RegExp(
     "]|[\\u{1D400}-\\u{1D7FF}]", // Mathematical Alphanumeric Symbols
   "u",
 );
+
+// The same regex, global, for the passes that want every hit on a line rather
+// than the first. Built from CONFUSABLE rather than written twice, because two
+// spellings of one class is the fault #57 named about the pattern list.
+const CONFUSABLE_ALL = new RegExp(CONFUSABLE.source, `${CONFUSABLE.flags}g`);
+
+// One dedupe-key shape for every pass in this file. NUL separates because it
+// cannot occur in a line number, a pattern index, or matched copy — and writing
+// it ONCE is the point: three call sites each spelling their own separator is how
+// the two halves of a dedupe drift apart while both still look right.
+const key = (...parts) => parts.join("\u0000");
 
 // Blank comments out, keeping every newline so line numbers still line up.
 //
@@ -257,7 +276,7 @@ for (const file of files) {
     for (const [at, { re, why }] of PATTERNS.entries()) {
       const hit = line.match(re);
       if (!hit) continue;
-      reported.add(`${i + 1}\u0000${at}\u0000${hit[0].toLowerCase()}`);
+      reported.add(key(i + 1, at, hit[0].toLowerCase()));
       judge(i + 1, `"${hit[0]}"`, why);
     }
   });
@@ -274,7 +293,7 @@ for (const file of files) {
   });
   for (const { at, text, view: viewName, span } of matchesIn(views, PATTERNS)) {
     const start = lineAt(span[0]);
-    const id = `${start}\u0000${at}\u0000${text}`;
+    const id = key(start, at, text);
     if (reported.has(id)) continue;
     reported.add(id);
     const end = lineAt(span[1] - 1);
@@ -286,18 +305,57 @@ for (const file of files) {
     );
   }
 
-  // Homoglyphs are read from the RAW line, comments included: an HTML comment in
-  // an .astro file ships, and a confusable is worth catching wherever it is.
-  raw.forEach((line, i) => {
-    const hit = line.match(CONFUSABLE);
-    if (!hit) return;
-    const point = `U+${hit[0].codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`;
+  // Homoglyphs, from the RAW line first — comments included, because an HTML
+  // comment in an .astro file ships and a confusable is worth catching wherever it
+  // is — and then from each normalised view.
+  //
+  // The second half is #80. Pass 2 DECODES "ch&#1077;apest" into a Cyrillic "e"
+  // and then discarded it, because this check only ever read raw lines: the gate
+  // built the evidence and threw it away. Every confusable is now read from every
+  // view this gate takes.
+  //
+  // #57 kept confusables source-only because a vendored bundle may legitimately
+  // carry another script. That reasoning SURVIVES rather than being worked around:
+  // pass 2's views are views of source, so nothing vendored is in scope here, and
+  // the dist gate is left alone.
+  //
+  // A hit found only in a view is reported at the ESCAPE's line, not at some
+  // position in a derived string — the span map already points at the bytes an
+  // author has to edit, and telling them where the decoded character "is" would
+  // name a place that exists in no file.
+  const flagConfusable = (where, at, text, note) => {
+    const point = `U+${text.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`;
     judge(
-      i + 1,
-      `"${hit[0]}" (${point})`,
+      at,
+      `"${text}" (${point})${note}`,
       "not a Latin letter, but shaped like one — a homoglyph hides a gated word from every pattern above",
+      where,
     );
+  };
+
+  // EVERY confusable on the raw line, not just the first. The view pass below
+  // matches globally, so a line-first raw pass mislabels: with two confusables on
+  // one line the raw pass claimed the first and the view pass then reported the
+  // second as "[plain]" — a view finding, for a character sitting in plain sight
+  // in the source. Naming the wrong cause is the fault the gates exist to remove,
+  // and a label nobody can act on is the shape it takes here.
+  const confusables = new Set();
+  raw.forEach((line, i) => {
+    for (const m of line.matchAll(CONFUSABLE_ALL)) {
+      confusables.add(key(i + 1, m[0]));
+      flagConfusable(`${file}:${i + 1}`, i + 1, m[0], "");
+    }
   });
+
+  for (const { name, text, map } of views) {
+    for (const m of text.matchAll(CONFUSABLE_ALL)) {
+      const line = lineAt(map[m.index]);
+      const id = key(line, m[0]);
+      if (confusables.has(id)) continue;
+      confusables.add(id);
+      flagConfusable(`${file}:${line}`, line, m[0], ` [${name}]`);
+    }
+  }
 }
 
 for (const p of pragmas.filter((p) => !p.used)) {
