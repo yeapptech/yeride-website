@@ -16,12 +16,11 @@
 //
 // Like scripts/copy-gate-patterns.test.mjs, this lives in scripts/, which
 // neither gate scans, so the forbidden phrases below are safe to write down.
-import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { basename, dirname, join } from "node:path";
+import { readFileSync } from "node:fs";
+import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BINARY, SCAN_EXT } from "./copy-gate-files.mjs";
+import { runGate } from "./copy-gate-fixture.mjs";
 
 const SOURCE_GATE = fileURLToPath(new URL("./check-copy-gate.mjs", import.meta.url));
 const DIST_GATE = fileURLToPath(new URL("./check-dist-copy-gate.mjs", import.meta.url));
@@ -37,22 +36,6 @@ const say = (ok, label, detail) => {
   console.log(`FAIL  ${label}${detail ? `\n      ${detail}` : ""}`);
   failures++;
 };
-
-/** Run a gate over a throwaway tree of {relativePath: contents}. */
-function runGate(gate, files) {
-  const dir = mkdtempSync(join(tmpdir(), "copy-gate-files-"));
-  try {
-    for (const [rel, body] of Object.entries(files)) {
-      const path = join(dir, rel);
-      mkdirSync(dirname(path), { recursive: true });
-      writeFileSync(path, body);
-    }
-    const r = spawnSync(process.execPath, [gate], { cwd: dir, encoding: "utf8" });
-    return { code: r.status, out: `${r.stdout ?? ""}${r.stderr ?? ""}` };
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-}
 
 // The source gate walks src/ and public/ and throws if either is missing, so
 // every fixture gets both. A .nojekyll carries no copy and is not scanned.

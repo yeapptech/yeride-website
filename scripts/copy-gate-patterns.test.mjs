@@ -21,12 +21,9 @@
 // the pattern list that can make a gate say LESS: `permits`. See the bottom of
 // this file — and note that they run the real reading machine and then the real
 // gate, not `re.test`, because a withdrawal is a property of the machine.
-import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { runGate } from "./copy-gate-fixture.mjs";
 import { PATTERNS } from "./copy-gate-patterns.mjs";
 import { countOccurrences, isPermitted, matchesIn, permissionsIn, viewsOf } from "./copy-gate-normalise.mjs";
 
@@ -168,15 +165,19 @@ const PATHOLOGICAL = [
 const BUDGET_MS = 250;
 
 let failures = 0;
-// Same shape as copy-gate-suspension.test.mjs's, for the layers at the bottom
-// that assert one fact at a time rather than walking a list of strings.
+let checks = 0;
+// The total is COUNTED, not written down — copy-gate-files.test.mjs's rule, and
+// it binds harder here: several of the controls below are loops, so a hand-kept
+// total is one edit away from claiming coverage that was deleted.
 const say = (ok, label, detail) => {
+  checks++;
   if (ok) return;
   console.log(`FAIL  ${label}${detail ? `\n      ${detail}` : ""}`);
   failures++;
 };
 const check = (label, list, wantMatch) => {
   for (const [name, s] of list) {
+    checks++;
     const hit = matches(s);
     if (wantMatch && hit.length === 0) {
       console.log(`FAIL  ${label} — nothing matched: ${name}\n      ${s}`);
@@ -191,6 +192,7 @@ check("forbidden", FORBIDDEN, true);
 check("legitimate", ALLOWED, false);
 
 for (const [i, s] of PATHOLOGICAL.entries()) {
+  checks++;
   const t0 = process.hrtime.bigint();
   PATTERNS.forEach((p) => p.re.test(s));
   const ms = Number(process.hrtime.bigint() - t0) / 1e6;
@@ -219,7 +221,7 @@ for (const [i, s] of PATHOLOGICAL.entries()) {
 const accusations = (text, { markup = false, includeFabricating = false } = {}) => {
   const views = viewsOf(text, { markup, includeFabricating });
   const permissions = permissionsIn(views, PATTERNS);
-  return matchesIn(views, PATTERNS).filter((m) => !isPermitted(permissions, m.at, m.span));
+  return matchesIn(views, PATTERNS).filter((m) => !isPermitted(permissions, m.at, m.offsets));
 };
 
 // Withdrawn: every split this normaliser exists to see through. The first is the
@@ -232,6 +234,11 @@ const PERMITTED = [
   ["wrapped by a formatter", "<h2>\n  No surge\n  today\n</h2>", { markup: true }],
   ["the word bolded", "<h2>No surge <b>today</b></h2>", { markup: true }],
   ["a JS escape in the bundle", `const h = "No surge \\u0074oday";`, {}],
+  // The permitted phrase with a gap of its OWN. isPermitted compares the bytes
+  // each side was read from, and both sides drop bytes — here the accusation
+  // comes from a view that removed the tag from the middle of the claim, and
+  // comparing outer ranges would leave this accused.
+  ["the claim itself split by a tag", "<h2>No <b>surge</b> today</h2>", { markup: true }],
 ];
 
 // Still accused. Each is a bound from permissionsIn or isPermitted, written as
@@ -248,6 +255,29 @@ const STILL_ACCUSED = [
   // "tags-as-space" this reads as the permitted phrase, and to a reader it reads
   // "No surgetoday". A view that can invent a phrase may accuse, never excuse.
   ["a fabricating view cannot excuse", "<p>No surge<i></i>today</p>", { markup: true, includeFabricating: true }, 1],
+  // THE SPAN-SWALLOW BYPASS, found by an independent review of the first revision
+  // of this fix and green in both gates at the time. Under "tags-removed" this
+  // reads as the permitted phrase, and the OUTER SPAN of that reading covers the
+  // markup the view dropped — including a never-claimed §5 string a browser puts
+  // on screen as alt text. isPermitted compares the bytes the permitted phrase was
+  // read FROM, so the alt is not among them.
+  //
+  // Two claims here, and only the visible one is excused: the alt is what must
+  // survive. Widen this back to a span and the count goes to 0, not to 1.
+  [
+    "a claim inside the markup the permitted phrase spans",
+    `<p>no surge <img src="/a.png" alt="no surge, ever" /> today</p>`,
+    { markup: true },
+    1,
+  ],
+  // The same shape without the tags, so the bound is not read as a markup-only
+  // concern: whitespace collapse and reference decoding drop bytes too.
+  [
+    "a claim inside a reference run the permitted phrase spans",
+    `const a = "No surge&nbsp;today";\nconst b = "no surge, ever.";`,
+    { markup: true },
+    1,
+  ],
 ];
 
 for (const [name, text, opts] of PERMITTED) {
@@ -283,21 +313,9 @@ for (const [name, text, opts, want] of STILL_ACCUSED) {
 // is what asserts the shipped "No surge today" still passes.
 const GATE = fileURLToPath(new URL("./check-copy-gate.mjs", import.meta.url));
 
-function runGate(files) {
-  const dir = mkdtempSync(join(tmpdir(), "copy-gate-permits-"));
-  try {
-    mkdirSync(join(dir, "public"), { recursive: true });
-    for (const [rel, body] of Object.entries(files)) {
-      const path = join(dir, rel);
-      mkdirSync(join(path, ".."), { recursive: true });
-      writeFileSync(path, body);
-    }
-    const r = spawnSync(process.execPath, [GATE], { cwd: dir, encoding: "utf8" });
-    return { code: r.status, out: `${r.stdout ?? ""}${r.stderr ?? ""}` };
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-}
+// The source gate walks src/ and public/ and throws if either is missing, so
+// every fixture gets both. A .nojekyll carries no copy and is not scanned.
+const src = (files) => runGate(GATE, { "public/.nojekyll": "", ...files });
 
 // The three splits from #82's own report, through the gate, in the file types
 // each would really be written in.
@@ -307,7 +325,7 @@ for (const [name, files] of [
   ["wrapped by a formatter", { "src/components/Fees.astro": `<h2>\n  No surge\n  today\n</h2>\n` }],
   ["the word bolded", { "src/components/Fees.astro": `<h2>No surge <b>today</b></h2>\n` }],
 ]) {
-  const { code, out } = runGate(files);
+  const { code, out } = src(files);
   say(code === 0, `the GATE must pass — permitted, ${name}`, out.trim());
 }
 
@@ -315,7 +333,7 @@ for (const [name, files] of [
 // has stopped reading this pattern at all — which is precisely what a lookahead
 // widened "just a little" would produce.
 {
-  const { code, out } = runGate({ "src/components/Fees.astro": `<h2>No surge, ever.</h2>\n` });
+  const { code, out } = src({ "src/components/Fees.astro": `<h2>No surge, ever.</h2>\n` });
   say(
     code === 1 && /no surge/i.test(out),
     "the GATE must still fail — the bare claim",
@@ -323,7 +341,7 @@ for (const [name, files] of [
   );
 }
 {
-  const { code, out } = runGate({
+  const { code, out } = src({
     "src/i18n/feesCopy.ts": `export const c = {\n  a: "No surge today",\n  b: "No surge, ever.",\n};\n`,
   });
   say(
@@ -347,18 +365,10 @@ for (const [name, files] of [
 // surge line" from being satisfied by a gate that has stopped reading at all.
 const DIST_GATE = fileURLToPath(new URL("./check-dist-copy-gate.mjs", import.meta.url));
 
-function surgeVerdict(html) {
-  const dir = mkdtempSync(join(tmpdir(), "copy-gate-permits-dist-"));
-  try {
-    mkdirSync(join(dir, "dist", "fees"), { recursive: true });
-    writeFileSync(join(dir, "dist", "fees", "index.html"), html);
-    const r = spawnSync(process.execPath, [DIST_GATE], { cwd: dir, encoding: "utf8" });
-    const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
-    return out.split("\n").filter((line) => /"no surge/i.test(line));
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-}
+const surgeVerdict = (html) =>
+  runGate(DIST_GATE, { "dist/fees/index.html": html })
+    .out.split("\n")
+    .filter((line) => /"no surge/i.test(line));
 
 for (const [name, html] of [
   ["as shipped", "<h2>No surge today</h2>\n"],
@@ -385,13 +395,5 @@ for (const [name, html] of [
   );
 }
 
-const total =
-  FORBIDDEN.length +
-  ALLOWED.length +
-  PATHOLOGICAL.length +
-  PERMITTED.length +
-  STILL_ACCUSED.length +
-  6 +
-  6;
-console.log(`${failures ? "✗" : "✓"} copy-gate patterns: ${total} controls, ${failures} failure${failures === 1 ? "" : "s"}`);
+console.log(`${failures ? "✗" : "✓"} copy-gate patterns: ${checks} controls, ${failures} failure${failures === 1 ? "" : "s"}`);
 process.exit(failures ? 1 : 0);

@@ -322,9 +322,11 @@ for (const file of files) {
       if (!hit) continue;
       // lineStarts indexes codeText, which `code` was split from, so a line start
       // plus the match index is an offset into the file — the same coordinates
-      // every view maps back to.
+      // every view maps back to. A raw match drops nothing, so its bytes are the
+      // contiguous run; a view's are not, which is why isPermitted takes offsets.
       const from = lineStarts[i] + hit.index;
-      if (isPermitted(permissions, at, [from, from + hit[0].length])) continue;
+      const offsets = Array.from({ length: hit[0].length }, (_, k) => from + k);
+      if (isPermitted(permissions, at, offsets)) continue;
       reported.add(key(i + 1, at, hit[0].toLowerCase()));
       judge(i + 1, `"${hit[0]}"`, why);
     }
@@ -332,8 +334,8 @@ for (const file of files) {
 
   // Pass 2 — the same patterns over the normalised views. Only hits pass 1 could
   // not see are printed, each naming the view that found it.
-  for (const { at, text, view: viewName, span } of matchesIn(views, PATTERNS)) {
-    if (isPermitted(permissions, at, span)) continue;
+  for (const { at, text, view: viewName, span, offsets } of matchesIn(views, PATTERNS)) {
+    if (isPermitted(permissions, at, offsets)) continue;
     const start = lineAt(span[0]);
     const id = key(start, at, text);
     if (reported.has(id)) continue;

@@ -489,7 +489,16 @@ export function countOccurrences(spans) {
   return count;
 }
 
-/** The original-byte spans where a permitted phrase is READ, per pattern index —
+/** A pattern as a fresh /g copy, so matchAll can walk every occurrence. Fresh on
+ *  every call rather than cached: a /g regex carries lastIndex, and one shared
+ *  across files or views would skip matches depending on what was read before it.
+ *  Written once because matchesIn and permissionsIn both need it, and a
+ *  withdrawal reading occurrences differently from an accusation is exactly the
+ *  drift one shared normaliser exists to prevent. */
+const globalise = (re) =>
+  new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
+
+/** The original-byte offsets a permitted phrase is READ FROM, per pattern index —
  *  the one direction in which a view is allowed to make a gate say less.
  *
  *  Wayfinder #82. §5 has one permitted exception, "no surge today", and it used
@@ -518,55 +527,76 @@ export function countOccurrences(spans) {
  *     permitted phrase under "tags-as-space" and as "no surgetoday" to a reader.
  *     Fabrication is allowed to raise the alarm; it is not allowed to call it off.
  *
- *  A fourth bound is isPermitted's, not this function's: the permitted span has to
- *  OVERLAP the accused one in original bytes, so a permitted phrase elsewhere in
- *  the file cannot excuse a bare claim here. */
+ *  A fourth bound is isPermitted's, not this function's: the accused bytes have to
+ *  be bytes the permitted phrase ACTUALLY CONTRIBUTED, so a permitted phrase
+ *  elsewhere in the file — or elsewhere on the same line — cannot excuse a bare
+ *  claim.
+ *
+ *  Which is why a permission is a SET of original offsets and not a span. The
+ *  first revision of this recorded [map[first], map[last] + 1], the outer hull,
+ *  and an independent review broke it in one line: in a tag-dropping view that
+ *  hull swallows every byte the view removed, so
+ *
+ *      <p>no surge <img alt="no surge, ever" /> today</p>
+ *
+ *  read as "no surge today" under `tags-removed`, and the hull it spanned covered
+ *  the alt attribute — withdrawing a never-claimed §5 string that a browser puts
+ *  on screen. It passed both gates green. A hull is a claim about the ENDS of a
+ *  match; what a withdrawal needs is the match's own bytes. */
 export function permissionsIn(views, patterns) {
   const out = new Map();
   for (const { text, map, fabricates } of views) {
     if (fabricates) continue;
     for (const [at, { permits }] of patterns.entries()) {
       if (!permits) continue;
-      const global = new RegExp(
-        permits.source,
-        permits.flags.includes("g") ? permits.flags : `${permits.flags}g`,
-      );
-      for (const m of text.matchAll(global)) {
+      for (const m of text.matchAll(globalise(permits))) {
         if (!m[0].length) continue;
-        const spans = out.get(at) ?? [];
-        spans.push([map[m.index], map[m.index + m[0].length - 1] + 1]);
-        out.set(at, spans);
+        const offsets = new Set(map.slice(m.index, m.index + m[0].length));
+        const permitted = out.get(at) ?? [];
+        permitted.push(offsets);
+        out.set(at, permitted);
       }
     }
   }
   return out;
 }
 
-/** Whether an accusation is covered by its own pattern's permitted phrase over
- *  the same original bytes. Overlap, not equality: the accused span is a strict
- *  substring of the permitted one ("no surge" inside "no surge today"), and the
- *  two are found in different views, so they agree on bytes and on nothing else. */
-export function isPermitted(permissions, at, span) {
-  const spans = permissions.get(at);
-  return !!spans && spans.some(([start, end]) => start < span[1] && span[0] < end);
+/** Whether an accusation is covered by its own pattern's permitted phrase — every
+ *  byte the accusation was READ FROM being a byte that phrase was read from too.
+ *
+ *  Containment, not overlap, and offsets rather than a range on either side. Both
+ *  sides drop bytes: the accusation may come from a view that removed a tag from
+ *  the middle of the claim ("No <b>surge</b> today"), and the permission from a
+ *  different view that removed a different one. Comparing outer ranges gets both
+ *  directions wrong — it excuses claims hiding in the gaps of the permitted
+ *  phrase, and it accuses a permitted phrase that has a gap of its own. */
+export function isPermitted(permissions, at, offsets) {
+  const permitted = permissions.get(at);
+  return !!permitted && permitted.some((allowed) => offsets.every((o) => allowed.has(o)));
 }
 
 /** Every match of `patterns` in every view, as
- *  [{ at, text, view, span: [startOffset, endOffset) }] in original-byte
+ *  [{ at, text, view, span: [startOffset, endOffset), offsets }] in original-byte
  *  coordinates. Both gates match the same way; they differ only in what they do
- *  with the spans afterwards. */
+ *  with the results afterwards.
+ *
+ *  `span` is the outer hull — what counting occurrences and reporting a line range
+ *  want. `offsets` is the bytes the match was actually read from, which in a
+ *  tag-dropping view is a SUBSET of that hull; isPermitted wants those, because a
+ *  hull tells you where a match ended and not what it was made of. */
 export function matchesIn(views, patterns) {
   const out = [];
   for (const { name, text, map } of views) {
     for (const [at, { re }] of patterns.entries()) {
-      const global = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
-      for (const m of text.matchAll(global)) {
+      for (const m of text.matchAll(globalise(re))) {
         if (!m[0].length) continue;
+        const offsets = map.slice(m.index, m.index + m[0].length);
         out.push({
           at,
           text: m[0].toLowerCase(),
           view: name,
-          span: [map[m.index], map[m.index + m[0].length - 1] + 1],
+          span: [offsets[0], offsets[offsets.length - 1] + 1],
+          offsets,
         });
       }
     }

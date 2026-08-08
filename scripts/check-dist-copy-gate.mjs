@@ -287,11 +287,13 @@ for (const path of files) {
   const permissions = permissionsIn(views, PATTERNS);
 
   const found = new Map();
-  for (const { at, text, view: name, span } of matchesIn(views, PATTERNS)) {
-    // Withdrawn per SPAN, before the counting — a permitted "no surge today" and
-    // a bare "no surge" further down the same file are two occurrences, and only
-    // one of them is excused.
-    if (isPermitted(permissions, at, span)) continue;
+  for (const { at, text, view: name, span, offsets } of matchesIn(views, PATTERNS)) {
+    // Withdrawn per MATCH, before the counting — a permitted "no surge today" and
+    // a bare "no surge" elsewhere in the same file are two occurrences, and only
+    // one of them is excused. Judged on the bytes the match was read from rather
+    // than on its outer span: in a tag-dropping view the span covers markup the
+    // view removed, and a claim sitting in that markup would ride out on it.
+    if (isPermitted(permissions, at, offsets)) continue;
     const id = `${at}\u0000${text}`;
     const seen = found.get(id) ?? { at, spans: [], text, view: name };
     seen.spans.push(span);
