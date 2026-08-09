@@ -46,6 +46,19 @@ export interface AppCharge {
 export interface ServiceAreaRef {
   id: string;
   identifier: string;
+  /**
+   * The area's circular region (yeride-functions#45), which `/fare-estimate`
+   * resolves the rider's pickup against (#73). `radiusMeters` is named for its
+   * unit so it cannot be guessed wrong.
+   *
+   * BOTH ARE OPTIONAL, and an unusable circle is an ABSENT KEY rather than a
+   * null or a zero — the endpoint's acceptance rule 1, and the same rule the
+   * rate fields keep. `/fees` ignores them; `src/lib/serviceArea.ts` reads them
+   * and treats an area missing them as "we cannot tell", never as "the rider is
+   * outside it".
+   */
+  center?: { lat: number; lng: number };
+  radiusMeters?: number;
 }
 
 /** One reference trip, evaluated server-side. `appCharges` carries the amount the
