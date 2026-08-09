@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "checks": "npm run test:gates && node scripts/check-route-parity.mjs && node scripts/check-copy-gate.mjs && node scripts/check-env-example.mjs && node scripts/check-deploy-env.mjs",
-    "test:gates": "node scripts/copy-gate-patterns.test.mjs && node scripts/copy-gate-normalise.test.mjs && node scripts/copy-gate-suspension.test.mjs && node scripts/copy-gate-files.test.mjs",
+    "test:gates": "node scripts/copy-gate-patterns.test.mjs && node scripts/copy-gate-normalise.test.mjs && node scripts/copy-gate-suspension.test.mjs && node scripts/copy-gate-pragma.test.mjs && node scripts/copy-gate-files.test.mjs",
     "check:fee-labels": "node scripts/check-fee-labels.mjs",
     "check:dist": "node scripts/check-dist-copy-gate.mjs",
     "check:env": "node scripts/check-env.mjs",
