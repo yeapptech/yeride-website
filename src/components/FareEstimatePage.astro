@@ -301,6 +301,37 @@ if (!areaName) {
       console.error("[fare-estimate] service areas unavailable", err);
     });
 
+  /**
+   * How long the submit path will wait on `areasReady` before giving up and
+   * treating the area as unresolved.
+   *
+   * 🔴 This bound is the difference between a soft dependency and a hard one,
+   * and it was NOT in the first draft, which awaited the fetch unbounded.
+   *
+   * The distinction that matters: a fetch that REJECTS settles the promise and
+   * is harmless — `.catch()` handles it, and a refused connection rejects in
+   * milliseconds. A fetch that never SETTLES is a different animal, and
+   * `.catch()` is no defence against it: every quote queues behind a request
+   * that is not coming back. A black-holed port, a slow-loris endpoint and a
+   * captive portal all produce it. Verified against a socket that accepts and
+   * never answers: unbounded, the page span forever with no error and no fare;
+   * bounded, it releases and quotes.
+   *
+   * Two seconds is generous rather than tight: the fetch starts at page init
+   * and the rider has to type two addresses before submitting, so by then it
+   * has almost always landed. This bound is reached only when the endpoint is
+   * pathological — exactly the case that must not cost the rider their fare.
+   */
+  const AREAS_WAIT_MS = 2000;
+
+  /** Resolves when the area list lands, or when we stop waiting for it. */
+  function areasOrGiveUp(): Promise<void> {
+    return Promise.race([
+      areasReady,
+      new Promise<void>((resolve) => setTimeout(resolve, AREAS_WAIT_MS)),
+    ]);
+  }
+
   let map: google.maps.Map;
   let pickup: google.maps.LatLng | null = null;
   let dropoff: google.maps.LatLng | null = null;
@@ -601,7 +632,9 @@ if (!areaName) {
         // Resolved BEFORE the route is drawn, so a rider outside every area is
         // told so instead of watching a route appear that the page then refuses
         // to price. It also spends no Directions call on a trip with no answer.
-        await areasReady;
+        // Bounded — see AREAS_WAIT_MS. A fee endpoint that never answers must
+        // cost the rider nothing but the resolution.
+        await areasOrGiveUp();
         if (ticket !== quote) return;
         const resolution = resolveServiceArea(
           pickup ? { lat: pickup.lat(), lng: pickup.lng() } : null,
