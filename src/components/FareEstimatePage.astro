@@ -672,6 +672,10 @@ if (!areaName) {
         const estimate = await getEstimates(
           leg.distance!.value,
           Math.ceil(leg.duration!.value / 60),
+          // The resolved area — the same id `showAreaName` just put on screen.
+          // Omitting it was the #73 review's find: the label named the rider's
+          // area while the fare came from the default.
+          areaId,
         );
         if (ticket !== quote) return;
 

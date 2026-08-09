@@ -1,6 +1,5 @@
 import { httpsCallable } from "firebase/functions";
 import { functions } from "./firebase";
-import { DEFAULT_SERVICE_AREA_ID } from "./serviceArea";
 
 export interface ServiceEstimate {
   serviceId: string;
@@ -58,10 +57,30 @@ interface FareEstimateRequest {
   duration: number;
 }
 
+/**
+ * 🔴 `serviceAreaId` is REQUIRED, and deliberately has no default.
+ *
+ * It used to default to `DEFAULT_SERVICE_AREA_ID`, and that default silently
+ * ate the whole of #73: the page resolved the rider's area, rendered it into
+ * the "Priced for" label, and then called this with two arguments — so every
+ * fare was still quoted at South Florida rates while the label named the
+ * rider's actual area. A wrong number wearing a correct label, which is worse
+ * than the disclosed-wrong-number state #62 shipped.
+ *
+ * Nothing caught it. `astro check` was happy because the parameter was
+ * optional; the unit controls do not reach this far; and the browser pass
+ * missed it because production publishes exactly ONE area, so the resolved id
+ * and the default are the same string. It would have surfaced only on the day
+ * a second market opened — the day this page finally mattered.
+ *
+ * Required, the omission is a type error. Do not give this a default again:
+ * the caller always knows which area it resolved, including when that is the
+ * fallback, and a default here only lets a caller forget to say.
+ */
 export async function getEstimates(
   distance: number,
   duration: number,
-  serviceAreaId: string = DEFAULT_SERVICE_AREA_ID,
+  serviceAreaId: string,
 ): Promise<FareEstimateResponse> {
   const estimateFares = httpsCallable<
     FareEstimateRequest,
