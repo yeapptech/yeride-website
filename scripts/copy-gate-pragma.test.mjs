@@ -36,17 +36,21 @@
 //
 // Like the other two control sets, this lives in scripts/, which neither gate
 // scans, so the forbidden phrases below are safe to write down.
-import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { runGate } from "./copy-gate-fixture.mjs";
 import { readPragma } from "./copy-gate-pragma.mjs";
 
 const GATE = fileURLToPath(new URL("./check-copy-gate.mjs", import.meta.url));
-let failures = 0;
 
+let failures = 0;
+let checks = 0;
+// The total is COUNTED, not written down — copy-gate-files.test.mjs's rule, and
+// this file has more reason to obey it than most: three of its lists are loops,
+// so a hand-kept total is one deleted entry away from claiming coverage that no
+// longer exists. A control set whose own arithmetic can lie is the failure it
+// exists to catch.
 const say = (ok, label, detail) => {
+  checks++;
   if (ok) return;
   console.log(`FAIL  ${label}${detail ? `\n      ${detail}` : ""}`);
   failures++;
@@ -116,21 +120,15 @@ for (const [name, line] of ABSENT) {
 // a temp tree with those two directories is a complete world to it.
 //
 // "at cost" is one of the copy-map §5 strings the pragma exists to bless, and
-// the phrase §3.4 suspends; it is what the twelve live pragmas sit on.
-function runGate(files) {
-  const dir = mkdtempSync(join(tmpdir(), "copy-gate-pragma-"));
-  try {
-    mkdirSync(join(dir, "src", "i18n"), { recursive: true });
-    mkdirSync(join(dir, "public"), { recursive: true });
-    for (const [name, body] of Object.entries(files)) {
-      writeFileSync(join(dir, "src", name), body);
-    }
-    const r = spawnSync(process.execPath, [GATE], { cwd: dir, encoding: "utf8" });
-    return { code: r.status, out: `${r.stdout ?? ""}${r.stderr ?? ""}` };
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-}
+// the phrase §3.4 suspends; it is what the live pragmas sit on.
+//
+// The spawn itself is scripts/copy-gate-fixture.mjs, shared with the patterns,
+// normalise and files control sets. A first draft of this file hand-rolled its
+// own and the review caught it: a gate spawned two ways is two claims about what
+// "the gate" does, and the day they drift both files still look right. What
+// stays here is the only thing that is this file's knowledge — that the source
+// gate throws unless both of its roots exist.
+const src = (files) => runGate(GATE, { "src/.keep": "", "public/.nojekyll": "", ...files });
 
 const MISPLACED_MSG = "copy-gate-allow must OPEN its own comment";
 
@@ -138,8 +136,8 @@ const MISPLACED_MSG = "copy-gate-allow must OPEN its own comment";
 // real gated phrase. If this is not green the fixture is wrong and every
 // mutation below proves nothing.
 {
-  const { code, out } = runGate({
-    "i18n/copy.ts": `export const copy = {\n  // copy-gate-allow: suspended, nothing is filed into the family (#48)\n  lead: "at cost",\n};\n`,
+  const { code, out } = src({
+    "src/i18n/copy.ts": `export const copy = {\n  // copy-gate-allow: suspended, nothing is filed into the family (#48)\n  lead: "at cost",\n};\n`,
   });
   say(code === 0, "fixture baseline — a correctly opened pragma must pass the gate", out.trim());
   say(out.includes("suspended, nothing is filed into the family (#48)"), "the gate prints the reason", out.trim());
@@ -148,8 +146,8 @@ const MISPLACED_MSG = "copy-gate-allow must OPEN its own comment";
 // THE POSITIVE CONTROL #100 ASKED FOR. Byte for byte the line the review
 // executed. The GATE must fail — not the reader.
 {
-  const { code, out } = runGate({
-    "Bad.astro": `<p data-src="https://x.test/a">Rides at cost. copy-gate-allow: brand approved #99</p>\n`,
+  const { code, out } = src({
+    "src/Bad.astro": `<p data-src="https://x.test/a">Rides at cost. copy-gate-allow: brand approved #99</p>\n`,
   });
   say(code === 1, "the GATE must fail on #100's exploit line", out.trim());
   say(out.includes(MISPLACED_MSG), "and must name the misplaced pragma as the cause", out.trim());
@@ -160,8 +158,8 @@ const MISPLACED_MSG = "copy-gate-allow must OPEN its own comment";
 // believes they are covered; failing quietly and letting the copy through on
 // some other path is the outcome this rule cannot have.
 {
-  const { code, out } = runGate({
-    "i18n/copy.ts": `// see https://yeride.com/docs — copy-gate-allow: ok #99\nexport const lead = "safe";\n`,
+  const { code, out } = src({
+    "src/i18n/copy.ts": `// see https://yeride.com/docs — copy-gate-allow: ok #99\nexport const lead = "safe";\n`,
   });
   say(code === 1 && out.includes(MISPLACED_MSG), "a misplaced pragma is an error even with no gated copy near it", out.trim());
 }
@@ -169,17 +167,29 @@ const MISPLACED_MSG = "copy-gate-allow must OPEN its own comment";
 // The pragma covers the line below it. Every pragma now opens its own comment,
 // so the old coversNext distinction is gone — this pins the surviving behaviour.
 {
-  const { code } = runGate({
-    "i18n/copy.ts": `export const copy = {\n  /* copy-gate-allow: suspended (#48) */\n  lead: "at cost",\n};\n`,
+  const { code } = src({
+    "src/i18n/copy.ts": `export const copy = {\n  /* copy-gate-allow: suspended (#48) */\n  lead: "at cost",\n};\n`,
   });
   say(code === 0, "a block-comment pragma covers the line below it", String(code));
+}
+
+// ...and it still covers its OWN line, which is reachable exactly when the
+// pragma opens a comment that then CLOSES, leaving copy after it. judge() looks
+// up the same line before the line above, the gate's failure footer advertises
+// both, and CLAUDE.md item 2 says "the line a match starts on" — three places
+// that must agree, and before the review of #100 nothing held them together.
+{
+  const { code, out } = src({
+    "src/i18n/copy.ts": `export const copy = {\n  /* copy-gate-allow: suspended (#48) */ lead: "at cost",\n};\n`,
+  });
+  say(code === 0, "a pragma covers copy that follows it on its own line", out.trim());
 }
 
 // An HTML pragma in .astro markup — the syntax the normalised pass reports in —
 // must work, and its reason must not print its own "-->".
 {
-  const { code, out } = runGate({
-    "Fees.astro": `<!-- copy-gate-allow: suspended (#48) -->\n<p>at cost</p>\n`,
+  const { code, out } = src({
+    "src/Fees.astro": `<!-- copy-gate-allow: suspended (#48) -->\n<p>at cost</p>\n`,
   });
   say(code === 0, "an HTML-comment pragma must work in .astro markup", out.trim());
   say(!out.includes("-->"), "and its reason must not carry the closing delimiter", out.trim());
@@ -188,22 +198,21 @@ const MISPLACED_MSG = "copy-gate-allow must OPEN its own comment";
 // A pragma that no longer matches anything still fails, so the allowlist cannot
 // outlive its reason. #100 must not have quietly disarmed that sweep.
 {
-  const { code, out } = runGate({
-    "i18n/copy.ts": `// copy-gate-allow: suspended (#48)\nexport const lead = "nothing gated here";\n`,
+  const { code, out } = src({
+    "src/i18n/copy.ts": `// copy-gate-allow: suspended (#48)\nexport const lead = "nothing gated here";\n`,
   });
   say(code === 1 && out.includes("matches nothing any more"), "an unused pragma must still fail", out.trim());
 }
 
 // A pragma without a ticket still fails.
 {
-  const { code, out } = runGate({
-    "i18n/copy.ts": `export const copy = {\n  // copy-gate-allow: brand approved\n  lead: "at cost",\n};\n`,
+  const { code, out } = src({
+    "src/i18n/copy.ts": `export const copy = {\n  // copy-gate-allow: brand approved\n  lead: "at cost",\n};\n`,
   });
   say(code === 1 && out.includes("must name the ticket"), "a ticketless pragma must still fail", out.trim());
 }
 
-const total = ACCEPTED.length + REFUSED.length + ABSENT.length + 1 + 11;
 console.log(
-  `${failures ? "✗" : "✓"} copy-gate pragma: ${total} controls, ${failures} failure${failures === 1 ? "" : "s"}`,
+  `${failures ? "✗" : "✓"} copy-gate pragma: ${checks} controls, ${failures} failure${failures === 1 ? "" : "s"}`,
 );
 process.exit(failures ? 1 : 0);

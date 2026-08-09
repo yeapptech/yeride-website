@@ -22,11 +22,12 @@
 // whose type has no comment syntax — .json, .webmanifest. Those are read as
 // markup now, because they ship byte for byte, so a legitimate phrase in one can
 // fail this gate with no way to bless it. That is deliberate rather than
-// unnoticed, and #100 looked at it again and left it: nothing under public/ is a
-// .json today, so there is no case to design against. The only pragma such a
-// file could carry would sit inside a shipped string value, which is precisely
-// the self-authorisation the pragma rule exists to refuse. Reword the copy, or
-// move the file's text into a .astro component where a pragma is possible.
+// unnoticed. The only pragma such a file could carry would sit inside a shipped
+// string value, which is precisely the "shipped data authorising itself" that
+// the pragma rule exists to refuse. Reword the copy, or move the file's text
+// into a .astro component where a pragma is possible. (#100 looked at inventing
+// a mechanism and left it where #81 did: nothing under public/ is a .json today,
+// so there is still no case to design against.)
 //
 // HOW IT READS A FILE — two passes.
 //
@@ -460,8 +461,9 @@ if (errors.length) {
   console.error(`\n  The list is docs/copy-map.md §5, on the copy-map/en-es branch until it merges:`);
   console.error(`    git show origin/copy-map/en-es:docs/copy-map.md`);
   console.error(`  To keep a string that does not run, put "// copy-gate-allow: <why> (#ticket)"`);
-  console.error(`  on the line directly above it. The pragma must be the FIRST thing in its`);
-  console.error(`  comment — a comment opener elsewhere on the line does not count (#100).`);
+  console.error(`  on the line directly above it, or ahead of it on its own line. The pragma`);
+  console.error(`  must OPEN its comment — a comment opener elsewhere on the line does not`);
+  console.error(`  count, so a "//" inside a URL will not do it (#100).`);
   process.exit(1);
 }
 
