@@ -585,16 +585,34 @@ persuasion.
 | Fee link → `/fees` | See the full fee schedule | Ver el tarifario completo |
 | No route error | We couldn't find a route between those two places. | No encontramos una ruta entre esos dos lugares. |
 | Service error | We couldn't get an estimate right now. Try again in a moment. | No pudimos calcular el estimado ahora. Intenta de nuevo en un momento. |
-| Outside area **(NOT SHIPPED — no honest trigger; see below and #62)** | We're not in that area yet. | Todavía no estamos en esa zona. |
+| Outside area **(SHIPPED by #73 — one honest trigger; see below)** | We're not in that area yet. | Todavía no estamos en esa zona. |
 
-**The "Outside area" row is not shipped** (#38, → [#62](https://github.com/yeapptech/yeride-website/issues/62)).
-The page asks `estimateFares` for `us-fl-south-florida` on every call and has no way to
-know where the rider is, so no condition it can observe means "you are outside our area":
-`functions/not-found` means *South Florida* has no services configured, which is a fault,
-and mapping the line to it would tell every rider on the site they are somewhere YeRide
-does not serve, during an outage. The row returns when the site can answer the question
-the copy asks. (The same gap means a rider anywhere on earth is quoted South Florida
-rates — that is #62's real subject; the unshipped string is how it surfaced.)
+~~**The "Outside area" row is not shipped**~~ — **shipped 2026-08-09 by
+[#73](https://github.com/yeapptech/yeride-website/issues/73)**, after waiting through #38
+and #62 for a condition that honestly means it.
+
+It was withheld because the page asked `estimateFares` for `us-fl-south-florida` on every
+call and had no way to know where the rider was. `getFeeSchedule` now publishes each
+area's circle ([yeride-functions#45](https://github.com/yeapptech/yeride-functions/issues/45),
+deployed 2026-08-09), so the page resolves the rider's **pickup** against those circles and
+the sentence has exactly one trigger.
+
+**That trigger is narrower than "no match", and the narrowing is the point.** The row runs
+only when **every** area published a usable circle and none of them contains the pickup. An
+area whose circle is missing might well contain the rider, so while one is unreadable the
+only true answer is *we cannot tell* — and the page falls back to the "Priced for" pair
+below, exactly as it did before #73. A two-state version of this rule would put "We're not
+in that area yet." on screen because an admin left a radius blank, which is the same class
+of false sentence the row was withheld over in the first place. The unreachable-endpoint
+case lands in that same fallback: the estimate must not acquire a third hard dependency.
+
+It is still **not** mapped to `functions/not-found`, which means the requested area has no
+services configured — a fault, not a geography — and mapping the line there would tell
+every rider on the site they are somewhere YeRide does not serve, during an outage.
+
+The **pickup** decides, matching how a ride is dispatched. A **drop-off** outside every
+area is not an error: it is priced at the pickup area's rates, which is what the
+"Priced-for note" below discloses.
 
 > **Amended 2026-08-03 (#62) — the two "Priced-for" rows above are new, and they are
 > what the page says instead.**
@@ -621,7 +639,15 @@ rates — that is #62's real subject; the unshipped string is how it surfaced.)
 >
 > This is a floor, not the fix. Resolving the area from the rider's pickup, and with it
 > shipping the "Outside area" row above, is
-> [#73](https://github.com/yeapptech/yeride-website/issues/73).
+> [#73](https://github.com/yeapptech/yeride-website/issues/73) — **done 2026-08-09**.
+>
+> **Both rows survive #73 unchanged, and the label is still shown when resolution
+> succeeds.** The page prices one area; a rider looking at a map with their own route on
+> it cannot tell which; and the two states that fall back to the default are invisible
+> from the outside. Showing the disclosure only when the site could *not* resolve would
+> make it appear exactly where the page was least certain and vanish where it was most —
+> visible doubt, hidden confidence. The note also stays true in the resolved case, where
+> "a route outside it" is now about the **drop-off**.
 
 > **Corrected 2026-08-03, same day, by independent review — the first version of these
 > two rows said "Service area" and did not mention availability. Both were wrong.**
