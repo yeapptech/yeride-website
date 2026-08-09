@@ -9,8 +9,14 @@
 //
 //     // copy-gate-allow: <why, naming the ticket that retires it, e.g. #48>
 //
-// The pragma must sit in a comment, must name a ticket, and one that stops
+// The pragma must OPEN its own comment, must name a ticket, and one that stops
 // matching anything fails the build, so the allowlist cannot outlive its reason.
+// "Opens its own comment" is the whole rule and it is scripts/copy-gate-pragma.mjs,
+// in a module of its own because #100 executed the old rule and it did not hold:
+// it asked only whether a comment opener appeared ANYWHERE earlier on the line,
+// and a URL contains "//", so shipped markup could authorise its own gated claim.
+// Read that module before loosening this — it argues why anchoring is the answer
+// rather than reusing stripComments, which models a different question.
 //
 // ONE PLACE HAS NO ESCAPE HATCH, and #81 made it reachable: a file under public/
 // whose type has no comment syntax — .json, .webmanifest. Those are read as
@@ -18,10 +24,10 @@
 // fail this gate with no way to bless it. That is deliberate rather than
 // unnoticed. The only pragma such a file could carry would sit inside a shipped
 // string value, which is precisely the "shipped data authorising itself" that
-// IN_COMMENT exists to refuse. Reword the copy, or move the file's text into a
-// .astro component where a pragma is possible. (A review noted IN_COMMENT is
-// itself loose — a "//" inside a URL satisfies it. Pre-existing, not #81's, and
-// not narrowed here on the way past.)
+// the pragma rule exists to refuse. Reword the copy, or move the file's text
+// into a .astro component where a pragma is possible. (#100 looked at inventing
+// a mechanism and left it where #81 did: nothing under public/ is a .json today,
+// so there is still no case to design against.)
 //
 // HOW IT READS A FILE — two passes.
 //
@@ -116,6 +122,7 @@ import { basename, join } from "node:path";
 import { PATTERNS } from "./copy-gate-patterns.mjs";
 import { BINARY, MARKUP_SYNTAX, SCAN_EXT } from "./copy-gate-files.mjs";
 import { isPermitted, matchesIn, permissionsIn, viewsOf } from "./copy-gate-normalise.mjs";
+import { readPragma } from "./copy-gate-pragma.mjs";
 import { passthroughFiling } from "./copy-gate-suspension.mjs";
 
 // public/ is copied verbatim into dist/, so it ships exactly as written.
@@ -128,17 +135,8 @@ const ROOTS = ["src", "public"];
 // measured both sides; scripts/copy-gate-files.mjs records the numbers.
 const SERVED_VERBATIM = /^public[/\\]/;
 
-const PRAGMA = /copy-gate-allow:[ \t]*(.+?)[ \t]*$/;
 // "#48ff00" is a colour, not a ticket.
 const TICKET = /#\d+(?!\w)/;
-// A pragma only counts inside a comment — otherwise shipped markup could
-// authorise itself, e.g. <p data-note="copy-gate-allow: ... #48">.
-const IN_COMMENT = /(\/\/|\/\*|<!--|^[ \t]*\*)/;
-// "<!--" is included because it is the only comment syntax valid in .astro markup,
-// which is exactly where pass 2 reports. Without it the failure footer advised
-// authors to do something that silently did not work, and then told them their
-// correct-but-misplaced pragma "matches nothing".
-const COMMENT_ONLY_LINE = /^[ \t]*(\{?[ \t]*\/\*|\/\/|\*|<!--)/;
 
 // Homoglyphs, answering #57's "is folding honest?" with no. A Cyrillic "\u0435"
 // in "ch\u0435apest" defeats every pattern above, and folding confusables back to
@@ -257,11 +255,14 @@ for (const file of files) {
   };
 
   raw.forEach((line, i) => {
-    const hit = line.match(PRAGMA);
+    const hit = readPragma(line);
     if (!hit) return;
-    const before = line.slice(0, line.indexOf("copy-gate-allow:"));
-    if (!IN_COMMENT.test(before)) {
-      errors.push(`${file}:${i + 1}  copy-gate-allow only counts inside a comment`);
+    if (hit.misplaced) {
+      errors.push(
+        `${file}:${i + 1}  copy-gate-allow must OPEN its own comment — nothing but ` +
+          `whitespace between the comment opener and the pragma. A "//" inside a URL is ` +
+          `not a comment, and shipped markup must not be able to authorise itself`,
+      );
       return;
     }
     pragmas.push({
@@ -269,20 +270,19 @@ for (const file of files) {
       line: i + 1,
       // An HTML pragma would otherwise print its own closing delimiter as part
       // of the reason.
-      reason: hit[1].replace(/\s*(-->|\*\/|\})+$/, ""),
-      // Only a comment-only line may cover the line below it; an inline pragma
-      // covers its own line and nothing else.
-      coversNext: COMMENT_ONLY_LINE.test(line),
+      reason: hit.reason.replace(/\s*(-->|\*\/|\})+$/, ""),
       used: false,
     });
   });
 
-  // A hit on line `here` is covered by a pragma on that same line, or by a
-  // comment-only pragma on the line directly above it.
+  // A hit on line `here` is covered by a pragma on that same line, or by one on
+  // the line directly above it. There is no longer a coversNext distinction:
+  // since #100 every pragma opens its own comment, so every pragma is the kind
+  // that used to be allowed to cover the line below.
   const judge = (here, hit, why, where = `${file}:${here}`) => {
     const pragma =
       pragmas.find((p) => p.file === file && p.line === here) ??
-      pragmas.find((p) => p.file === file && p.line === here - 1 && p.coversNext);
+      pragmas.find((p) => p.file === file && p.line === here - 1);
 
     if (!pragma) {
       errors.push(`${where}  ${hit} — ${why}`);
@@ -461,7 +461,9 @@ if (errors.length) {
   console.error(`\n  The list is docs/copy-map.md §5, on the copy-map/en-es branch until it merges:`);
   console.error(`    git show origin/copy-map/en-es:docs/copy-map.md`);
   console.error(`  To keep a string that does not run, put "// copy-gate-allow: <why> (#ticket)"`);
-  console.error(`  on it, or on a comment-only line directly above it.`);
+  console.error(`  on the line directly above it, or ahead of it on its own line. The pragma`);
+  console.error(`  must OPEN its comment — a comment opener elsewhere on the line does not`);
+  console.error(`  count, so a "//" inside a URL will not do it (#100).`);
   process.exit(1);
 }
 
