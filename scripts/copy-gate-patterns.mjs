@@ -114,7 +114,33 @@ export const PATTERNS = [
   { re: new RegExp(`\\b(${EN_NOUN})${within(5)}(${EN_ADJ})\\b`, "i"), why: "never claimed: fares are metered, not locked" },
   { re: /\bno surprises\b/i, why: "never claimed: fares are metered, not locked" },
   { re: /\bsin sorpresas\b/i, why: "never claimed: fares are metered, not locked" },
-  { re: /\bno surge\b(?![ \t]+today)/i, why: 'never claimed: only "no surge today" is permitted (§3.4)' },
+  // §5 permits ONE exception, and #82 moved it from a lookahead on the forbidden
+  // phrase to a PERMITTED PHRASE of its own. A lookahead is a same-line,
+  // same-bytes assertion, and both gates read normalised text only to ACCUSE:
+  // pass 1's raw verdict is final and a view can only add hits, never withdraw
+  // one. So the shipped "No surge today" (src/i18n/feesCopy.ts) passed by
+  // accident — because it happens to sit on one line with a plain space. Write
+  // "no surge&nbsp;today", let a formatter wrap the line, or bold the word
+  // ("no surge <b>today</b>"), and the build failed on copy §3.4 expressly
+  // permits, while every view could see it was permitted and none was asked.
+  //
+  // `permits` is that missing direction: a hit is WITHDRAWN when a
+  // NON-FABRICATING view reads the permitted phrase over the same original
+  // bytes. copy-gate-normalise.mjs's permissionsIn holds the three bounds that
+  // keep a withdrawal from becoming a hole — read them before adding a second
+  // `permits`, because this is the one field in this file that can make a gate
+  // say less rather than more.
+  //
+  // The separator is [ \t]+ rather than \s+, and that is the same "never across
+  // a sentence" discipline GAP keeps above. Every view collapses a wrapped
+  // newline to a space and a PARAGRAPH break to a newline, so this excuses the
+  // words either side of a line wrap and still accuses across a paragraph, where
+  // a reader sees "No surge" standing alone as a claim.
+  {
+    re: /\bno surge\b/i,
+    permits: /\bno surge[ \t]+today\b/i,
+    why: 'never claimed: only "no surge today" is permitted (§3.4)',
+  },
   { re: /\bnunca\b[^.]{0,20}\brecargo\b/i, why: 'never claimed: only "no surge today" is permitted (§3.4)' },
   { re: /\bcheape(st|r)\b/i, why: "never claimed: no price-leadership claim" },
   { re: /\blowest (fees|fares|price)\b/i, why: "never claimed: no price-leadership claim" },

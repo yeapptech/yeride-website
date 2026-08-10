@@ -9,8 +9,25 @@
 //
 //     // copy-gate-allow: <why, naming the ticket that retires it, e.g. #48>
 //
-// The pragma must sit in a comment, must name a ticket, and one that stops
+// The pragma must OPEN its own comment, must name a ticket, and one that stops
 // matching anything fails the build, so the allowlist cannot outlive its reason.
+// "Opens its own comment" is the whole rule and it is scripts/copy-gate-pragma.mjs,
+// in a module of its own because #100 executed the old rule and it did not hold:
+// it asked only whether a comment opener appeared ANYWHERE earlier on the line,
+// and a URL contains "//", so shipped markup could authorise its own gated claim.
+// Read that module before loosening this — it argues why anchoring is the answer
+// rather than reusing stripComments, which models a different question.
+//
+// ONE PLACE HAS NO ESCAPE HATCH, and #81 made it reachable: a file under public/
+// whose type has no comment syntax — .json, .webmanifest. Those are read as
+// markup now, because they ship byte for byte, so a legitimate phrase in one can
+// fail this gate with no way to bless it. That is deliberate rather than
+// unnoticed. The only pragma such a file could carry would sit inside a shipped
+// string value, which is precisely the "shipped data authorising itself" that
+// the pragma rule exists to refuse. Reword the copy, or move the file's text
+// into a .astro component where a pragma is possible. (#100 looked at inventing
+// a mechanism and left it where #81 did: nothing under public/ is a .json today,
+// so there is still no case to design against.)
 //
 // HOW IT READS A FILE — two passes.
 //
@@ -51,10 +68,18 @@
 //   - copy assembled at runtime in the BROWSER, and copy that arrives from the
 //     fee-schedule endpoint — neither is in the source or the build. The first is
 //     beyond both gates; the second belongs to #56.
-//   - a normalised hit is only ever an ACCUSATION. §5's one permitted exception,
-//     "no surge today", is a same-line lookahead, so splitting it fails the build
-//     on copy §3.4 allows — pass 2 can see that it is permitted and is not asked.
-//     That is #82.
+//   - a normalised hit is very nearly always only an ACCUSATION, and #82 opened
+//     the single exception rather than removing the rule. §5 permits one phrase,
+//     "no surge today", which used to be a negative lookahead on the forbidden
+//     pattern and so held only for the exact bytes that lookahead saw: splitting
+//     it with an &nbsp;, a line wrap or a <b> failed the build on copy §3.4
+//     expressly allows, while every view could see it was permitted and none was
+//     asked. A pattern may now declare `permits`, and a hit is WITHDRAWN when a
+//     non-fabricating view reads that permitted phrase over the same bytes. It is
+//     the only thing in either gate that turns a failure into a pass; the bounds
+//     that keep it from becoming a hole are on permissionsIn in
+//     copy-gate-normalise.mjs, and both directions are proved end to end, through
+//     this script and through the dist gate, by copy-gate-patterns.test.mjs.
 //   - a NAMED reference outside copy-gate-normalise.mjs's table, which stays
 //     finite and is argued there. #80 closed the rest of that list: the invisible
 //     class is now a Unicode property rather than eight of its members, numeric
@@ -68,8 +93,17 @@
 //     more likely to be shipped text), and an HTML comment is not stripped at all
 //     because Astro emits it into the built page, so an escape in either of those
 //     still fails. A LITERAL confusable is caught in every comment, everywhere.
-//   - a tag-split phrase in a file type the tag views skip — .ts by design, but
-//     also .json, .txt, .yml and, in the dist gate, every .js bundle. #81.
+//   - a tag-split phrase in a compiled file under src/ — a .ts, a .json, a .yml.
+//     #81 settled this deliberately rather than by omission, but on TWO different
+//     grounds and only one of them is the generics argument. For .ts: a "<" there
+//     is a generic and not a tag, and every innerHTML assignment in this repo is
+//     written inside a .astro component, which IS read as markup here. For .json
+//     and .yml, where a "<" really is a tag, the ground is narrower — nothing
+//     under src/ is served, so it reaches a reader only through a .astro
+//     component or through the build, and the dist gate reads that result as
+//     markup. A lost authorship-time backstop, not a production hole.
+//     Everything under public/ ships byte for byte and so IS read as markup
+//     whatever its extension. See scripts/copy-gate-files.mjs.
 //   - anything in a file type SCAN_EXT does not list. Those are named on every
 //     run as "not read:", success or failure, so the gap is visible rather than
 //     rediscovered.
@@ -86,36 +120,23 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import { PATTERNS } from "./copy-gate-patterns.mjs";
-import { matchesIn, viewsOf } from "./copy-gate-normalise.mjs";
+import { BINARY, MARKUP_SYNTAX, SCAN_EXT } from "./copy-gate-files.mjs";
+import { isPermitted, matchesIn, permissionsIn, viewsOf } from "./copy-gate-normalise.mjs";
+import { readPragma } from "./copy-gate-pragma.mjs";
 import { passthroughFiling } from "./copy-gate-suspension.mjs";
 
 // public/ is copied verbatim into dist/, so it ships exactly as written.
 const ROOTS = ["src", "public"];
-// Case-insensitive, like the dist gate: #57 fixed exactly this bug there after a
-// review found "evade.HTML" was never read at all, and the source gate kept it.
-const SCAN_EXT = /\.(astro|ts|tsx|js|jsx|mjs|cjs|md|mdx|html|json|ya?ml|svg|css|txt)$/i;
-// Extensions that cannot carry readable copy. Anything else that goes unscanned
-// is NAMED in the output, on the failure path as well as the success one — the
-// same rule the dist gate follows, because a file type silently ignored reads as
-// a file type cleared.
-const BINARY = /\.(png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|eot|pdf|mp4|webm|zip|gz|map)$/i;
-// Which of those carry tags worth removing. .astro is the one that matters —
-// it is where prose gets typed straight into markup — but .md and .svg can hold
-// literal HTML too. A .ts file is read with its tags kept, because "a < b" is a
-// comparison and stripping to the next ">" would eat real code.
-const MARKUP_EXT = /\.(astro|html|svg|md|mdx)$/i;
+// Which of the two roots is SERVED rather than compiled. Everything under
+// public/ reaches the browser byte for byte, so a "<" in it opens a tag whatever
+// the extension says — an HTML fragment inside public/content.json ships as
+// written. Under src/ only the markup file types are read that way, because a
+// "<" in a .ts is a generic and reading it as a tag swallows real code. #81
+// measured both sides; scripts/copy-gate-files.mjs records the numbers.
+const SERVED_VERBATIM = /^public[/\\]/;
 
-const PRAGMA = /copy-gate-allow:[ \t]*(.+?)[ \t]*$/;
 // "#48ff00" is a colour, not a ticket.
 const TICKET = /#\d+(?!\w)/;
-// A pragma only counts inside a comment — otherwise shipped markup could
-// authorise itself, e.g. <p data-note="copy-gate-allow: ... #48">.
-const IN_COMMENT = /(\/\/|\/\*|<!--|^[ \t]*\*)/;
-// "<!--" is included because it is the only comment syntax valid in .astro markup,
-// which is exactly where pass 2 reports. Without it the failure footer advised
-// authors to do something that silently did not work, and then told them their
-// correct-but-misplaced pragma "matches nothing".
-const COMMENT_ONLY_LINE = /^[ \t]*(\{?[ \t]*\/\*|\/\/|\*|<!--)/;
 
 // Homoglyphs, answering #57's "is folding honest?" with no. A Cyrillic "\u0435"
 // in "ch\u0435apest" defeats every pattern above, and folding confusables back to
@@ -234,11 +255,14 @@ for (const file of files) {
   };
 
   raw.forEach((line, i) => {
-    const hit = line.match(PRAGMA);
+    const hit = readPragma(line);
     if (!hit) return;
-    const before = line.slice(0, line.indexOf("copy-gate-allow:"));
-    if (!IN_COMMENT.test(before)) {
-      errors.push(`${file}:${i + 1}  copy-gate-allow only counts inside a comment`);
+    if (hit.misplaced) {
+      errors.push(
+        `${file}:${i + 1}  copy-gate-allow must OPEN its own comment — nothing but ` +
+          `whitespace between the comment opener and the pragma. A "//" inside a URL is ` +
+          `not a comment, and shipped markup must not be able to authorise itself`,
+      );
       return;
     }
     pragmas.push({
@@ -246,20 +270,19 @@ for (const file of files) {
       line: i + 1,
       // An HTML pragma would otherwise print its own closing delimiter as part
       // of the reason.
-      reason: hit[1].replace(/\s*(-->|\*\/|\})+$/, ""),
-      // Only a comment-only line may cover the line below it; an inline pragma
-      // covers its own line and nothing else.
-      coversNext: COMMENT_ONLY_LINE.test(line),
+      reason: hit.reason.replace(/\s*(-->|\*\/|\})+$/, ""),
       used: false,
     });
   });
 
-  // A hit on line `here` is covered by a pragma on that same line, or by a
-  // comment-only pragma on the line directly above it.
+  // A hit on line `here` is covered by a pragma on that same line, or by one on
+  // the line directly above it. There is no longer a coversNext distinction:
+  // since #100 every pragma opens its own comment, so every pragma is the kind
+  // that used to be allowed to cover the line below.
   const judge = (here, hit, why, where = `${file}:${here}`) => {
     const pragma =
       pragmas.find((p) => p.file === file && p.line === here) ??
-      pragmas.find((p) => p.file === file && p.line === here - 1 && p.coversNext);
+      pragmas.find((p) => p.file === file && p.line === here - 1);
 
     if (!pragma) {
       errors.push(`${where}  ${hit} — ${why}`);
@@ -272,12 +295,38 @@ for (const file of files) {
     }
   };
 
+  const views = viewsOf(codeText, {
+    markup: SERVED_VERBATIM.test(file) || MARKUP_SYNTAX.test(file),
+    css: /\.css$/i.test(file),
+    // See copy-gate-normalise.mjs: the fabricating views belong to the dist gate,
+    // because a per-line pragma blessing a phrase nobody wrote teaches the next
+    // reader that this gate cries wolf.
+    includeFabricating: false,
+  });
+
+  // §5's permitted exceptions, as spans of this file's bytes (#82). This is the
+  // one thing a view may do that makes the gate say LESS, and it is read before
+  // either pass so that both consult it — pass 1 above all, because a raw line is
+  // exactly where the permitted phrase gets split by an &nbsp;, a line wrap or a
+  // <b>. permissionsIn holds the bounds; the short version is that only a pattern
+  // declaring `permits` is withdrawable, only a positive reading of §5's own
+  // permitted words withdraws it, only a non-fabricating view may read them, and
+  // only over the same bytes.
+  const permissions = permissionsIn(views, PATTERNS);
+
   // Pass 1 — raw, line by line. Reported exactly as it always was.
   const reported = new Set();
   code.forEach((line, i) => {
     for (const [at, { re, why }] of PATTERNS.entries()) {
       const hit = line.match(re);
       if (!hit) continue;
+      // lineStarts indexes codeText, which `code` was split from, so a line start
+      // plus the match index is an offset into the file — the same coordinates
+      // every view maps back to. A raw match drops nothing, so its bytes are the
+      // contiguous run; a view's are not, which is why isPermitted takes offsets.
+      const from = lineStarts[i] + hit.index;
+      const offsets = Array.from({ length: hit[0].length }, (_, k) => from + k);
+      if (isPermitted(permissions, at, offsets)) continue;
       reported.add(key(i + 1, at, hit[0].toLowerCase()));
       judge(i + 1, `"${hit[0]}"`, why);
     }
@@ -285,15 +334,8 @@ for (const file of files) {
 
   // Pass 2 — the same patterns over the normalised views. Only hits pass 1 could
   // not see are printed, each naming the view that found it.
-  const views = viewsOf(codeText, {
-    markup: MARKUP_EXT.test(file),
-    css: /\.css$/i.test(file),
-    // See copy-gate-normalise.mjs: the fabricating views belong to the dist gate,
-    // because a per-line pragma blessing a phrase nobody wrote teaches the next
-    // reader that this gate cries wolf.
-    includeFabricating: false,
-  });
-  for (const { at, text, view: viewName, span } of matchesIn(views, PATTERNS)) {
+  for (const { at, text, view: viewName, span, offsets } of matchesIn(views, PATTERNS)) {
+    if (isPermitted(permissions, at, offsets)) continue;
     const start = lineAt(span[0]);
     const id = key(start, at, text);
     if (reported.has(id)) continue;
@@ -419,7 +461,9 @@ if (errors.length) {
   console.error(`\n  The list is docs/copy-map.md §5, on the copy-map/en-es branch until it merges:`);
   console.error(`    git show origin/copy-map/en-es:docs/copy-map.md`);
   console.error(`  To keep a string that does not run, put "// copy-gate-allow: <why> (#ticket)"`);
-  console.error(`  on it, or on a comment-only line directly above it.`);
+  console.error(`  on the line directly above it, or ahead of it on its own line. The pragma`);
+  console.error(`  must OPEN its comment — a comment opener elsewhere on the line does not`);
+  console.error(`  count, so a "//" inside a URL will not do it (#100).`);
   process.exit(1);
 }
 

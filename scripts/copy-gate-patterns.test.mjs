@@ -16,7 +16,16 @@
 // copy that is entirely correct. Every entry under "must not fire" is real copy
 // from this site or a real Spanish sentence someone could reasonably write. Add
 // to it before widening anything.
+//
+// A THIRD AND FOURTH LIST arrived with #82, and they are about the one field in
+// the pattern list that can make a gate say LESS: `permits`. See the bottom of
+// this file — and note that they run the real reading machine and then the real
+// gate, not `re.test`, because a withdrawal is a property of the machine.
+import { fileURLToPath } from "node:url";
+
+import { runGate } from "./copy-gate-fixture.mjs";
 import { PATTERNS } from "./copy-gate-patterns.mjs";
+import { countOccurrences, isPermitted, matchesIn, permissionsIn, viewsOf } from "./copy-gate-normalise.mjs";
 
 const matches = (s) => PATTERNS.filter((p) => p.re.test(s));
 
@@ -80,6 +89,11 @@ const FORBIDDEN = [
   ["EN copula plural", "Prices are flat."],
   ["EN rate is fixed", "The rate is fixed before you ride."],
   ["EN case insensitive", "Flat Fare"],
+  // The bare surge claim. §3.4 permits "no surge TODAY" and nothing wider; the
+  // unqualified form is the claim the permitted phrase is carved out of, so it
+  // belongs here rather than being implied by the exception's own controls below.
+  ["EN bare surge claim", "No surge, ever."],
+  ["EN surge claim mid-sentence", "Flat fees and no surge."],
 ];
 
 // ------------------------------------------------------------ must NOT fire
@@ -151,8 +165,19 @@ const PATHOLOGICAL = [
 const BUDGET_MS = 250;
 
 let failures = 0;
+let checks = 0;
+// The total is COUNTED, not written down — copy-gate-files.test.mjs's rule, and
+// it binds harder here: several of the controls below are loops, so a hand-kept
+// total is one edit away from claiming coverage that was deleted.
+const say = (ok, label, detail) => {
+  checks++;
+  if (ok) return;
+  console.log(`FAIL  ${label}${detail ? `\n      ${detail}` : ""}`);
+  failures++;
+};
 const check = (label, list, wantMatch) => {
   for (const [name, s] of list) {
+    checks++;
     const hit = matches(s);
     if (wantMatch && hit.length === 0) {
       console.log(`FAIL  ${label} — nothing matched: ${name}\n      ${s}`);
@@ -167,6 +192,7 @@ check("forbidden", FORBIDDEN, true);
 check("legitimate", ALLOWED, false);
 
 for (const [i, s] of PATHOLOGICAL.entries()) {
+  checks++;
   const t0 = process.hrtime.bigint();
   PATTERNS.forEach((p) => p.re.test(s));
   const ms = Number(process.hrtime.bigint() - t0) / 1e6;
@@ -177,6 +203,197 @@ for (const [i, s] of PATHOLOGICAL.entries()) {
   }
 }
 
-const total = FORBIDDEN.length + ALLOWED.length + PATHOLOGICAL.length;
-console.log(`${failures ? "✗" : "✓"} copy-gate patterns: ${total} controls, ${failures} failure${failures === 1 ? "" : "s"}`);
+// ------------------------------------------- §5's permitted exception (#82)
+//
+// TWO MORE LAYERS, for the same reason copy-gate-suspension.test.mjs has two: the
+// reader being right is not the claim. `permits` is the only thing in either gate
+// that turns a failure into a pass, so it is proved through the real reading
+// machine first, and then through check-copy-gate.mjs itself.
+//
+// What #82 was filed over: "no surge today" is copy §3.4 expressly permits, and
+// it was expressed as a negative lookahead on the forbidden pattern. Both gates
+// read normalised text only to ACCUSE, so the lookahead was a same-line,
+// same-bytes assertion — splitting the permitted phrase with an &nbsp;, a line
+// wrap, or a <b> failed the build on permitted copy, while every view could see
+// it was permitted and none was asked.
+
+// ---- layer 1: the reading machine. Accusations left standing after withdrawal.
+const accusations = (text, { markup = false, includeFabricating = false } = {}) => {
+  const views = viewsOf(text, { markup, includeFabricating });
+  const permissions = permissionsIn(views, PATTERNS);
+  return matchesIn(views, PATTERNS).filter((m) => !isPermitted(permissions, m.at, m.offsets));
+};
+
+// Withdrawn: every split this normaliser exists to see through. The first is the
+// copy as it ships today; the rest are the edits #82 says nobody would think
+// twice about.
+const PERMITTED = [
+  ["as shipped, one line", `  surgeH2: "No surge today",`, {}],
+  ["non-breaking space", "<h2>No surge&nbsp;today</h2>", { markup: true }],
+  ["the legacy no-semicolon form", "<h2>No surge&nbsptoday</h2>", { markup: true }],
+  ["wrapped by a formatter", "<h2>\n  No surge\n  today\n</h2>", { markup: true }],
+  ["the word bolded", "<h2>No surge <b>today</b></h2>", { markup: true }],
+  ["a JS escape in the bundle", `const h = "No surge \\u0074oday";`, {}],
+  // The permitted phrase with a gap of its OWN. isPermitted compares the bytes
+  // each side was read from, and both sides drop bytes — here the accusation
+  // comes from a view that removed the tag from the middle of the claim, and
+  // comparing outer ranges would leave this accused.
+  ["the claim itself split by a tag", "<h2>No <b>surge</b> today</h2>", { markup: true }],
+];
+
+// Still accused. Each is a bound from permissionsIn or isPermitted, written as
+// the copy that would slip through if the bound were dropped.
+const STILL_ACCUSED = [
+  ["the bare claim", "<h2>No surge, ever.</h2>", { markup: true }, 1],
+  // Every view collapses a paragraph break to a newline, not to a space, so the
+  // permitted phrase does not span one — a reader sees "No surge" standing alone.
+  ["across a paragraph break", "No surge\n\ntoday is different.", {}, 1],
+  // isPermitted's overlap bound: a permitted phrase elsewhere in the file must not
+  // excuse a bare claim here. Two occurrences, one excused, exactly one left.
+  ["a permitted phrase does not excuse a second, bare one", `const a = "No surge today";\nconst b = "No surge, ever.";`, {}, 1],
+  // permissionsIn's fabrication bound, and the reason it is not decorative: under
+  // "tags-as-space" this reads as the permitted phrase, and to a reader it reads
+  // "No surgetoday". A view that can invent a phrase may accuse, never excuse.
+  ["a fabricating view cannot excuse", "<p>No surge<i></i>today</p>", { markup: true, includeFabricating: true }, 1],
+  // THE SPAN-SWALLOW BYPASS, found by an independent review of the first revision
+  // of this fix and green in both gates at the time. Under "tags-removed" this
+  // reads as the permitted phrase, and the OUTER SPAN of that reading covers the
+  // markup the view dropped — including a never-claimed §5 string a browser puts
+  // on screen as alt text. isPermitted compares the bytes the permitted phrase was
+  // read FROM, so the alt is not among them.
+  //
+  // Two claims here, and only the visible one is excused: the alt is what must
+  // survive. Widen this back to a span and the count goes to 0, not to 1.
+  [
+    "a claim inside the markup the permitted phrase spans",
+    `<p>no surge <img src="/a.png" alt="no surge, ever" /> today</p>`,
+    { markup: true },
+    1,
+  ],
+  // The same shape without the tags, so the bound is not read as a markup-only
+  // concern: whitespace collapse and reference decoding drop bytes too.
+  [
+    "a claim inside a reference run the permitted phrase spans",
+    `const a = "No surge&nbsp;today";\nconst b = "no surge, ever.";`,
+    { markup: true },
+    1,
+  ],
+];
+
+for (const [name, text, opts] of PERMITTED) {
+  const left = accusations(text, opts);
+  say(
+    left.length === 0,
+    `permitted — ${name}`,
+    `${text.replace(/\n/g, "\\n")}\n      still accused: ${left.map((m) => `"${m.text}" [${m.view}]`).join(", ")}`,
+  );
+}
+for (const [name, text, opts, want] of STILL_ACCUSED) {
+  const left = accusations(text, opts);
+  // Counted as the dist gate counts: overlapping spans from different views are
+  // ONE claim seen several times. Counting raw matches instead would make these
+  // controls assert the number of views, which is not the fact under test.
+  const got = countOccurrences(left.map((m) => m.span));
+  say(
+    got === want,
+    `still accused — ${name}`,
+    `${text.replace(/\n/g, "\\n")}\n      expected ${want} claim(s), got ${got}`,
+  );
+}
+
+// ---- layer 2: the gate itself, spawned over a temporary fixture tree.
+// This is what a unit control cannot reach: between the reading machine and the
+// verdict sit pass 1's raw line matcher — which is where the permitted phrase is
+// actually split — the comment-stripping pass, and the import wiring. Deleting
+// `isPermitted` from pass 1 alone leaves every layer-1 control green.
+//
+// The gate walks ROOTS = ["src", "public"] relative to its working directory, so
+// a temp tree with those two directories is a complete world to it. Never the
+// real tree: the real tree's own green run, one step later in `npm run checks`,
+// is what asserts the shipped "No surge today" still passes.
+const GATE = fileURLToPath(new URL("./check-copy-gate.mjs", import.meta.url));
+
+// The source gate walks src/ and public/ and throws if either is missing, so
+// every fixture gets both. A .nojekyll carries no copy and is not scanned.
+const src = (files) => runGate(GATE, { "public/.nojekyll": "", ...files });
+
+// The three splits from #82's own report, through the gate, in the file types
+// each would really be written in.
+for (const [name, files] of [
+  ["as shipped", { "src/i18n/feesCopy.ts": `export const c = {\n  surgeH2: "No surge today",\n};\n` }],
+  ["non-breaking space", { "src/components/Fees.astro": `<h2>No surge&nbsp;today</h2>\n` }],
+  ["wrapped by a formatter", { "src/components/Fees.astro": `<h2>\n  No surge\n  today\n</h2>\n` }],
+  ["the word bolded", { "src/components/Fees.astro": `<h2>No surge <b>today</b></h2>\n` }],
+]) {
+  const { code, out } = src(files);
+  say(code === 0, `the GATE must pass — permitted, ${name}`, out.trim());
+}
+
+// The negative control. Without it the four above are satisfied by a gate that
+// has stopped reading this pattern at all — which is precisely what a lookahead
+// widened "just a little" would produce.
+{
+  const { code, out } = src({ "src/components/Fees.astro": `<h2>No surge, ever.</h2>\n` });
+  say(
+    code === 1 && /no surge/i.test(out),
+    "the GATE must still fail — the bare claim",
+    out.trim(),
+  );
+}
+{
+  const { code, out } = src({
+    "src/i18n/feesCopy.ts": `export const c = {\n  a: "No surge today",\n  b: "No surge, ever.",\n};\n`,
+  });
+  say(
+    code === 1 && /:3\b/.test(out),
+    "the GATE must still fail — a permitted phrase does not excuse a bare one on another line",
+    out.trim(),
+  );
+}
+
+// ---- layer 3: the DIST gate, over a fixture dist/ tree.
+// Both gates import the same pattern list and the same normaliser, but each
+// calls isPermitted itself, so "the source gate withdraws" is not evidence that
+// the shipped-output gate does — that inference is the one #83 was filed over.
+// It matters more here, not less: this gate takes the two views that can invent
+// a phrase, so it is where a fabricated "permission" would be laundered.
+//
+// Asserted on the surge line rather than on the exit code, and the weakness is
+// stated rather than hidden: a fixture dist/ cannot carry the real build's files,
+// so this gate's ALLOWED entries all report "no longer appears" and it exits 1
+// whatever the surge verdict. The bare-claim control below is what stops "no
+// surge line" from being satisfied by a gate that has stopped reading at all.
+const DIST_GATE = fileURLToPath(new URL("./check-dist-copy-gate.mjs", import.meta.url));
+
+const surgeVerdict = (html) =>
+  runGate(DIST_GATE, { "dist/fees/index.html": html })
+    .out.split("\n")
+    .filter((line) => /"no surge/i.test(line));
+
+for (const [name, html] of [
+  ["as shipped", "<h2>No surge today</h2>\n"],
+  ["non-breaking space", "<h2>No surge&nbsp;today</h2>\n"],
+  ["the word bolded", "<h2>No surge <b>today</b></h2>\n"],
+  ["wrapped by a formatter", "<h2>\n  No surge\n  today\n</h2>\n"],
+]) {
+  const lines = surgeVerdict(html);
+  say(lines.length === 0, `the DIST gate must not report — permitted, ${name}`, lines.join("\n      "));
+}
+{
+  const lines = surgeVerdict("<h2>No surge, ever.</h2>\n");
+  say(lines.length === 1, "the DIST gate must still report — the bare claim", lines.join("\n      "));
+}
+// The laundering shape the fabrication bound exists to refuse. Under
+// "tags-as-space" — a view only this gate takes — the bytes read as the permitted
+// phrase; a reader sees "No surgetoday". The permission must not be granted.
+{
+  const lines = surgeVerdict("<h2>No surge<i></i>today</h2>\n");
+  say(
+    lines.length === 1,
+    "the DIST gate must still report — a fabricating view cannot excuse",
+    lines.join("\n      "),
+  );
+}
+
+console.log(`${failures ? "✗" : "✓"} copy-gate patterns: ${checks} controls, ${failures} failure${failures === 1 ? "" : "s"}`);
 process.exit(failures ? 1 : 0);

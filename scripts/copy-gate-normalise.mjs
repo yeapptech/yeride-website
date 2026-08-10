@@ -102,7 +102,10 @@
 //     word the reader never sees — a fabrication, in the gate that declines those.
 //     The case that WOULD publish it, a bundle assigning that string to innerHTML,
 //     is not a reference question at all; it is which file types get the markup
-//     views, which is #81.
+//     views — settled by #81, which reads everything SERVED as markup (all of
+//     dist/, all of public/) and leaves compiled source under src/ as plain text.
+//     So that bundle IS read as markup now, at the dist gate, and the .ts under
+//     src/ it was compiled from still is not.
 //   - "entities-blanked" is marked non-fabricating on the tag argument (removing a
 //     separator removes the gap), which holds for a reference a BROWSER also drops
 //     and not for one it renders literally: "insur&foo;ance" is "insur&foo;ance" on
@@ -113,8 +116,9 @@
 //     "&Nbsp;" decodes here and renders literally in a browser. Left alone: it can
 //     only over-accuse, and this file's failures worth chasing are misses.
 //
-// Which FILE TYPES get the tag views at all is #81 — a .js bundle writing
-// tag-split markup into innerHTML is read by neither gate's tag views today.
+// Which FILE TYPES get the tag views at all is NOT decided here. Callers pass
+// `markup`, and scripts/copy-gate-files.mjs holds the rule they pass it from,
+// with the measurements #81 settled it on.
 
 // ---------------------------------------------------------------------------
 
@@ -269,7 +273,88 @@ function decodeEscape(raw, i, css = false) {
 // as literal text, and so must this: an adversarial review hid
 // "Insur<span>ance</span>" behind an earlier bare "<" by making the scan below
 // swallow everything up to the next ">".
-const TAG_START = /^<[a-zA-Z!/?]/;
+//
+// #99. Testing only the NEXT CHARACTER was that rule at its weakest, and #81 made
+// it load-bearing by reading minified JavaScript as markup. "r<t.length" passes a
+// next-character test — "t" is a letter — and then tagEnd runs to a ">" four
+// functions away. Measured on the build at the time of #81, and reproduced to the
+// byte before this change:
+//
+//   dist/_astro/FareEstimatePage….js  61,608 B  38 spans  24,678 swallowed (40.1%)  longest 16,251
+//   dist/_astro/FeeSchedule….js       13,043 B  89 spans   2,327 swallowed (17.8%)
+//
+// It cuts both ways: a claim INSIDE such a span is invisible to the tag views (and
+// the plain view does not rescue it — there the claim is still split by its tag),
+// and the span DELETED welds the identifiers either side into a phrase nobody
+// wrote ("rates=i0)flat").
+//
+// THE INSTRUMENT IS THE OPENING TEST, NOT A LENGTH BOUND, and #99 weighed the
+// bound first because it is the obvious fix. It is a bad one here: the longest
+// GENUINE tag in this repo's own output is 2,825 bytes of SVG path data, with a
+// second at 1,273 B and then a cliff to 434 B, so a bound safe for real markup has
+// to sit above ~3 KB — which removes the two largest false spans and leaves the
+// rest, buying a partial fix at the price of a constant that silently stops
+// reading a real asset as markup the day the brand lockup grows. Length does not
+// separate the two things; SHAPE does. A JavaScript comparison is not shaped like
+// a tag and never was:
+//
+//   opens a tag        <div class="x">   <br/>   </p>   <Foo.Bar />   <!-- … -->
+//   does not           r<t.length   i<n;   x<a[i]   e<r&&t   i<len)
+//
+// So the rule below reads the tag NAME and requires it to end the way a tag name
+// ends — at whitespace, "/" or ">". Everything in the right-hand column fails on
+// the character after the name, before tagEnd is ever called, and the "<" is
+// emitted as ordinary text, which is what a browser does with it too.
+//
+// End-of-input is deliberately NOT a third terminator. It reads as though it should
+// be — a file ending mid-name — but it cannot change an outcome: with no ">" after
+// it, tagEnd returns -1 and the "<" is emitted as text whatever this test says. It
+// was written in and then removed rather than left in as an unfalsifiable bound,
+// because the controls could not tell the two versions apart.
+//
+// Two deliberate narrowings, both places where HTML5 is MORE permissive than this
+// and being more permissive would discriminate nothing:
+//
+//   - The name charset is what real markup uses, not HTML5's "anything until
+//     whitespace, / or >". Under HTML5's own rule "r<t.length)&&(x>y" has a tag
+//     name of "t.length)&&(x" — perfectly legal, and exactly the span this ticket
+//     exists to stop. A tag named "t.length)&&(x" does not appear in authored
+//     markup; letters, digits, "-", "_", ":" and "." are what does, "." and ":"
+//     because of Astro's <Namespace.Component> and XML's xml:lang.
+//   - After "<!" only the three forms that actually occur are accepted — a
+//     comment, CDATA and a doctype. HTML5 turns any other "<!x" into a bogus
+//     comment running to the next ">", and "a<!b" is ordinary JavaScript: the
+//     widened form welds "rates,n=id,flat" out of a minified comparison, which is
+//     the control that earns this clause.
+//
+// The processing-instruction clause is NOT narrowed the same way, and the residue
+// is stated rather than left to be discovered: "<?x" opens a span, so a contrived
+// "r<?t:v … a>b" would still weld. It is left alone because that sequence is not
+// valid JavaScript in the first place — unlike "a<!b", which is — and because the
+// only real writer of the form is an XML declaration, of which the built tree
+// contains none today. Narrow it to "<?xml" the day one of those changes.
+//
+// This can only ever make the tag views read LESS as a tag. A real tag it declined
+// would be a miss, not a fabrication, and the fixture in copy-gate-normalise.test.mjs
+// carries the shapes this repo's own output actually contains.
+//
+// WHAT IT DOES NOT SEPARATE, because the claim "every span is now a real tag" is a
+// property of this build and not of this rule, and an independent review had to
+// point that out: a ONE-LETTER tag name is genuinely ambiguous. "a<i>b" and
+// "x=a<b>c" are valid minified JavaScript and valid markup alike, so the span is
+// still taken and the identifiers either side still weld. No syntactic rule can
+// tell those apart — a browser cannot either — and the built tree contains none
+// today. That is a measurement, not a guarantee, and it is the reason the tag views
+// remain something the dist gate's ALLOWED list has to be able to answer for.
+const TAG_OPEN = /<(?:!--|!\[CDATA\[|!doctype|\?[a-z]|\/?[a-z][a-z0-9:._-]*(?=[\s/>]))/iy;
+
+/** Whether a tag, comment or CDATA section opens at `raw[i]`. Sticky rather than
+ *  applied to a slice: the name run is unbounded, and slicing a fixed two
+ *  characters is what made the old test read only the first of them. */
+function opensTag(raw, i) {
+  TAG_OPEN.lastIndex = i;
+  return TAG_OPEN.test(raw);
+}
 
 /** The index just past the tag, comment or CDATA section starting at `raw[i]`, or
  *  -1 if it never closes.
@@ -373,7 +458,7 @@ function view(
   for (let i = 0; i < raw.length; ) {
     const ch = raw[i];
 
-    if (tags !== "keep" && ch === "<" && TAG_START.test(raw.slice(i, i + 2))) {
+    if (tags !== "keep" && ch === "<" && opensTag(raw, i)) {
       const end = tagEnd(raw, i);
       if (end !== -1) {
         if (tags === "space") {
@@ -460,6 +545,10 @@ export function viewsOf(raw, { markup, includeFabricating, css = false }) {
     (v) => (markup || !v.markupOnly) && (includeFabricating || !v.fabricates),
   ).map((v) => ({
     name: v.name,
+    // Carried out of VIEWS rather than left behind, because permissionsIn below
+    // has to tell an honest reading from an exaggerated one: a view that can
+    // invent a phrase may ACCUSE, never excuse.
+    fabricates: v.fabricates,
     ...view(raw, { ...v.opts, ...(markup ? {} : { tags: "keep" }), cssEscapes: css }),
   }));
 }
@@ -481,22 +570,114 @@ export function countOccurrences(spans) {
   return count;
 }
 
+/** A pattern as a fresh /g copy, so matchAll can walk every occurrence. Fresh on
+ *  every call rather than cached: a /g regex carries lastIndex, and one shared
+ *  across files or views would skip matches depending on what was read before it.
+ *  Written once because matchesIn and permissionsIn both need it, and a
+ *  withdrawal reading occurrences differently from an accusation is exactly the
+ *  drift one shared normaliser exists to prevent. */
+const globalise = (re) =>
+  new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
+
+/** The original-byte offsets a permitted phrase is READ FROM, per pattern index —
+ *  the one direction in which a view is allowed to make a gate say less.
+ *
+ *  Wayfinder #82. §5 has one permitted exception, "no surge today", and it used
+ *  to be a negative lookahead on the forbidden pattern. That could only ever work
+ *  on the exact bytes the lookahead saw: both gates read normalised text purely to
+ *  ACCUSE — the raw verdict is final and a view can only add hits — so splitting
+ *  the permitted phrase any of the three ways this file exists to see through
+ *  ("no surge&nbsp;today", a wrapped line, "no surge <b>today</b>") failed the
+ *  build on copy §3.4 expressly allows, with every view able to see it was
+ *  permitted and none of them asked.
+ *
+ *  THREE BOUNDS, and they are the whole safety argument. A withdrawal is the only
+ *  thing in either gate that turns a failure into a pass, so it is deliberately
+ *  hard to reach:
+ *
+ *  1. Only a pattern that DECLARES `permits` can ever be withdrawn. Every other
+ *     pattern keeps the old contract exactly — the raw verdict is final.
+ *  2. A withdrawal needs a POSITIVE match of the permitted phrase, never the
+ *     absence of the forbidden one. That is the bound #82 asked for: normalisation
+ *     is lossy in places (#80 lists which), and "the pattern stopped matching once
+ *     normalised" would let a loss exonerate a real claim. Only §5's own permitted
+ *     words can excuse anything.
+ *  3. Only a NON-FABRICATING view may excuse. The dist gate reads the two views
+ *     that can invent a phrase, and letting one of those excuse would open a
+ *     laundering shape it exists to close — "no surge<td></td>today" reads as the
+ *     permitted phrase under "tags-as-space" and as "no surgetoday" to a reader.
+ *     Fabrication is allowed to raise the alarm; it is not allowed to call it off.
+ *
+ *  A fourth bound is isPermitted's, not this function's: the accused bytes have to
+ *  be bytes the permitted phrase ACTUALLY CONTRIBUTED, so a permitted phrase
+ *  elsewhere in the file — or elsewhere on the same line — cannot excuse a bare
+ *  claim.
+ *
+ *  Which is why a permission is a SET of original offsets and not a span. The
+ *  first revision of this recorded [map[first], map[last] + 1], the outer hull,
+ *  and an independent review broke it in one line: in a tag-dropping view that
+ *  hull swallows every byte the view removed, so
+ *
+ *      <p>no surge <img alt="no surge, ever" /> today</p>
+ *
+ *  read as "no surge today" under `tags-removed`, and the hull it spanned covered
+ *  the alt attribute — withdrawing a never-claimed §5 string that a browser puts
+ *  on screen. It passed both gates green. A hull is a claim about the ENDS of a
+ *  match; what a withdrawal needs is the match's own bytes. */
+export function permissionsIn(views, patterns) {
+  const out = new Map();
+  for (const { text, map, fabricates } of views) {
+    if (fabricates) continue;
+    for (const [at, { permits }] of patterns.entries()) {
+      if (!permits) continue;
+      for (const m of text.matchAll(globalise(permits))) {
+        if (!m[0].length) continue;
+        const offsets = new Set(map.slice(m.index, m.index + m[0].length));
+        const permitted = out.get(at) ?? [];
+        permitted.push(offsets);
+        out.set(at, permitted);
+      }
+    }
+  }
+  return out;
+}
+
+/** Whether an accusation is covered by its own pattern's permitted phrase — every
+ *  byte the accusation was READ FROM being a byte that phrase was read from too.
+ *
+ *  Containment, not overlap, and offsets rather than a range on either side. Both
+ *  sides drop bytes: the accusation may come from a view that removed a tag from
+ *  the middle of the claim ("No <b>surge</b> today"), and the permission from a
+ *  different view that removed a different one. Comparing outer ranges gets both
+ *  directions wrong — it excuses claims hiding in the gaps of the permitted
+ *  phrase, and it accuses a permitted phrase that has a gap of its own. */
+export function isPermitted(permissions, at, offsets) {
+  const permitted = permissions.get(at);
+  return !!permitted && permitted.some((allowed) => offsets.every((o) => allowed.has(o)));
+}
+
 /** Every match of `patterns` in every view, as
- *  [{ at, text, view, span: [startOffset, endOffset) }] in original-byte
+ *  [{ at, text, view, span: [startOffset, endOffset), offsets }] in original-byte
  *  coordinates. Both gates match the same way; they differ only in what they do
- *  with the spans afterwards. */
+ *  with the results afterwards.
+ *
+ *  `span` is the outer hull — what counting occurrences and reporting a line range
+ *  want. `offsets` is the bytes the match was actually read from, which in a
+ *  tag-dropping view is a SUBSET of that hull; isPermitted wants those, because a
+ *  hull tells you where a match ended and not what it was made of. */
 export function matchesIn(views, patterns) {
   const out = [];
   for (const { name, text, map } of views) {
     for (const [at, { re }] of patterns.entries()) {
-      const global = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
-      for (const m of text.matchAll(global)) {
+      for (const m of text.matchAll(globalise(re))) {
         if (!m[0].length) continue;
+        const offsets = map.slice(m.index, m.index + m[0].length);
         out.push({
           at,
           text: m[0].toLowerCase(),
           view: name,
-          span: [map[m.index], map[m.index + m[0].length - 1] + 1],
+          span: [offsets[0], offsets[offsets.length - 1] + 1],
+          offsets,
         });
       }
     }
