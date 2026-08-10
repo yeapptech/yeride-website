@@ -111,6 +111,15 @@ Site footer — copy per copy-map §1.2. Rendered by `BaseLayout`.
 lines. **Social is X/Twitter only** — the Facebook and Instagram icons pointed at `#` and
 were removed for good. Do not re-add a social icon without a working URL.
 
+**The copyright line is the one piece of this component's copy that is not in its own
+frontmatter.** `© {year} YeRide` was the last literal text node on the site, so #88's
+prose gate moved it to `copyright` in `src/i18n/utilityCopy.ts`; the rest of the footer's
+strings stay in `Footer.astro`'s `t` object, untouched. It takes no language — §1.2 gives
+one form for both — and the **year is the build's**, passed in by the component. That
+closed the rot #79 named and left: the year had been hard-coded `2026` and would have gone
+wrong on 2027-01-01 with nothing to catch it. The residue is real and narrow — this is a
+static build, so a year in which the site is never deployed still shows the previous one.
+
 ### navBar
 
 **Removed.** `src/components/navBar.astro` and `src/data/navData.ts` were deleted by the

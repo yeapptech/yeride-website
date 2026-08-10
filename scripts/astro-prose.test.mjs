@@ -92,9 +92,19 @@ const FOUND = [
     `${FENCE}<div>{cond // Stripe's own\n  ? null : null}<p>Ride now today</p></div>\n`,
     "Ride now today",
   ],
-  // An unterminated "<" is ordinary text to a browser, and swallowing the rest of
-  // the file from it would hide every node after it.
-  ["text after an unterminated tag", `${FENCE}<p>a < b</p>\n<p>Ride now today</p>\n`, "Ride now today"],
+  // An unterminated "<" is ordinary text to a browser, and swallowing from it to
+  // end of file would hide every node after it.
+  //
+  // The "<" has to actually OPEN a tag for this to test anything, and there must
+  // be no ">" anywhere after it — that is the only way tagEnd returns -1. A first
+  // draft used `<p>a < b</p>` and proved nothing: "< " is not a tag opening at
+  // all (TAG_OPEN wants a name character straight after the "<"), so the branch
+  // never ran and disabling it left every control green.
+  [
+    "text after an unterminated tag",
+    `${FENCE}<b Ride now today\n`,
+    "<b Ride now today",
+  ],
 ];
 
 for (const [name, source, expected] of FOUND) {
@@ -122,6 +132,19 @@ const NOT_TEXT = [
   // of the JavaScript out as a text node.
   ["a brace inside a string in an expression", `${FENCE}<p>{cond ? "a}" : "Ride now today"}</p>\n`],
   ["an escaped quote inside a string in an expression", `${FENCE}<p>{cond ? "a\\"} Ride now today" : b}</p>\n`],
+  // MARKUP BUILT INSIDE A TEMPLATE LITERAL — FeeSchedule.astro's posted card and
+  // example ledger are both assembled this way, `<th class="…">${esc(label)}</th>`
+  // and so on. This is what actually holds the quote tracking: the two entries
+  // above turn out to be unobservable (the "}" that closes an expression also
+  // clears the buffer, so an early close reports nothing either way), and a
+  // mutation run with the tracking disabled left every other control green. Here
+  // the "${…}" inside the literal drops back to depth 0 and the following "</td>"
+  // flushes what came between it as a text node — reporting a fragment of a
+  // string literal as page copy.
+  [
+    "markup inside a template literal in an expression",
+    `${FENCE}<div>{rows.map((r) => \`<td class="py-2">\${r.label} Ride now today</td>\`)}</div>\n`,
+  ],
   // Attributes and props are OUT OF SCOPE, and that is #79's decision, not an
   // omission: all 24 page files pass literal EN/ES title and description props
   // to BaseLayout, because #37's review deleted twelve such keys from src/i18n
