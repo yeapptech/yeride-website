@@ -77,12 +77,15 @@ page declares its own `<html>`/`<head>`**, and no page carries inline header or 
 markup — `Header.astro` and `Footer.astro` have one caller each, `BaseLayout`. A navigation
 or footer change is therefore one edit, in one place.
 
-Redesigned routes keep the page file thin — `BaseLayout` plus one component that holds the
-whole body (`HomePage`, `DriversPage`, `RidersPage`, `FeeSchedule`, `FareEstimatePage`) — with
-the copy in `src/i18n/`. Follow that shape when adding a page. One page still awaits its
-redesign ticket — `about` — and sits on `BaseLayout` with its pre-redesign body inline; it is
-[#85](https://github.com/yeapptech/yeride-website/issues/85), blocked outside this repo on
-yeapptech/yeride-brand#22's authored ES identity paragraph.
+Every route keeps the page file thin — `BaseLayout` plus one component that holds the whole
+body (`HomePage`, `DriversPage`, `RidersPage`, `FeeSchedule`, `FareEstimatePage`,
+`LegalDocument`, `ContactPage`, `AboutPage`) — with the copy in `src/i18n/`. Follow that shape
+when adding a page. `about` was the last route still carrying its pre-redesign body and shipped
+on the shape with [#85](https://github.com/yeapptech/yeride-website/issues/85), once
+yeapptech/yeride-brand#22 landed the authored ES identity paragraph it was blocked on outside
+this repo. **No route is exempt any more, and gate 1's `PENDING` map is empty** — an entry
+there is now a claim that a route ships in one language, so add one only with the ticket that
+retires it.
 
 `/404` and `/redirect` are the two exceptions to "every route ships EN and ES": they are one
 file each, serving **both** languages, because GitHub Pages answers every missing path with a
