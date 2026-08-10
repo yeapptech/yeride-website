@@ -100,7 +100,7 @@ Content-Type: application/json
 | `firstName` | string | Yes | User's first name |
 | `lastName` | string | Yes | User's last name |
 | `email` | string | Yes | Valid email address |
-| `phoneNumber` | string | Yes | E.164. A bare ten digits is read as NANP and sent as `+1…`; a `+`-prefixed number is validated as E.164 and sent unchanged |
+| `phoneNumber` | string | Yes | E.164. Formatting characters (spaces, `()`, `.`, dashes, NBSP) are stripped from every value first; a bare ten digits is then read as NANP and sent as `+1…`, and a `+`-prefixed number keeps its own country code |
 | `role` | string | Yes | Either `rider` or `driver` |
 
 #### Response
@@ -133,9 +133,10 @@ line, EN and ES — is in `src/i18n/formCopy.ts`.
 This page **does not restate that logic.** It used to: a `submitForm`, a
 `formatPhoneNumber` and a `validateForm` sample sat here, and by the time #42 swept
 them both of the interesting ones were wrong. `formatPhoneNumber` prepended `+1`
-unconditionally, which is exactly what #37 stopped doing — a bare ten digits is
-treated as NANP and gets the `+1`, but an already-`+`-prefixed number is validated as
-E.164 and left alone, so a non-US number is no longer mangled. And `validateForm`
+unconditionally, which is exactly what #37 stopped doing — formatting characters are
+stripped from every value, a bare ten digits is then treated as NANP and gets the
+`+1`, but an already-`+`-prefixed number keeps its own country code, so a non-US
+number is no longer mangled. And `validateForm`
 checked a `role` the person picks, when #37 **deleted the role dropdown**: role is
 pre-set by the page, `driver` on `/drivers` and `rider` on `/riders`. Nothing asserted
 either sample, which is why they drifted. Read the component.

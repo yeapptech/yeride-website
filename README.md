@@ -14,6 +14,9 @@ The official marketing website for YeRide - a community-driven ridesharing platf
 
 ## Quick Start
 
+Needs **Node 22.6 or later** — not 20.x, and the reason is in
+[Getting Started](docs/getting-started.md#prerequisites).
+
 ```bash
 # Clone the repository
 git clone https://github.com/yeapptech/yeride-website.git

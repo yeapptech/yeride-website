@@ -12,7 +12,8 @@ This document describes how to contribute to the YeRide website.
    cd yeride-website
    ```
 
-2. **Install dependencies**
+2. **Install dependencies** — on **Node 22.6 or later**, not 20.x
+   ([why](./getting-started.md#prerequisites))
    ```bash
    npm install
    ```
