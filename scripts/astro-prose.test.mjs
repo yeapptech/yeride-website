@@ -105,6 +105,22 @@ const FOUND = [
     `${FENCE}<b Ride now today\n`,
     "<b Ride now today",
   ],
+  // Both sides of a ternary that renders markup: the element CONTENT is still
+  // page copy even though the expression around it is not. The companion
+  // "must not be read as template prose" entry below is the half that matters.
+  [
+    "element content inside a ternary",
+    `${FENCE}<div>{ok ? <b>Ride now today</b> : <i>z</i>}</div>\n`,
+    "Ride now today",
+  ],
+  // A "}" with no expression open is ordinary text to a browser. The flag
+  // version discarded the buffer here, so a phrase could hide in front of a
+  // stray brace and the gate would report only what followed it.
+  [
+    "a node containing a stray closing brace",
+    `${FENCE}<p>Ride today } always</p>\n`,
+    "Ride today } always",
+  ],
 ];
 
 for (const [name, source, expected] of FOUND) {
@@ -144,6 +160,42 @@ const NOT_TEXT = [
   [
     "markup inside a template literal in an expression",
     `${FENCE}<div>{rows.map((r) => \`<td class="py-2">\${r.label} Ride now today</td>\`)}</div>\n`,
+  ],
+  // THE DEFECT A REVIEW FOUND, and the reason the walk counts elements per frame
+  // rather than setting one "inMarkup" flag on every tag. Once the first element
+  // inside an expression CLOSED, the flag stayed true and the rest of the
+  // expression's JavaScript was read as page copy — an ordinary ternary failed
+  // the build. It was live, too: the same shape left `") : ("` in
+  // LegalDocument.astro and `")) ) : ("` twice in BaseLayout.astro as text nodes
+  // in the real tree, passing only because none holds a word character.
+  [
+    "JavaScript between two elements in one expression",
+    `${FENCE}<div>{ok ? <b>x</b> : "no rides today" && <i>y</i>}</div>\n`,
+  ],
+  [
+    "a call between two elements in one expression",
+    `${FENCE}<div>{cond ? <b>a</b> : fmt(x, y) + join(<i>y</i>)}</div>\n`,
+  ],
+  // A void element has no closing tag, so counting it as open would leave its
+  // frame permanently in markup and put the rest of the expression back on the
+  // page — the same defect arriving by another door.
+  // Both of these need a SECOND element after the string: the "}" that closes an
+  // expression also clears the buffer, so a fixture ending at the "}" reports
+  // nothing either way and proves nothing. Mutation caught that — the first
+  // drafts ended at the brace and stayed green with void handling deleted.
+  [
+    "a void element with no slash inside an expression",
+    `${FENCE}<div>{ok ? <img src="a.png"> : "no rides today" && <i>y</i>}</div>\n`,
+  ],
+  [
+    "a self-closing element inside an expression",
+    `${FENCE}<div>{ok ? <br /> : "no rides today" && <i>y</i>}</div>\n`,
+  ],
+  // Element depth is per FRAME because the two nest independently: closing <b>
+  // inside the expression must not be taken to close the <li> outside it.
+  [
+    "an element closing inside an expression nested in an element",
+    `${FENCE}<li>{ok ? <b>y</b> : "no rides today"}</li>\n`,
   ],
   // Attributes and props are OUT OF SCOPE, and that is #79's decision, not an
   // omission: all 24 page files pass literal EN/ES title and description props

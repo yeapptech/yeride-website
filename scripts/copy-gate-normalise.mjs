@@ -690,3 +690,37 @@ export function matchesIn(views, patterns) {
   }
   return out;
 }
+
+/**
+ * Where each line of `text` begins, and the reverse lookup from an offset back
+ * to its 1-based line number.
+ *
+ * Here because both gates turn a match found in a whole-file reading back into
+ * the file:line an author has to edit, and a binary search written twice is two
+ * places for an off-by-one to live.
+ *
+ * `starts` is returned as well as `at` because the copy gate needs it in the
+ * other direction: its raw per-line pass adds a match index to a line start to
+ * get an offset into the file, which is what lets a raw hit and a normalised hit
+ * be recognised as the same occurrence.
+ *
+ * @returns `{starts, at}` — `starts[n]` is the offset of line n+1, `at(offset)`
+ *   is the 1-based line containing `offset`.
+ */
+export function lineIndex(text) {
+  const starts = [0];
+  for (let i = 0; i < text.length; i++) if (text[i] === "\n") starts.push(i + 1);
+  return {
+    starts,
+    at: (offset) => {
+      let lo = 0;
+      let hi = starts.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (starts[mid] <= offset) lo = mid;
+        else hi = mid - 1;
+      }
+      return lo + 1;
+    },
+  };
+}

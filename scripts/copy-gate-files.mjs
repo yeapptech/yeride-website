@@ -104,3 +104,17 @@ export const BINARY = /\.(png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|eot|pdf|mp4
 // whether the file is served as-is. .md and .mdx can hold literal HTML; .astro is
 // where prose gets typed straight into markup.
 export const MARKUP_SYNTAX = /\.(astro|html?|xhtml|svg|xml|md|mdx)$/i;
+
+// Walking the tree is here rather than in each gate for the reason the tables
+// above are: two copies of "which files does this gate see" is two claims about
+// coverage, and #81 found exactly that drift between the two extension lists.
+import { readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
+
+/** Every file under `dir`, recursively. */
+export function walk(dir) {
+  return readdirSync(dir).flatMap((entry) => {
+    const path = join(dir, entry);
+    return statSync(path).isDirectory() ? walk(path) : [path];
+  });
+}

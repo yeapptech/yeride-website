@@ -23,8 +23,16 @@
 // WHAT COUNTS AS PROSE — the whole rule, and a boundary drawn wrong produces the
 // cry-wolf failure #68 refused. #88 named two candidates and left the choice to
 // be made against the real tree rather than in advance. Measured over all 35
-// .astro files: 11 non-blank text nodes, of which ten are a "→" glyph or a bare
-// ":" and one is Footer.astro's copyright.
+// .astro files with THIS reader: 12 non-blank text nodes before the cleanup
+// below — ten a "→" glyph, one a bare ":", and one Footer.astro's copyright —
+// and 11 after it, the arrows and the colon.
+//
+// An earlier revision of this comment said 11 and put the copyright among them.
+// That count came from a prototype that skipped expression bodies wholesale, so
+// it never saw the arrow inside an expression in HomePage.astro and it was taken
+// before the cleanup; a review caught the discrepancy. The figure above is from
+// the shipped reader, and re-measuring is one command:
+//   node -e 'import("./scripts/astro-prose.mjs").then(...)' over src/**/*.astro.
 //
 //   A. two or more whitespace-separated word characters  — fires on the
 //      copyright, zero false positives over the corpus.
@@ -72,6 +80,22 @@ export function templateStart(source) {
 const RAW_ELEMENT = /^<[ \t]*(script|style)\b/i;
 const SELF_CLOSING = /\/[ \t]*>$/;
 
+/** A tag that opens or closes a real element, as opposed to a comment, a
+ *  doctype, a CDATA section or a processing instruction — none of which nest. */
+const ELEMENT_TAG = /^<\/?[a-z]/i;
+const CLOSING_TAG = /^<[ \t]*\//;
+
+/** HTML's void elements: they have no closing tag, so an author may write
+ *  `<br>` or `<img …>` with no slash and nothing will ever close it. Counting
+ *  one as an open element would leave its expression frame permanently "in
+ *  markup" and put the rest of that expression's JavaScript back on the page —
+ *  the same defect the frame model exists to remove, arriving by another door. */
+const VOID = new Set([
+  "area", "base", "br", "col", "embed", "hr", "img", "input",
+  "link", "meta", "source", "track", "wbr",
+]);
+const isVoid = (tag) => VOID.has((tag.match(/^<[ \t]*([a-z][a-z0-9]*)/i)?.[1] ?? "").toLowerCase());
+
 /**
  * Every non-blank text node in an .astro template.
  *
@@ -86,13 +110,34 @@ const SELF_CLOSING = /\/[ \t]*>$/;
  * markup is built INSIDE an expression — LegalDocument, BaseLayout, AboutPage and
  * PreRegistrationForm all render through `.map(… => (<li>…</li>))` — so a reader
  * that skipped expression bodies would leave the main surface unscanned while
- * appearing to cover it. Instead a single `inMarkup` flag follows the nesting:
- * a tag always returns us to markup, "{" leaves it, and the "}" closing that
- * expression returns to the markup that contained it.
+ * appearing to cover it.
+ *
+ * SO THE WALK TRACKS ELEMENT NESTING, NOT JUST "am I past a tag". Each "{" pushes
+ * an expression frame and each "}" pops it; inside a frame, text is markup only
+ * while an element is OPEN — an opening tag raises that frame's element depth, a
+ * closing tag lowers it, and a self-closing or void tag changes nothing. At the
+ * top level, outside every expression, text is always markup.
+ *
+ * The first version of this used one `inMarkup` flag that any tag set true, and a
+ * review caught what that costs: after the FIRST element inside an expression
+ * closes, the rest of that expression's JavaScript was read as page copy.
+ *
+ *     <div>{ok ? <b>x</b> : "no rides today" && <i>y</i>}</div>
+ *
+ * yielded `x`, ` : "no rides today" && `, `y` — and the middle one is prose, so an
+ * ordinary ternary failed the build. That is precisely the cry-wolf failure #68
+ * refused. It was not hypothetical: the same shape left `") : ("` in
+ * LegalDocument.astro and `")) ) : ("` twice in BaseLayout.astro sitting in the
+ * real tree as text nodes, passing only because none of them contains a word
+ * character. One identifier between those parentheses and the build breaks.
  *
  * Inside an expression, quotes and template literals are tracked, so a "}" in a
  * string ({cond ? "a}" : "b"}) cannot close the expression early and spill the
  * remaining JavaScript out as a text node.
+ *
+ * A "}" with no expression open is ordinary text, as it is to a browser — the
+ * flag version silently discarded the buffer there, so `<p>Ride today } always</p>`
+ * reported only "always" and a phrase could hide in front of a stray brace.
  *
  * @param source the whole .astro file, frontmatter included.
  * @returns `{at, text}` per node, `at` being the offset in `source` of its first
@@ -101,15 +146,39 @@ const SELF_CLOSING = /\/[ \t]*>$/;
 export function textNodes(source) {
   const nodes = [];
   let i = templateStart(source);
-  let inMarkup = true;
-  let depth = 0;
   let quote = "";
   let buffer = "";
   let at = i;
 
+  // One frame per open expression. `frames.length === 0` is the template's top
+  // level, where text is always markup; inside a frame it is markup only while
+  // that frame has an element open. Element depth is PER FRAME because the two
+  // nest independently — `<li>{x ? <b>y</b> : z}</li>` closes <b> inside the
+  // expression without closing <li> outside it.
+  const frames = [];
+  const inMarkup = () => frames.length === 0 || frames[frames.length - 1].elements > 0;
+
   const flush = () => {
     if (buffer.trim()) nodes.push({ at, text: buffer });
     buffer = "";
+  };
+
+  /** Absorb a tag's effect on the current frame's element depth. Nothing at the
+   *  top level, where markup is markup whatever is open. */
+  const countElement = (tag) => {
+    const frame = frames[frames.length - 1];
+    if (!frame) return;
+    if (CLOSING_TAG.test(tag)) {
+      if (frame.elements > 0) frame.elements--;
+      return;
+    }
+    // A comment, doctype, CDATA or processing instruction is not an element, and
+    // neither is a tag that closes itself — either by "/>" or by being a void
+    // element, which has no closing tag to match. Counting a void element would
+    // leave the frame permanently "in markup" and put the rest of the
+    // expression's JavaScript back on the page.
+    if (!ELEMENT_TAG.test(tag) || SELF_CLOSING.test(tag) || isVoid(tag)) return;
+    frame.elements++;
   };
 
   while (i < source.length) {
@@ -130,7 +199,7 @@ export function textNodes(source) {
       // An unterminated tag closes nothing. Treat the "<" as the ordinary text
       // a browser would, rather than swallowing the rest of the file.
       if (end === -1) {
-        if (inMarkup) {
+        if (inMarkup()) {
           if (!buffer) at = i;
           buffer += ch;
         }
@@ -145,26 +214,25 @@ export function textNodes(source) {
         const rest = source.slice(i);
         const close = rest.match(new RegExp(`</[ \\t]*${raw[1]}[ \\t]*>`, "i"));
         i += close ? close.index + close[0].length : rest.length;
+      } else {
+        countElement(tag);
       }
-      inMarkup = true;
       at = i;
       continue;
     }
 
     if (ch === "{") {
       flush();
-      depth++;
-      inMarkup = false;
+      frames.push({ elements: 0 });
       i++;
       at = i;
       continue;
     }
 
-    if (ch === "}") {
+    if (ch === "}" && frames.length) {
       // Whatever was accumulating belonged to the expression, not to the page.
       buffer = "";
-      if (depth > 0) depth--;
-      inMarkup = true;
+      frames.pop();
       i++;
       at = i;
       continue;
@@ -181,7 +249,7 @@ export function textNodes(source) {
     // prose — 49 findings, every one of them false. A gate that cries wolf on
     // its first run is the failure #68 refused, and this is exactly how it
     // happens.
-    if (!inMarkup && ch === "/" && (source[i + 1] === "*" || source[i + 1] === "/")) {
+    if (!inMarkup() && ch === "/" && (source[i + 1] === "*" || source[i + 1] === "/")) {
       if (source[i + 1] === "*") {
         const end = source.indexOf("*/", i + 2);
         i = end === -1 ? source.length : end + 2;
@@ -192,13 +260,13 @@ export function textNodes(source) {
       continue;
     }
 
-    if (!inMarkup && (ch === '"' || ch === "'" || ch === "`")) {
+    if (!inMarkup() && (ch === '"' || ch === "'" || ch === "`")) {
       quote = ch;
       i++;
       continue;
     }
 
-    if (inMarkup) {
+    if (inMarkup()) {
       if (!buffer) at = i;
       buffer += ch;
     }

@@ -116,13 +116,25 @@
 // Three §5 rules are judgement, not regex, and are NOT checked here — they stay
 // human review at copy time. The list lives with the patterns.
 
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { basename, join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { basename } from "node:path";
 
 import { PATTERNS } from "./copy-gate-patterns.mjs";
-import { BINARY, MARKUP_SYNTAX, SCAN_EXT } from "./copy-gate-files.mjs";
-import { isPermitted, matchesIn, permissionsIn, viewsOf } from "./copy-gate-normalise.mjs";
-import { readPragma } from "./copy-gate-pragma.mjs";
+import { BINARY, MARKUP_SYNTAX, SCAN_EXT, walk } from "./copy-gate-files.mjs";
+import {
+  isPermitted,
+  lineIndex,
+  matchesIn,
+  permissionsIn,
+  viewsOf,
+} from "./copy-gate-normalise.mjs";
+import {
+  TICKET,
+  collectPragmas,
+  pragmaFor,
+  readPragma,
+  unusedPragmas,
+} from "./copy-gate-pragma.mjs";
 import { passthroughFiling } from "./copy-gate-suspension.mjs";
 
 // public/ is copied verbatim into dist/, so it ships exactly as written.
@@ -134,9 +146,6 @@ const ROOTS = ["src", "public"];
 // "<" in a .ts is a generic and reading it as a tag swallows real code. #81
 // measured both sides; scripts/copy-gate-files.mjs records the numbers.
 const SERVED_VERBATIM = /^public[/\\]/;
-
-// "#48ff00" is a colour, not a ticket.
-const TICKET = /#\d+(?!\w)/;
 
 // Homoglyphs, answering #57's "is folding honest?" with no. A Cyrillic "\u0435"
 // in "ch\u0435apest" defeats every pattern above, and folding confusables back to
@@ -201,13 +210,6 @@ function stripComments(src) {
     .replace(/^[ \t]*\/\/.*$/gm, blank);
 }
 
-function walk(dir) {
-  return readdirSync(dir).flatMap((entry) => {
-    const path = join(dir, entry);
-    return statSync(path).isDirectory() ? walk(path) : [path];
-  });
-}
-
 const errors = [];
 const allowed = [];
 const pragmas = [];
@@ -241,48 +243,26 @@ for (const file of files) {
   const codeText = stripComments(source);
   const code = codeText.split(/\r?\n/);
 
-  const lineStarts = [0];
-  for (let i = 0; i < codeText.length; i++) if (codeText[i] === "\n") lineStarts.push(i + 1);
-  const lineAt = (offset) => {
-    let lo = 0;
-    let hi = lineStarts.length - 1;
-    while (lo < hi) {
-      const mid = (lo + hi + 1) >> 1;
-      if (lineStarts[mid] <= offset) lo = mid;
-      else hi = mid - 1;
-    }
-    return lo + 1;
-  };
+  // lineStarts indexes codeText, which `code` was split from, so a line start
+  // plus a match index is an offset into the file.
+  const { starts: lineStarts, at: lineAt } = lineIndex(codeText);
 
-  raw.forEach((line, i) => {
-    const hit = readPragma(line);
-    if (!hit) return;
-    if (hit.misplaced) {
-      errors.push(
-        `${file}:${i + 1}  copy-gate-allow must OPEN its own comment — nothing but ` +
-          `whitespace between the comment opener and the pragma. A "//" inside a URL is ` +
-          `not a comment, and shipped markup must not be able to authorise itself`,
-      );
-      return;
-    }
-    pragmas.push({
-      file,
-      line: i + 1,
-      // An HTML pragma would otherwise print its own closing delimiter as part
-      // of the reason.
-      reason: hit.reason.replace(/\s*(-->|\*\/|\})+$/, ""),
-      used: false,
-    });
-  });
+  // The pragma reading, the line pairing, the ticket rule and the unused sweep
+  // all live in copy-gate-pragma.mjs and are called from here rather than
+  // written here, so this gate and #88's prose gate cannot drift on the one
+  // mechanism whose job is to make a build say LESS.
+  const found = collectPragmas(source, file, readPragma);
+  pragmas.push(...found.pragmas);
+  for (const at of found.misplaced) {
+    errors.push(
+      `${at.file}:${at.line}  copy-gate-allow must OPEN its own comment — nothing but ` +
+        `whitespace between the comment opener and the pragma. A "//" inside a URL is ` +
+        `not a comment, and shipped markup must not be able to authorise itself`,
+    );
+  }
 
-  // A hit on line `here` is covered by a pragma on that same line, or by one on
-  // the line directly above it. There is no longer a coversNext distinction:
-  // since #100 every pragma opens its own comment, so every pragma is the kind
-  // that used to be allowed to cover the line below.
   const judge = (here, hit, why, where = `${file}:${here}`) => {
-    const pragma =
-      pragmas.find((p) => p.file === file && p.line === here) ??
-      pragmas.find((p) => p.file === file && p.line === here - 1);
+    const pragma = pragmaFor(pragmas, file, here);
 
     if (!pragma) {
       errors.push(`${where}  ${hit} — ${why}`);
@@ -409,7 +389,7 @@ for (const file of files) {
   }
 }
 
-for (const p of pragmas.filter((p) => !p.used)) {
+for (const p of unusedPragmas(pragmas)) {
   errors.push(`${p.file}:${p.line}  copy-gate-allow matches nothing any more — delete it`);
 }
 

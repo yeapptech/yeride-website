@@ -44,25 +44,21 @@
 // scripts/astro-prose.test.mjs, with scripts/copy-gate-patterns.test.mjs as the
 // precedent. An unused hatch is an untested one.
 
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
 
 import { isProse, textNodes } from "./astro-prose.mjs";
-import { pragmaReader } from "./copy-gate-pragma.mjs";
+import { walk } from "./copy-gate-files.mjs";
+import { lineIndex } from "./copy-gate-normalise.mjs";
+import {
+  TICKET,
+  collectPragmas,
+  pragmaFor,
+  pragmaReader,
+  unusedPragmas,
+} from "./copy-gate-pragma.mjs";
 
 const ROOT = "src";
 const readPragma = pragmaReader("astro-prose-allow");
-
-// "#48ff00" is a colour, not a ticket. Same test as the copy gate's, for the
-// same reason.
-const TICKET = /#\d+(?!\w)/;
-
-function walk(dir) {
-  return readdirSync(dir).flatMap((entry) => {
-    const path = join(dir, entry);
-    return statSync(path).isDirectory() ? walk(path) : [path];
-  });
-}
 
 const errors = [];
 const allowed = [];
@@ -75,52 +71,26 @@ for (const file of files) {
   scanned++;
   const source = readFileSync(file, "utf8");
 
-  const lineStarts = [0];
-  for (let i = 0; i < source.length; i++) if (source[i] === "\n") lineStarts.push(i + 1);
-  const lineAt = (offset) => {
-    let lo = 0;
-    let hi = lineStarts.length - 1;
-    while (lo < hi) {
-      const mid = (lo + hi + 1) >> 1;
-      if (lineStarts[mid] <= offset) lo = mid;
-      else hi = mid - 1;
-    }
-    return lo + 1;
-  };
+  const { at: lineAt } = lineIndex(source);
 
-  source.split(/\r?\n/).forEach((line, i) => {
-    const hit = readPragma(line);
-    if (!hit) return;
-    if (hit.misplaced) {
-      errors.push(
-        `${file}:${i + 1}  astro-prose-allow must OPEN its own comment — nothing but ` +
-          `whitespace between the comment opener and the pragma, so shipped markup ` +
-          `cannot authorise itself`,
-      );
-      return;
-    }
-    pragmas.push({
-      file,
-      line: i + 1,
-      // An HTML pragma would otherwise print its own closing delimiter as part
-      // of the reason.
-      reason: hit.reason.replace(/\s*(-->|\*\/|\})+$/, ""),
-      used: false,
-    });
-  });
+  const found = collectPragmas(source, file, readPragma);
+  pragmas.push(...found.pragmas);
+  for (const at of found.misplaced) {
+    errors.push(
+      `${at.file}:${at.line}  astro-prose-allow must OPEN its own comment — nothing but ` +
+        `whitespace between the comment opener and the pragma, so shipped markup ` +
+        `cannot authorise itself`,
+    );
+  }
 
   for (const node of textNodes(source)) {
     const text = node.text.trim();
     if (!isProse(text)) continue;
 
     const here = lineAt(node.at);
-    // Same pairing as the copy gate: the line the node STARTS on, or the line
-    // directly above it. It has to be the start rather than any line in the
-    // span, because the alternative is a pragma further down authorising prose
-    // whose reader, looking at the line it begins on, sees no pragma at all.
-    const pragma =
-      pragmas.find((p) => p.file === file && p.line === here) ??
-      pragmas.find((p) => p.file === file && p.line === here - 1);
+    // The pairing rule is the copy gate's, called rather than re-typed — see
+    // pragmaFor in copy-gate-pragma.mjs for why the hatch discipline exists once.
+    const pragma = pragmaFor(pragmas, file, here);
 
     // One line, whatever the node's own line breaks — a paragraph wrapped across
     // four source lines is one fault, and printing it as four is the noise that
@@ -145,7 +115,7 @@ for (const file of files) {
   }
 }
 
-for (const p of pragmas.filter((p) => !p.used)) {
+for (const p of unusedPragmas(pragmas)) {
   errors.push(`${p.file}:${p.line}  astro-prose-allow matches nothing any more — delete it`);
 }
 
