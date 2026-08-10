@@ -37,33 +37,19 @@ The site will be available at [http://localhost:4321](http://localhost:4321).
 |---------|-------------|
 | `npm run dev` | Start development server |
 | `npm run checks` | The gates a pull request must pass — no dependencies, no secrets |
-| `npm run test:gates` | The control sets alone (also run first by `npm run checks`) |
-| `npm run build` | `npm run checks`, then the env check, `astro check`, `astro build` and the dist copy gate |
+| `npm run build` | The whole gate chain, then `astro build` |
 | `npm run preview` | Preview production build |
-| `npx astro check` | Type-check alone |
 
+The full list is in [Getting Started](docs/getting-started.md#available-scripts).
 `npm run build` is the only automated verification gate in this repo, and it is a
 chain: what each link asserts, and why, is in [CLAUDE.md](CLAUDE.md). Run
 `npm run checks` before opening a pull request — it is what CI runs.
 
 ## Project Structure
 
-```
-yeride-website/
-├── src/
-│   ├── components/     # One body component per route, plus Header/Footer/form
-│   ├── layouts/        # BaseLayout.astro — the only <html>/<head> in the repo
-│   ├── pages/          # Route pages; every one has an /es/ twin
-│   ├── i18n/           # EN/ES copy, per page — no prose lives in a template
-│   └── lib/            # Backend clients: fareEstimate, feeSchedule, serviceArea
-├── scripts/            # The build gates and their controls
-├── public/             # Static assets, shipped into dist/ byte for byte
-├── docs/               # Documentation
-└── dist/               # Build output
-```
-
-There is no `src/data/` or `src/styles/`: `navData.ts` and `main.css` were deleted
-by the brand foundation (wayfinder #35) and must not come back.
+The tree, annotated, is one place: **[Directory Structure](docs/architecture.md#directory-structure)**.
+It is not repeated here — a second copy is a second thing to keep true, and nothing
+asserts either.
 
 ## Documentation
 

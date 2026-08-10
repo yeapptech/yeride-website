@@ -137,4 +137,4 @@ and bury your real change in a full-file diff.
 
 ## Further Documentation
 
-`docs/` holds longer-form guides: `architecture.md`, `components.md`, `api-integration.md`, `deployment.md`, `getting-started.md`, `contributing.md`.
+`docs/` holds longer-form guides: `architecture.md`, `components.md`, `api-integration.md`, `deployment.md`, `getting-started.md`, `contributing.md`. It also holds **`copy-map.md`**, which is not a guide but the **copy source of truth** — every string on the site, EN and ES, per page, and its §5 is the gated list both copy gates enforce. Read it before writing or changing any user-facing string; it merged to `main` with #42, having lived on the `copy-map/en-es` branch until then.

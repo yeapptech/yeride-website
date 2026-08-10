@@ -63,8 +63,8 @@ missing or empty one (`scripts/check-env.mjs`). The list is `.env.example`.
 Registers a new user for the YeRide whitelist.
 
 > **This endpoint is not answering in production** (checked 2026-08-10, #42). The host
-> `PUBLIC_API_URL` resolves to returns the Google frontend's "404 Page not found" for
-> every path and every method — byte for byte what a `*.a.run.app` hostname with no
+> that `PUBLIC_API_URL` points at returns the Google frontend's "404 Page not found"
+> for every path and every method — byte for byte what a `*.a.run.app` hostname with no
 > service behind it returns, and `*.a.run.app` is wildcard DNS, so resolving proves
 > nothing. Not a CORS problem and not a routing problem: there is nothing to route to.
 > Every pre-registration from the live site therefore fails and shows the generic

@@ -187,18 +187,13 @@ const items: any[] = [];
 
 ### File Organization
 
-```
-src/
-├── components/       # One body component per route, plus Header/Footer/form
-├── layouts/          # BaseLayout.astro — the only <html>/<head> in the repo
-├── pages/            # Route pages; every one has an /es/ twin
-├── i18n/             # EN/ES copy, per page
-└── lib/              # Backend clients: fareEstimate, feeSchedule, serviceArea
-```
+The tree, annotated, is in [Architecture](./architecture.md#directory-structure) and is
+not repeated here.
 
-Flat on purpose: there is no `ui/` or `features/` split, and no `data/`, `styles/` or
-`utils/`. A route is one thin page file plus one component that holds the whole body,
-with its copy in `src/i18n/` — see [Architecture](./architecture.md).
+What it will not tell you outright is the *shape*: it is flat on purpose. There is no
+`ui/` or `features/` split under `components/`, and no `data/`, `styles/` or `utils/`
+at all. A route is one thin page file plus one component holding the whole body, with
+its copy in `src/i18n/`. Follow that when adding anything.
 
 ## Pull Request Process
 
