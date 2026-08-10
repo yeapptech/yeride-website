@@ -29,8 +29,14 @@ const { lang } = Astro.props;
 const t = fareEstimateCopy[lang];
 const esPrefix = lang === "es" ? "/es" : "";
 
-// The area every quote on this page is for (#62), named from the same constant
-// the request is built from and through the same bilingual map /fees uses.
+// The area named before the rider has picked a pickup — and the FALLBACK the
+// page keeps when it cannot resolve one (#62, narrowed by #73).
+//
+// Since #73 the area is resolved at RUNTIME from the pickup, so the script
+// rewrites this name once it knows. This still renders server-side and still
+// throws on a missing key: the label has to say something the moment the page
+// paints, before any fetch, and `us-fl-south-florida` is what the page asks for
+// until told otherwise.
 //
 // The map is read DIRECTLY rather than through `serviceAreaName`, whose job is
 // to survive an area the site has never heard of: it humanises the identifier,
@@ -131,16 +137,23 @@ if (!areaName) {
       </div>
 
       {/*
-        WHERE the quote applies. The page prices one area whatever the rider
-        typed, so it says which rather than letting the map underneath imply
-        the rider's own (#62).
+        WHERE the quote applies (#62). Since #73 the area is resolved from the
+        rider's pickup, so this usually names the rider's OWN area rather than
+        a constant — and the script rewrites `[data-area-name]` when it does.
 
-        Rendered here rather than from the response for the same reason the
-        limit note below is: it has to stand in EVERY state — before a route is
-        entered, and when the estimate fails — and a rider who never gets a
-        number is still owed the reason. `estimateFares` echoes back the id it
-        was given and never another, so the response could not correct this
-        anyway.
+        It keeps saying it anyway, which is #73's item 4 answered: the page
+        still prices ONE area, the rider cannot see which from a map with a
+        route on it, and the two states that fall back to the default are
+        invisible from the outside. Dropping the label whenever resolution
+        succeeded would make the disclosure appear only in the cases the site
+        was least sure about — visible doubt, hidden confidence, exactly
+        backwards. It also has to stand in EVERY state, including before a
+        pickup is entered and when the estimate fails.
+
+        Rendered here rather than from the response: `estimateFares` echoes back
+        the id it was given and never another, so the response cannot correct
+        it. The `[data-area-name]` span is rewritten from the RESOLVED id, which
+        is the same id the request was built from.
       */}
       {/*
         Contrast: the area name carries the whole claim, so it sits at full
@@ -152,7 +165,7 @@ if (!areaName) {
       */}
       <p class="mt-6 max-w-xl text-[15px] text-ink">
         <span class="font-bold">{t.areaLabel}:</span>
-        {areaName}
+        <span data-area-name>{areaName}</span>
       </p>
       <p class="mt-1 max-w-xl text-[15px] text-ink/70">{t.areaNote}</p>
 
@@ -224,7 +237,16 @@ if (!areaName) {
   import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
   import { getEstimates, type ServiceEstimate } from "../lib/fareEstimate";
   import { fareEstimateCopy } from "../i18n/fareEstimateCopy";
-  import { serviceName, serviceDescription } from "../i18n/feeLabels";
+  import {
+    serviceName,
+    serviceDescription,
+    serviceAreaName,
+  } from "../i18n/feeLabels";
+  import { getFeeSchedule, type ServiceAreaRef } from "../lib/feeSchedule";
+  import {
+    DEFAULT_SERVICE_AREA_ID,
+    resolveServiceArea,
+  } from "../lib/serviceArea";
   import type { Lang } from "../i18n/feesCopy";
 
   const lang = (document.documentElement.lang === "es" ? "es" : "en") as Lang;
@@ -247,6 +269,68 @@ if (!areaName) {
   const routeDistance = el<HTMLElement>("[data-route-distance]")!;
   const routeDuration = el<HTMLElement>("[data-route-duration]")!;
   const estimatesList = el<HTMLElement>("[data-estimates]")!;
+  const areaNameSlot = el<HTMLElement>("[data-area-name]")!;
+
+  /**
+   * Every area the endpoint publishes, with its circle — or `null` while the
+   * fetch is in flight and FOREVER if it fails.
+   *
+   * 🔴 `null` must never harden into "the rider is outside". It means the site
+   * cannot tell, and `resolveServiceArea` returns `unknown` for it, which lands
+   * on the default area and #62's disclosure. This page's stack is Firebase +
+   * Maps and must not acquire a third HARD dependency: `getFeeSchedule` going
+   * down, or `PUBLIC_FEE_SCHEDULE_URL` being unset, degrades the page to
+   * exactly what it did before #73 and still quotes.
+   */
+  let areas: ServiceAreaRef[] | null = null;
+
+  /**
+   * Kicked off at init, never awaited on the critical path. Resolution needs it
+   * only when the rider submits, by which time it has almost always landed; if
+   * it has not, `areas` is still `null` and the fallback is the same one a
+   * failed fetch gets. Awaiting it before the form worked would make the fee
+   * endpoint a gate on the fare.
+   */
+  const areasReady = getFeeSchedule()
+    .then((schedule) => {
+      areas = schedule.areas;
+    })
+    .catch((err) => {
+      // Not shown to the rider: nothing is wrong with their request, and the
+      // page still quotes. The console line is for us.
+      console.error("[fare-estimate] service areas unavailable", err);
+    });
+
+  /**
+   * How long the submit path will wait on `areasReady` before giving up and
+   * treating the area as unresolved.
+   *
+   * 🔴 This bound is the difference between a soft dependency and a hard one,
+   * and it was NOT in the first draft, which awaited the fetch unbounded.
+   *
+   * The distinction that matters: a fetch that REJECTS settles the promise and
+   * is harmless — `.catch()` handles it, and a refused connection rejects in
+   * milliseconds. A fetch that never SETTLES is a different animal, and
+   * `.catch()` is no defence against it: every quote queues behind a request
+   * that is not coming back. A black-holed port, a slow-loris endpoint and a
+   * captive portal all produce it. Verified against a socket that accepts and
+   * never answers: unbounded, the page span forever with no error and no fare;
+   * bounded, it releases and quotes.
+   *
+   * Two seconds is generous rather than tight: the fetch starts at page init
+   * and the rider has to type two addresses before submitting, so by then it
+   * has almost always landed. This bound is reached only when the endpoint is
+   * pathological — exactly the case that must not cost the rider their fare.
+   */
+  const AREAS_WAIT_MS = 2000;
+
+  /** Resolves when the area list lands, or when we stop waiting for it. */
+  function areasOrGiveUp(): Promise<void> {
+    return Promise.race([
+      areasReady,
+      new Promise<void>((resolve) => setTimeout(resolve, AREAS_WAIT_MS)),
+    ]);
+  }
 
   let map: google.maps.Map;
   let pickup: google.maps.LatLng | null = null;
@@ -296,6 +380,34 @@ if (!areaName) {
 
   function clearError() {
     errorSlot.textContent = "";
+  }
+
+  /**
+   * Rename the "Priced for" label to the area the quote was actually built
+   * from (#73). The id passed here is the SAME one handed to `getEstimates`, so
+   * the label cannot name one area while the request asked for another — the
+   * drift the server-rendered constant was there to prevent, now that the
+   * constant is only the fallback.
+   *
+   * Goes through `serviceAreaName`, not the raw map, because an area resolved
+   * from a circle may be one the site has never authored a name for — stage
+   * carries areas prod does not. That humanises the identifier ("Us Mi
+   * Detroit") in both languages, which is ugly and English-derived but TRUE,
+   * and strictly better than the alternatives: the frontmatter throw is a
+   * build-time guarantee about one hard-coded id and cannot cover ids that only
+   * exist at runtime, and silently keeping the previous area's name would put
+   * the wrong market beside a real fare. `scripts/check-fee-labels.mjs` (#56)
+   * is what stops it being reached — it fails the deploy on an area id no map
+   * covers, which is why an uncovered id is a loud omission rather than a
+   * silent one.
+   */
+  function showAreaName(areaId: string) {
+    const area = areas?.find((a) => a.id === areaId);
+    areaNameSlot.textContent = serviceAreaName(
+      areaId,
+      area?.identifier ?? areaId,
+      lang,
+    );
   }
 
   /** The button is takeable only when there is a whole route and no quote out. */
@@ -513,6 +625,37 @@ if (!areaName) {
       setLoading(true);
 
       try {
+        // WHICH AREA PRICES THIS TRIP (#73). Resolved from the PICKUP, matching
+        // how a ride is actually dispatched — a drop-off outside every area is
+        // not an error and is priced at the pickup area's rates.
+        //
+        // Resolved BEFORE the route is drawn, so a rider outside every area is
+        // told so instead of watching a route appear that the page then refuses
+        // to price. It also spends no Directions call on a trip with no answer.
+        // Bounded — see AREAS_WAIT_MS. A fee endpoint that never answers must
+        // cost the rider nothing but the resolution.
+        await areasOrGiveUp();
+        if (ticket !== quote) return;
+        const resolution = resolveServiceArea(
+          pickup ? { lat: pickup.lat(), lng: pickup.lng() } : null,
+          areas,
+        );
+
+        // The one condition that honestly means it: every area published a
+        // circle and none of them contains the pickup. `unknown` — an
+        // unreadable circle, or no list at all — deliberately does NOT land
+        // here; it falls through to the default area and #62's disclosure.
+        if (resolution.kind === "outside") {
+          showError(t.outsideArea);
+          return;
+        }
+
+        const areaId =
+          resolution.kind === "inside"
+            ? resolution.areaId
+            : DEFAULT_SERVICE_AREA_ID;
+        showAreaName(areaId);
+
         const directions = await new DirectionsService().route({
           origin: pickup,
           destination: dropoff,
@@ -529,6 +672,10 @@ if (!areaName) {
         const estimate = await getEstimates(
           leg.distance!.value,
           Math.ceil(leg.duration!.value / 60),
+          // The resolved area — the same id `showAreaName` just put on screen.
+          // Omitting it was the #73 review's find: the label named the rider's
+          // area while the fare came from the default.
+          areaId,
         );
         if (ticket !== quote) return;
 
@@ -554,14 +701,15 @@ if (!areaName) {
   function errorCopy(err: any): string {
     // DirectionsService rejects with the status in the message.
     if (/ZERO_RESULTS|NOT_FOUND/.test(String(err?.message))) return t.noRouteError;
-    // NOTE: §3.5's "Outside area" line is deliberately unreachable and is not
-    // shipped. This page asks `estimateFares` for `us-fl-south-florida` on
-    // every call and has no way to know where the rider is, so a rider in
-    // Chicago is quoted South Florida rates and `functions/not-found` means
-    // "South Florida has no services configured" — a fault, not a geography.
-    // Saying "We're not in that area yet" there would be false. The page states
-    // the area it priced instead (#62); the row itself waits on #73, which
-    // waits on yeapptech/yeride-functions#45 to publish each area's circle.
+    // 🔴 §3.5's "Outside area" line is NOT reachable from here, and that has
+    // not changed now that #73 ships it. It is decided BEFORE this point, off
+    // the resolved pickup, and nothing `estimateFares` can throw means it.
+    //
+    // Specifically: do not map it to `functions/not-found`. That means the
+    // requested area has no services configured — a fault, not a geography —
+    // so during an outage it would tell every rider on the site that YeRide
+    // does not serve where they are. `t.serviceError` is the honest line for a
+    // failure whose cause is ours.
     console.error("[fare-estimate]", err);
     return t.serviceError;
   }

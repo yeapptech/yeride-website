@@ -68,20 +68,27 @@ const en = {
   feeLink: "See the full fee schedule",
   noRouteError: "We couldn't find a route between those two places.",
   serviceError: "We couldn't get an estimate right now. Try again in a moment.",
-  // §3.5's third error row, "Outside area" / "We're not in that area yet.", is
-  // NOT here. The page asks `estimateFares` for `us-fl-south-florida` on every
-  // call and has no way to know where the rider is, so nothing it can observe
-  // means "you are outside our area" — `functions/not-found` means South
-  // Florida itself has no services configured. Shipping the string would put a
-  // sentence on screen the site cannot know to be true.
-  //
-  // #62 settled WHY the site cannot know: a service area is a circle
-  // (`latitude`/`longitude`/`radius` on every `serviceAreas/{id}` document, and
-  // yeride-mobile's `ResolveActiveServiceArea` already tests it with Haversine),
-  // but `getFeeSchedule` publishes only `{id, identifier}`. Until
-  // yeapptech/yeride-functions#45 publishes the circle, no condition on this
-  // page means "you are outside our area" — so #62 shipped what IS true, the
-  // `areaLabel`/`areaNote` pair ABOVE, and the row itself waits for #73.
+  /**
+   * §3.5's third error row, SHIPPED by #73 — it waited through #38 and #62 for
+   * a condition that honestly means it, and now has one.
+   *
+   * It fires on exactly one state: the pickup is inside no published circle,
+   * AND every area published a usable circle (`resolveServiceArea`'s `outside`).
+   * Both halves are load-bearing. Drop the second and the line appears whenever
+   * an admin leaves a radius blank, which is the false sentence #62 refused to
+   * ship the row over — a rider told YeRide does not serve them because of a
+   * missing field.
+   *
+   * It is still NOT mapped to `functions/not-found`, which means the requested
+   * area has no services configured — a fault, not a geography, and during an
+   * outage that mapping would tell every rider on the site they are somewhere
+   * YeRide does not go.
+   *
+   * The PICKUP decides, matching how a ride is dispatched; a drop-off outside
+   * every area is not an error and is priced at the pickup area's rates, which
+   * is what `areaNote` above discloses.
+   */
+  outsideArea: "We're not in that area yet.",
 };
 
 export const fareEstimateCopy: Record<Lang, typeof en> = {
@@ -112,5 +119,17 @@ export const fareEstimateCopy: Record<Lang, typeof en> = {
     feeLink: "Ver el tarifario completo",
     noRouteError: "No encontramos una ruta entre esos dos lugares.",
     serviceError: "No pudimos calcular el estimado ahora. Intenta de nuevo en un momento.",
+    // "esa zona", not "esa área" — verbatim from §3.5, and left alone on
+    // purpose despite `areaNote` above deliberately saying "esta área".
+    //
+    // They are not the same word doing the same job. "Área" is this site's
+    // COVERAGE noun: `/es/fees` labels its picker "Área de servicio", both
+    // legal documents use it that way, and `areaNote` says "esta área" to name
+    // the rate card the quote came from. This line names the place the RIDER
+    // typed, which is not a YeRide service area and must not be called one —
+    // "Todavía no estamos en esa área" would read as *that service area of
+    // ours*, i.e. one we have and are not in. Flagged on #73 so the choice is
+    // recorded rather than looking like the drift §3.4 warns about.
+    outsideArea: "Todavía no estamos en esa zona.",
   },
 };

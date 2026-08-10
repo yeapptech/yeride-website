@@ -378,11 +378,33 @@ That cost is the point: adding one is a decision.
 3. **A quote belongs to the route it was asked for.** A counter retires every in-flight
    quote when either end changes or the form is submitted again, so a reply about an
    abandoned journey can never be rendered under a map showing a different one.
-4. **§3.5's "Outside area" line is not shipped.** The page asks for
-   `us-fl-south-florida` on every call and cannot know where the rider is, so it has no
-   condition that makes the sentence true. #62 established why — a service area is a
-   circle no endpoint publishes yet — and shipped the "Priced for" pair instead; the
-   line itself waits on #73.
+4. **The area is resolved from the rider's PICKUP (#73), and "outside" is a
+   three-state answer.** `resolveServiceArea` in `src/lib/serviceArea.ts` runs Haversine
+   against each area's published circle — semantics copied from yeride-mobile's
+   `ResolveActiveServiceArea`, inclusive at the boundary, first match in document-id
+   order on overlap — and returns `inside`, `outside` or **`unknown`**.
+
+   The third state is the honest one and the reason this is not a boolean. `outside`
+   requires **every** area to have published a usable circle; if one has not, the rider
+   might be in it and nothing can know, so the answer is `unknown`. `unknown` also
+   covers a `getFeeSchedule` that cannot be reached — the page must not acquire a third
+   hard dependency, so a failed fetch still quotes. Both `unknown` paths fall back to
+   `DEFAULT_SERVICE_AREA_ID` and #62's "Priced for" disclosure, which is exactly the
+   behaviour the page had before #73.
+
+   **§3.5's "Outside area" line now ships**, on `outside` alone. It is still never
+   mapped to `functions/not-found`, which means the requested area has no services
+   configured — a fault, not a geography, and mapping it there would tell every rider on
+   the site that YeRide does not serve them during an outage.
+
+   The **pickup** decides, matching how a ride is dispatched; a drop-off outside every
+   area is not an error and is priced at the pickup area's rates. `scripts/service-area.test.mjs`
+   pins all of the above and runs in `npm run checks`.
+
+5. **The "Priced for" label keeps naming the area even when resolution succeeds** (#73
+   item 4). The page still prices one area, the rider cannot tell which from a map with
+   a route on it, and the two fallback states are invisible from outside — so dropping
+   the label on success would show the disclosure only where the site was least certain.
 
 Each result's **tier name and blurb are site copy in both languages** (#65), read from
 `serviceName()` / `serviceDescription()` by `serviceId`. Before that the callable's
