@@ -14,6 +14,9 @@ The official marketing website for YeRide - a community-driven ridesharing platf
 
 ## Quick Start
 
+Needs **Node 22.6 or later** — not 20.x, and the reason is in
+[Getting Started](docs/getting-started.md#prerequisites).
+
 ```bash
 # Clone the repository
 git clone https://github.com/yeapptech/yeride-website.git
@@ -36,31 +39,29 @@ The site will be available at [http://localhost:4321](http://localhost:4321).
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start development server |
-| `npm run build` | Build production site |
+| `npm run checks` | The gates a pull request must pass — no dependencies, no secrets |
+| `npm run build` | The whole gate chain, then `astro build` |
 | `npm run preview` | Preview production build |
-| `npm run astro check` | Run TypeScript checks |
+
+The full list is in [Getting Started](docs/getting-started.md#available-scripts).
+`npm run build` is the only automated verification gate in this repo, and it is a
+chain: what each link asserts, and why, is in [CLAUDE.md](CLAUDE.md). Run
+`npm run checks` before opening a pull request — it is what CI runs.
 
 ## Project Structure
 
-```
-yeride-website/
-├── src/
-│   ├── components/     # Reusable UI components
-│   ├── layouts/        # Page layout templates
-│   ├── pages/          # Route pages
-│   ├── data/           # Static data
-│   └── styles/         # Global styles
-├── public/             # Static assets
-├── docs/               # Documentation
-└── dist/               # Build output
-```
+The tree, annotated, is one place: **[Directory Structure](docs/architecture.md#directory-structure)**.
+It is not repeated here — a second copy is a second thing to keep true, and nothing
+asserts either.
 
 ## Documentation
 
 - [Getting Started](docs/getting-started.md) - Setup and installation
 - [Architecture](docs/architecture.md) - Project structure and design
 - [Components](docs/components.md) - Component reference
-- [API Integration](docs/api-integration.md) - Backend integration
+- [Copy map](docs/copy-map.md) - **Every string on the site, EN and ES.** The source
+  of truth for copy: §5 is the gated list both copy gates enforce
+- [API Integration](docs/api-integration.md) - The two backends
 - [Deployment](docs/deployment.md) - CI/CD and hosting
 - [Contributing](docs/contributing.md) - Development workflow
 
@@ -79,7 +80,9 @@ The site deploys automatically to GitHub Pages when changes are pushed to `main`
 
 ## Related Repositories
 
-- [yeride-admin-api](https://github.com/yeapptech/yeride-admin-api) - Backend API
+- [yeride-admin-api](https://github.com/yeapptech/yeride-admin-api) - Pre-registration (`v1/auth/register`)
+- [yeride-functions](https://github.com/yeapptech/yeride-functions) - `getFeeSchedule` (the `/fees` rate card) and the `estimateFares` callable
+- [yeride-brand](https://github.com/yeapptech/yeride-brand) - Tokens, assets and the binding copy/design docs
 
 ## License
 

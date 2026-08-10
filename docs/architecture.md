@@ -43,7 +43,7 @@ yeride-website/
 │   │   ├── firebase.ts       # firebase/functions only — no Auth, no Firestore
 │   │   ├── fareEstimate.ts   # estimateFares callable + its rider-facing contract
 │   │   ├── feeSchedule.ts    # getFeeSchedule fetch + response contract
-│   │   └── serviceArea.ts    # The one service-area constant /fare-estimate prices for
+│   │   └── serviceArea.ts    # Which market a pickup is quoted at (#73), three states
 │   │
 │   ├── layouts/
 │   │   └── BaseLayout.astro  # The ONLY layout. Every page renders through it
@@ -61,18 +61,26 @@ yeride-website/
 │   ├── .nojekyll             # Disable Jekyll on GitHub Pages
 │   └── images/               # Image assets
 │
-├── scripts/                  # The build gates — see CLAUDE.md
-│   ├── check-route-parity.mjs      check-copy-gate.mjs
-│   ├── check-env.mjs               check-dist-copy-gate.mjs
-│   ├── check-env-example.mjs       check-deploy-env.mjs
-│   ├── env-required.mjs            check-fee-labels.mjs  # outside the build
-│   ├── check-astro-prose.mjs       astro-prose.mjs
-│   ├── copy-gate-patterns.mjs      copy-gate-normalise.mjs
-│   └── copy-gate-patterns.test.mjs # Run by hand when the pattern list changes
+├── scripts/                  # The build gates, their shared modules and
+│                            # their controls. Not enumerated here — CLAUDE.md
+│                            # is the list, and an enumeration drifts: this one
+│                            # had fallen 11 files behind by #42.
+│   ├── check-*.mjs           # One per gate; `*.test.mjs` are the control sets,
+│   │                         # run by `npm run test:gates` (first, on every
+│   │                         # `npm run checks`) rather than by hand
+│   └── copy-gate-*.mjs       # The ONE pattern list, normaliser, file-type table
+│                             # and pragma reader — both copy gates import these
+│
+├── docs/                     # The longer-form guides, and one thing that is
+│                            # not a guide:
+│   └── copy-map.md           # THE COPY SOURCE OF TRUTH — every string, EN/ES,
+│                             # per page. Its §5 is the list both copy gates
+│                             # enforce. Read before changing any copy.
 │
 ├── .github/
 │   └── workflows/
-│       ├── checks.yml        # Route parity + copy gate, every PR, no deps
+│       ├── checks.yml        # The control sets + gates 1-5, no deps. Every PR
+│                             # AND every push outside main (#104)
 │       ├── deploy-all.yml    # Full chain + deploy, on main
 │       └── fee-label-drift.yml     # Daily fee-label check
 │

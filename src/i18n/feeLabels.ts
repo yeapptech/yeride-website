@@ -131,7 +131,7 @@ export function serviceAreaName(id: string, identifier: string, lang: Lang): str
 //     assets — so `grep` from here cannot confirm it and this is the pointer
 //     instead. Checked 2026-08-03.
 //   - copy-map §3.4 authors every other cell of this rate card in both
-//     languages. That one IS checkable from here, on branch copy-map/en-es.
+//     languages. That one IS checkable from here — docs/copy-map.md, in this repo.
 //
 // AUTHORING EN TOO is the point, not incidental. Rendering the backend string
 // on /fees and an authored one on /es/fees is what leaks English today; one map

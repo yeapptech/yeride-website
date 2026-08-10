@@ -338,8 +338,7 @@ if (errors.length) {
   console.error(`✗ dist copy gate (${files.length} files)`);
   for (const e of errors) console.error(`  ${e}`);
   for (const ext of notice) console.error(`  not read: ${ext} — add it to SCAN_EXT if it can carry copy`);
-  console.error(`\n  The list is docs/copy-map.md §5, on the copy-map/en-es branch until it merges:`);
-  console.error(`    git show origin/copy-map/en-es:docs/copy-map.md`);
+  console.error(`\n  The list is docs/copy-map.md §5.`);
   console.error(`  A source pragma cannot reach here — it is stripped by the build. A string that`);
   console.error(`  has to ship without being a claim is blessed in this script's ALLOWED list,`);
   console.error(`  keyed to the path above, with a reason naming the issue that retires it.`);

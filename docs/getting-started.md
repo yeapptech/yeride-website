@@ -4,7 +4,13 @@ This guide will help you set up the YeRide website for local development.
 
 ## Prerequisites
 
-- **Node.js** 20.x or later
+- **Node.js** 22.6 or later — **not** 20.x. `npm run test:gates` runs
+  `scripts/service-area.test.mjs` with `--experimental-strip-types` so it can import
+  the real `src/lib/serviceArea.ts` rather than keep a second copy of the maths, and
+  that flag does not exist before 22.6. On an older Node that control — the last of
+  the seven, so you get six green ticks first — dies on the flag itself:
+  `node: bad option: --experimental-strip-types`. CI runs **24**, where type
+  stripping is the default and the flag is accepted anyway.
 - **npm** 9.x or later
 - A code editor (VS Code recommended)
 
@@ -63,9 +69,18 @@ The site will be available at [http://localhost:4321](http://localhost:4321).
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start development server at `localhost:4321` |
-| `npm run build` | Build production site to `./dist/` |
+| `npm run checks` | The gates a pull request must pass — needs neither dependencies nor secrets |
+| `npm run test:gates` | The control sets alone (also run first by `npm run checks`) |
+| `npm run build` | `npm run checks`, then the env check, `astro check`, `astro build` and the dist copy gate |
 | `npm run preview` | Preview production build locally |
-| `npm run astro check` | Run TypeScript type checking |
+| `npx astro check` | Type-check alone |
+| `npm run check:env` | The env gate alone (needs a filled-in `.env`) |
+| `npm run check:dist` | The dist copy gate alone (needs a `dist/`) |
+| `npm run check:fee-labels` | Every published charge/area/tier id has an EN/ES label (needs the network) |
+
+`npm run build` is a chain of gates, not just a compile: what each one asserts, and
+why it exists, is in [CLAUDE.md](../CLAUDE.md). Run `npm run checks` before opening a
+pull request — it is exactly what CI runs on one.
 
 ## Building for Production
 
@@ -85,18 +100,14 @@ npm run preview
 
 ## Project Structure
 
-```
-yeride-website/
-├── src/
-│   ├── components/     # Reusable UI components
-│   ├── layouts/        # Page layout templates
-│   ├── pages/          # Route pages (file-based routing)
-│   ├── data/           # Static data files
-│   └── styles/         # Global styles
-├── public/             # Static assets (images, favicon, etc.)
-├── docs/               # Project documentation
-└── dist/               # Build output (generated)
-```
+The tree, annotated, is one place: **[Directory Structure](./architecture.md#directory-structure)**.
+It is not repeated here — a second copy is a second thing to keep true, and nothing
+asserts either.
+
+Two things it will tell you that surprise people: there is no `src/data/` or
+`src/styles/` (deleted by the brand foundation, wayfinder #35, along with the CDN
+Tailwind tags, the Google Fonts link to Inter and the Open Props import — **do not
+re-add any of them**), and all copy lives in `src/i18n/`, never in a template.
 
 ## Common Issues
 
@@ -113,7 +124,7 @@ npm run dev -- --port 3000
 Run the type checker to identify issues:
 
 ```bash
-npm run astro check
+npx astro check
 ```
 
 ### Environment Variables Not Loading

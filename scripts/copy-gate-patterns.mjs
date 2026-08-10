@@ -1,5 +1,5 @@
-// The copy-gate pattern list — docs/copy-map.md §5, on the copy-map/en-es branch
-// until it merges. Wayfinder #41 authored it; #57 moved it here so the source
+// The copy-gate pattern list — docs/copy-map.md §5, in this repo (#42 merged it
+// from copy-map/en-es). Wayfinder #41 authored it; #57 moved it here so the source
 // gate and the dist gate match the *same* list. Two lists would drift, and a
 // pattern that exists in one gate and not the other is worse than no pattern:
 // it reads as covered.

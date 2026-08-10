@@ -1,6 +1,6 @@
 // Copy-gate lint — gated and never-claimed strings must not reach the site.
-// Wayfinder #41; the string list is docs/copy-map.md §5 (on the copy-map/en-es
-// branch until it merges).
+// Wayfinder #41; the string list is docs/copy-map.md §5, in this repo (#42
+// merged it from copy-map/en-es).
 //
 // Dumb on purpose: comments are stripped, everything else under src/ and
 // public/ is matched against a fixed pattern list. A string that has to stay in
@@ -438,8 +438,7 @@ if (errors.length) {
   console.error(`✗ copy gate (${scanned} files)`);
   for (const e of errors) console.error(`  ${e}`);
   for (const ext of unreadTypes) console.error(`  not read: ${ext} — add it to SCAN_EXT if it can carry copy`);
-  console.error(`\n  The list is docs/copy-map.md §5, on the copy-map/en-es branch until it merges:`);
-  console.error(`    git show origin/copy-map/en-es:docs/copy-map.md`);
+  console.error(`\n  The list is docs/copy-map.md §5.`);
   console.error(`  To keep a string that does not run, put "// copy-gate-allow: <why> (#ticket)"`);
   console.error(`  on the line directly above it, or ahead of it on its own line. The pragma`);
   console.error(`  must OPEN its comment — a comment opener elsewhere on the line does not`);

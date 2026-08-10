@@ -12,7 +12,8 @@ This document describes how to contribute to the YeRide website.
    cd yeride-website
    ```
 
-2. **Install dependencies**
+2. **Install dependencies** — on **Node 22.6 or later**, not 20.x
+   ([why](./getting-started.md#prerequisites))
    ```bash
    npm install
    ```
@@ -187,24 +188,23 @@ const items: any[] = [];
 
 ### File Organization
 
-```
-src/
-├── components/        # Reusable components
-│   ├── ui/           # Generic UI components
-│   └── features/     # Feature-specific components
-├── layouts/          # Page layouts
-├── pages/            # Route pages
-├── data/             # Static data/configuration
-├── styles/           # Global styles
-└── utils/            # Utility functions
-```
+The tree, annotated, is in [Architecture](./architecture.md#directory-structure) and is
+not repeated here.
+
+What it will not tell you outright is the *shape*: it is flat on purpose. There is no
+`ui/` or `features/` split under `components/`, and no `data/`, `styles/` or `utils/`
+at all. A route is one thin page file plus one component holding the whole body, with
+its copy in `src/i18n/`. Follow that when adding anything.
 
 ## Pull Request Process
 
 ### Before Submitting
 
-- [ ] Code builds without errors (`npm run build`)
-- [ ] TypeScript checks pass (`npm run astro check`)
+- [ ] The gates pass (`npm run checks`) — this is exactly what CI runs on a pull request
+- [ ] Code builds without errors (`npm run build`, which needs a filled-in `.env`)
+- [ ] TypeScript checks pass (`npx astro check`)
+- [ ] Any new or changed copy is in `src/i18n/` and written into `docs/copy-map.md`
+- [ ] EN and ES ship together — no route, and no string, in one language only
 - [ ] Changes tested locally
 - [ ] Documentation updated (if applicable)
 - [ ] Commit messages follow conventions
@@ -245,26 +245,27 @@ Add screenshots for UI changes
 
 ## Adding New Pages
 
-1. Create a new `.astro` file in `src/pages/`
-2. Use `BaseLayout` for consistent structure
-3. Add navigation link in `Header.astro`
-4. Test the new route locally
+Use the `new-page` skill in `.claude/skills/` — it carries the current shape. The
+rules it applies are gates, so getting them wrong is a red build rather than a review
+comment:
 
-Example:
+1. Create the `.astro` file in `src/pages/` **and its `/es/` twin**. Every route ships
+   EN and ES together; `scripts/check-route-parity.mjs` fails on a page with no twin.
+2. Render through `BaseLayout`. No page declares its own `<html>`/`<head>`, and no page
+   carries inline header or footer markup.
+3. Keep the page file thin — `BaseLayout` plus one component holding the whole body.
+4. **Put the copy in `src/i18n/`, not in the template.** A text node in an `.astro`
+   template must not contain prose; `scripts/check-astro-prose.mjs` fails the build on
+   one. Page `title` and `description` are the deliberate exception — they are passed
+   as props from the page file.
+5. Write the strings into [`docs/copy-map.md`](./copy-map.md) first. It is the copy
+   source of truth, and its §5 is the gated list both copy gates enforce — a claim
+   YeRide cannot make will fail the build in `src/` and again in `dist/`.
+6. Link it in `Header.astro` or `Footer.astro` in **both** languages — see the
+   `nav-sync` skill.
 
-```astro
----
-// src/pages/faq.astro
-import BaseLayout from '../layouts/BaseLayout.astro';
----
-
-<BaseLayout title="FAQ | YeRide">
-  <main class="container mx-auto px-4 py-16">
-    <h1 class="text-4xl font-bold mb-8">Frequently Asked Questions</h1>
-    <!-- FAQ content -->
-  </main>
-</BaseLayout>
-```
+Read a shipped route end to end before writing a new one; `src/pages/about.astro` and
+`src/pages/es/about.astro` are the smallest complete pair.
 
 ## Adding New Components
 
