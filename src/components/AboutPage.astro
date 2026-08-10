@@ -1,0 +1,73 @@
+---
+// /about and /es/about (wayfinder #85). Copy VERBATIM from docs/copy-map.md
+// §3.6; §4's title and meta description sit on the page files.
+//
+// Takes `lang` alone and resolves its own copy from src/i18n — the contract
+// docs/components.md sets for page components.
+//
+// A prose page, so it takes ContactPage's measure rather than the audience
+// pages' pillar stack: one paper ground, one column, section order exactly as
+// §3.6 lists its slots — H1, identity paragraph, mission, the four values,
+// entity line. The four values are the only list, and they are a list in the
+// copy map too.
+//
+// Why this page is smaller than the brand paragraph it quotes: two spans are
+// omitted from `identity`, and the reasons live on `aboutCopy.ts`. The fee
+// sentence returns when #48 lands; restoring it is an edit to that file alone.
+import { aboutCopy } from "../i18n/aboutCopy";
+import type { Lang } from "../i18n/feesCopy";
+
+export interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = aboutCopy[lang];
+---
+
+<main class="bg-paper">
+  <div class="mx-auto w-full max-w-3xl px-5 pb-20 pt-10 sm:px-6 md:pb-28 md:pt-16">
+    <h1
+      class="font-extrabold tracking-headline text-[2rem] leading-[1.06] text-ink sm:text-[2.5rem]"
+    >
+      {t.h1}
+    </h1>
+    <p class="mt-6 text-[17px] leading-relaxed text-ink/80 sm:text-[19px]">
+      {t.identity}
+    </p>
+
+    <section class="mt-12 border-t border-ink/10 pt-10 md:mt-16">
+      <h2
+        class="font-extrabold tracking-headline text-[1.5rem] leading-[1.15] text-ink sm:text-[1.75rem]"
+      >
+        {t.missionH2}
+      </h2>
+      <p class="mt-4 text-[17px] leading-relaxed text-ink/80">{t.mission}</p>
+    </section>
+
+    <section class="mt-12 border-t border-ink/10 pt-10 md:mt-16">
+      <h2
+        class="font-extrabold tracking-headline text-[1.5rem] leading-[1.15] text-ink sm:text-[1.75rem]"
+      >
+        {t.valuesH2}
+      </h2>
+      <ul class="mt-6 space-y-4">
+        {
+          t.values.map((value) => (
+            <li class="flex gap-3 text-[17px] leading-relaxed text-ink/80">
+              {/* a dot, not a dash — every value already opens with an em dash */}
+              <span
+                aria-hidden="true"
+                class="mt-[0.6em] h-1.5 w-1.5 shrink-0 rounded-full bg-cab-yellow"
+              />
+              <span>{value}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <p class="mt-14 border-t border-ink/10 pt-8 text-[15px] text-ink/60 md:mt-20">
+      {t.entity}
+    </p>
+  </div>
+</main>

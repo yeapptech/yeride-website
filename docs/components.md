@@ -491,6 +491,52 @@ If structured intake is wanted later, the shape to copy is **`PreRegistrationFor
 markup and per-field EN/ES copy in `src/i18n/`, posting to an endpoint YeRide owns — with a
 copy-map amendment giving §3.7 the field cells §2.2 has.
 
+### AboutPage
+
+The body of `/about` and `/es/about` (wayfinder #85).
+
+**Location:** `src/components/AboutPage.astro`
+
+**Props:**
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `lang` | `"en" \| "es"` | **yes** | Selects the copy |
+
+Copy: `src/i18n/aboutCopy.ts` (`aboutCopy`), verbatim from copy-map §3.6. Takes `lang` alone
+and resolves its own copy, the contract every page component here follows.
+
+A prose page, so it takes **`ContactPage`'s measure** rather than the audience pages' pillar
+stack — one paper ground, one `max-w-3xl` column, sections in exactly §3.6's slot order: H1,
+identity paragraph, mission, the four values, entity line. The four values are the only list,
+and they are a list in the copy map too.
+
+**The identity paragraph is the brand's paragraph quoted in part, and that is the whole point
+of the component.** `docs/identity.md` carries a "Who we are" paragraph in each language
+(the ES one authored by yeapptech/yeride-brand#22), marked verbatim-only — and **neither is
+usable whole**, because each states the suspended pass-through family as fact and each carries
+hard-coded money, so copy-map §5 fails the build on both, in both languages. §3.6 writes out
+the exact surviving text — the brand's own words, unedited and in its own order, **two spans
+omitted and nothing rewritten, resequenced or translated** — and this component takes it from
+§3.6 rather than from the brand doc. The argument for each omission is on `aboutCopy.ts`:
+
+- **The fee sentence** returns when [#48](https://github.com/yeapptech/yeride-website/issues/48)
+  lands. That is an edit to `aboutCopy.ts` alone — do not restore it anywhere else.
+- **The origin sentence** carries hard-coded money (copy-map §0.4). It was cut rather than
+  blessed with a `copy-gate-allow`, because a pragma buys a permanent hole in the one rule
+  keeping invented figures off this site.
+
+Two things a reader might otherwise take for defects. §3.6 sets the paragraph in markdown with
+a **bold lead sentence and italicised word mentions**; those are the document's formatting, not
+copy — this site's copy modules are plain strings everywhere and nothing renders `set:html`, so
+the emphasis is dropped and the words are unchanged. And the **entity line repeats** the
+paragraph's closing sentence in fuller form: §3.6 specifies both slots, they sit four sections
+apart, and with the origin sentence cut the entity line is the only surviving mention of
+Hernando Sierra.
+
+`/about` is linked from the **footer only** — copy-map §1.2, and §1.1's header has no About
+slot — so `Footer.astro` already carried it in both languages and shipping this page needed no
+nav change.
+
 ## Page-Specific Components
 
 ### Homepage (index.astro)

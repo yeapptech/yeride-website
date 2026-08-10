@@ -19,12 +19,10 @@ const EXEMPT = new Set(["404", "redirect"]);
 //
 // The list cannot go stale: an entry whose twin now exists, or whose EN page has
 // gone, fails the check.
-const PENDING = {
-  // #39 split /about out to #85 on 2026-08-04: it is the only route left whose
-  // ES twin is blocked OUTSIDE this repo, on yeapptech/yeride-brand#22's
-  // authored ES identity paragraph. Nothing here can retire it.
-  about: "#85 — the identity page",
-};
+// Empty since 2026-08-10 (#85): /about was the last entry, and it shipped with
+// its twin once yeapptech/yeride-brand#22 landed the authored ES identity
+// paragraph. #42's precondition is met — keep it that way.
+const PENDING = {};
 
 function walk(dir) {
   return readdirSync(dir).flatMap((entry) => {

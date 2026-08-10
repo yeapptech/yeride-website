@@ -1,35 +1,13 @@
 ---
-// Body content below is pre-redesign — the brand rebuild of this page is
-// ticket #85, split out of #39 because /es/about is blocked outside this repo
-// on yeapptech/yeride-brand#22's authored ES identity paragraph. EN and ES ship
-// together (copy-map §0.1), so this page waits for it in both languages.
+// /about (wayfinder #85). Title and meta description per docs/copy-map.md §4.
 import BaseLayout from "../layouts/BaseLayout.astro";
+import AboutPage from "../components/AboutPage.astro";
 ---
 
-<BaseLayout title="About Us - YeRide">
-  <main>
-    <section class="bg-gradient-to-r from-blue-500 to-blue-700 text-white py-20">
-      <div class="container mx-auto px-4 text-center">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">
-          About YeRide
-        </h1>
-        <p class="text-xl mb-8 max-w-2xl mx-auto">
-          A community-driven movement dedicated to making transportation fair and equitable.
-        </p>
-      </div>
-    </section>
-
-    <section class="py-16 bg-white">
-      <div class="container mx-auto px-4">
-        <div class="max-w-3xl mx-auto">
-          <p class="text-lg mb-6 text-gray-700 leading-relaxed">
-            At YeRide, we're not just a ridesharing app; we're a community-driven
-            movement dedicated to making transportation fair and equitable.
-            Our mission is to connect riders and drivers directly, eliminating
-            the middleman, and fostering a local community of happy riders and drivers.
-          </p>
-        </div>
-      </div>
-    </section>
-  </main>
+<BaseLayout
+  title="About YeRide | YeRide"
+  description="Why YeRide exists, who built it, and the four things it holds to."
+  lang="en"
+>
+  <AboutPage lang="en" />
 </BaseLayout>

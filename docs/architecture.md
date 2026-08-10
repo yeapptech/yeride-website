@@ -27,6 +27,7 @@ yeride-website/
 │   │   ├── FareEstimatePage.astro  # /fare-estimate — Maps + estimateFares
 │   │   ├── LegalDocument.astro     # /privacy-policy and /terms, both languages
 │   │   ├── ContactPage.astro
+│   │   ├── AboutPage.astro         # /about — prose page, ContactPage's measure
 │   │   ├── NotFoundPage.astro      # /404 — renders EN and ES at once
 │   │   ├── RedirectPage.astro      # /redirect — same
 │   │   ├── AvailabilityBlock.astro # Shared block (copy-map §2.1)
@@ -35,7 +36,7 @@ yeride-website/
 │   ├── i18n/                 # ALL copy, EN/ES, verbatim from docs/copy-map.md
 │   │   ├── homeCopy.ts  audienceCopy.ts  feesCopy.ts
 │   │   ├── fareEstimateCopy.ts  legalCopy.ts  utilityCopy.ts
-│   │   ├── formCopy.ts
+│   │   ├── aboutCopy.ts  formCopy.ts
 │   │   └── feeLabels.ts      # Site-authored names for backend charge/area/tier ids
 │   │
 │   ├── lib/
@@ -101,7 +102,7 @@ English one with **English slugs** (`/fees` → `/es/fees`, never `/es/tarifas`)
 | `src/pages/privacy-policy.astro` | `/privacy-policy` | `/es/privacy-policy` |
 | `src/pages/terms.astro` | `/terms` | `/es/terms` |
 | `src/pages/contact.astro` | `/contact` | `/es/contact` |
-| `src/pages/about.astro` | `/about` | pending (#85) |
+| `src/pages/about.astro` | `/about` | `/es/about` |
 | `src/pages/404.astro` | `/404` | **same file** |
 | `src/pages/redirect.astro` | `/redirect` | **same file** |
 
@@ -154,7 +155,8 @@ picks the mark that is legal on that ground, and `alternates`/`bilingual` are fo
 2. **Chrome** — `Header`, `Footer`. One caller each, `BaseLayout`; a nav change
    is one edit.
 3. **Body components** — one per route (`HomePage`, `DriversPage`, `RidersPage`,
-   `FeeSchedule`, `FareEstimatePage`, `LegalDocument`, `ContactPage`). Each takes
+   `FeeSchedule`, `FareEstimatePage`, `LegalDocument`, `ContactPage`,
+   `AboutPage`). Each takes
    `lang` **alone** and resolves its own copy from `src/i18n/`. A page that
    passes resolved copy down as a prop breaks the contract. `NotFoundPage` and
    `RedirectPage` take no props at all — they render both languages at once.
