@@ -57,23 +57,59 @@
 // could carry would sit inside a shipped string value, which is precisely the
 // self-authorisation the rule above refuses.
 
-/** A pragma MENTIONED anywhere on the line. Used only to tell "you wrote one in
- *  the wrong place" from "there is no pragma here" — a misplaced pragma has to
- *  be an error, never a silent no-op, or the author believes they are covered. */
-const MENTIONS = /copy-gate-allow:/;
-
-// A pragma that OPENS its comment: line start, an optional "{" for the .astro
-// expression-wrapped block-comment form, a comment opener, whitespace, then the
-// pragma. The reason runs to end of line and is trimmed of its own closing
-// delimiter by the caller.
+// ONE RULE, TWO TOKENS (#88). check-astro-prose.mjs needs the same hatch
+// discipline, so it takes the same reader through the factory below rather than
+// re-typing the position rule — a rule present in one gate and spelled again in
+// the other reads as agreement when it is not, which is #57's argument for one
+// pattern list and #68's for one normaliser, and #100 found that drift living
+// inside a SINGLE gate.
 //
-// The openers are written "one or more" rather than exact so that "///", a
-// "/**" JSDoc opener and a "**" continuation are pragma sites too — each is the
-// same comment, differing only in how many stars its author typed.
-const OPENS_COMMENT = /^[ \t]*(?:\{[ \t]*)?(?:\/\/+|\/\*+|<!--+|\*+)[ \t]*copy-gate-allow:[ \t]*(.+?)[ \t]*$/;
+// The TOKEN has to differ, and that is forced rather than chosen:
+// check-copy-gate.mjs scans .astro files too, and it fails the build on a
+// `copy-gate-allow` that matches nothing. A prose hatch spelled with that token
+// would be read by both gates, satisfy one and be reported as dead by the other.
+// So the prose gate's token is `astro-prose-allow`, and neither gate can see the
+// other's pragmas.
 
 /**
- * Read one source line as a pragma.
+ * Build a pragma reader for one token.
+ *
+ * Both regexes are built per token rather than shared, because a pragma reader
+ * carries no state between calls and building two of them costs nothing.
+ *
+ * MENTIONS is a pragma named anywhere on the line. It is used only to tell "you
+ * wrote one in the wrong place" from "there is no pragma here" — a misplaced
+ * pragma has to be an error, never a silent no-op, or the author believes they
+ * are covered.
+ *
+ * OPENS_COMMENT is a pragma that OPENS its comment: line start, an optional "{"
+ * for the .astro expression-wrapped block-comment form, a comment opener,
+ * whitespace, then the pragma. The reason runs to end of line and is trimmed of
+ * its own closing delimiter by the caller.
+ *
+ * The openers are written "one or more" rather than exact so that "///", a
+ * "/**" JSDoc opener and a "**" continuation are pragma sites too — each is the
+ * same comment, differing only in how many stars its author typed.
+ *
+ * @param token the pragma word, without its colon. Written literally into both
+ *   patterns, so it must contain no regex metacharacter; the two live tokens are
+ *   `copy-gate-allow` and `astro-prose-allow`.
+ * @returns a reader with the signature described on `readPragma` below.
+ */
+export function pragmaReader(token) {
+  const mentions = new RegExp(`${token}:`);
+  const opensComment = new RegExp(
+    `^[ \\t]*(?:\\{[ \\t]*)?(?:\\/\\/+|\\/\\*+|<!--+|\\*+)[ \\t]*${token}:[ \\t]*(.+?)[ \\t]*$`,
+  );
+  return (line) => {
+    const opens = line.match(opensComment);
+    if (opens) return { reason: opens[1] };
+    return mentions.test(line) ? { misplaced: true } : null;
+  };
+}
+
+/**
+ * Read one source line as a `copy-gate-allow` pragma.
  *
  * @param line one raw line of a scanned file.
  * @returns `null` when the line does not mention a pragma at all;
@@ -82,8 +118,4 @@ const OPENS_COMMENT = /^[ \t]*(?:\{[ \t]*)?(?:\/\/+|\/\*+|<!--+|\*+)[ \t]*copy-g
  *   `{reason}` otherwise, with the reason still carrying any trailing comment
  *   delimiter for the caller to strip.
  */
-export function readPragma(line) {
-  const opens = line.match(OPENS_COMMENT);
-  if (opens) return { reason: opens[1] };
-  return MENTIONS.test(line) ? { misplaced: true } : null;
-}
+export const readPragma = pragmaReader("copy-gate-allow");

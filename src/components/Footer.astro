@@ -2,11 +2,16 @@
 // Site footer — copy per docs/copy-map.md §1.2. Social is X/Twitter only;
 // the Facebook/Instagram icons pointed at "#" and are removed for good.
 import mark from "@yeapptech/yeride-brand/assets/logo/yeride-mark.svg";
+import { copyright } from "../i18n/utilityCopy";
 
 export interface Props {
   lang?: "en" | "es";
 }
 const { lang = "en" } = Astro.props;
+
+// Stamped at build time — see `copyright` in src/i18n/utilityCopy.ts for why the
+// year is taken here rather than hard-coded or read in the browser.
+const year = new Date().getFullYear();
 
 const t = {
   en: {
@@ -64,7 +69,7 @@ const esPrefix = lang === "es" ? "/es" : "";
     <div class="mt-6 space-y-1 text-[14px] text-ink/55">
       <p>{t.place}</p>
       <p>{t.entity}</p>
-      <p>© 2026 YeRide</p>
+      <p>{copyright(year)}</p>
     </div>
   </div>
 </footer>

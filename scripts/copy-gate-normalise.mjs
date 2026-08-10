@@ -351,7 +351,13 @@ const TAG_OPEN = /<(?:!--|!\[CDATA\[|!doctype|\?[a-z]|\/?[a-z][a-z0-9:._-]*(?=[\
 /** Whether a tag, comment or CDATA section opens at `raw[i]`. Sticky rather than
  *  applied to a slice: the name run is unbounded, and slicing a fixed two
  *  characters is what made the old test read only the first of them. */
-function opensTag(raw, i) {
+// Exported for scripts/check-astro-prose.mjs (#88), which finds text nodes by
+// running this pair for their COMPLEMENT — the spans between one tag's end and
+// the next tag's start. It imports them rather than writing a second scanner,
+// for the reason #57 gave for one pattern list and #68 for one normaliser: a
+// scanner present in one gate and different in the other reads as agreement when
+// it is not. Both are hardened by the arguments above; neither is a parser.
+export function opensTag(raw, i) {
   TAG_OPEN.lastIndex = i;
   return TAG_OPEN.test(raw);
 }
@@ -366,7 +372,7 @@ function opensTag(raw, i) {
  *  wrote: a ">" inside an HTML comment ("at<!-- see /fees > cost -->market" read
  *  as "at cost"), inside a quoted attribute value, and inside an Astro attribute
  *  expression, where "=>" is an arrow function and not a tag end. */
-function tagEnd(raw, i) {
+export function tagEnd(raw, i) {
   if (raw.startsWith("<!--", i)) {
     const end = raw.indexOf("-->", i + 4);
     return end === -1 ? -1 : end + 3;

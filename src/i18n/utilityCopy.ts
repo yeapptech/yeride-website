@@ -60,3 +60,27 @@ export const redirectCopy = {
     fallback: "¿No abrió? Abre YeRide.",
   },
 } satisfies Record<Lang, unknown>;
+
+/**
+ * The footer's copyright line (§1.2).
+ *
+ * Here because #88 forbids literal prose in an .astro text node and this was the
+ * only one in the tree — `<p>© 2026 YeRide</p>` in Footer.astro. It gets no "it
+ * is short" or "it is a mark" exemption: an exemption CATEGORY is exactly the
+ * boundary judgement #79 chose the text-nodes-only rule to avoid.
+ *
+ * Not keyed by language, and that is the copy rather than an oversight — §1.2
+ * gives one form for both, a symbol, a year and a name with nothing to translate.
+ * The rest of Footer.astro's copy stays in its own frontmatter, untouched; #88
+ * moved this line and only this line.
+ *
+ * THE YEAR IS THE CALLER'S, and that closes the rot #79 named and deliberately
+ * left: it was hard-coded 2026 and would have been wrong from 2027-01-01, with
+ * nothing to catch it. The caller passes the build's year, so the line is right
+ * from the first deploy of any new year. The residue is narrower but real and is
+ * stated rather than left to be found — this is a static build, so a year in
+ * which the site is never deployed still shows the previous one. It is not taken
+ * in the browser, because that would put script on every page of a zero-JS site
+ * to render four characters.
+ */
+export const copyright = (year: number) => `© ${year} YeRide`;
