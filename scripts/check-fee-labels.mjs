@@ -52,26 +52,38 @@ const TIMEOUT_MS = 10_000;
 //     install. Running it after the install would make a network-only check
 //     wait on the private registry, and a registry outage would then block a
 //     check that never needed one.
-//   - Neither CI path ever reaches it. deploy-all.yml and fee-label-drift.yml
-//     both hand PUBLIC_FEE_SCHEDULE_URL to this step in its own `env:` block,
-//     so `process.env` answers first and `fromDotEnv` is unreachable in CI.
-//     The divergence is local-only; the deploy gate does not depend on it.
-//   - Locally it degrades loudly. Keys kept in .env.local — which .gitignore
-//     advertises as a supported input — are invisible to it, and the run then
-//     prints SKIPPED and "Nothing was checked" rather than a green tick.
+//   - No CI path reaches it while the secret has a value. deploy-all.yml and
+//     fee-label-drift.yml both hand PUBLIC_FEE_SCHEDULE_URL to this step in its
+//     own `env:` block, so `process.env` answers first. The one way CI falls
+//     through is an EMPTY secret — `process.env` is then falsy and deploy-all
+//     reaches `fromDotEnv`, which reads the .env that same workflow just wrote
+//     from that same empty secret, so the answer is "" either way and the run
+//     skips. The divergence is local-only; the deploy gate does not rest on it.
+//   - Locally it degrades loudly. It reads `.env` and nothing else: no
+//     .env.local (which .gitignore advertises as a supported input), no mode
+//     files, no quote stripping, and a raw `startsWith` that cannot see an
+//     `export `-prefixed line. Every one of those degrades to SKIPPED and
+//     "Nothing was checked" rather than a green tick.
 //
 // What it does NOT do is claim to agree with the build. A URL the two readers
 // disagree on would have this check verify one endpoint while the build ships
-// another, and say nothing. So every run PRINTS WHERE THE URL CAME FROM: the
-// failure this script exists to refuse is success-shaped output over something
-// that was never checked, and that includes checking the wrong thing.
+// another, and say nothing. So a run that RESOLVED a URL always prints it and
+// where it came from — on the success, failure and unreachable-endpoint paths
+// alike. The one run that prints neither is the one that resolved no URL at
+// all, and it names instead the sources it did not read, which is the same
+// disclosure for the only case where there is nothing to name. The failure this
+// script exists to refuse is success-shaped output over something that was
+// never checked, and that includes checking the wrong thing.
 const [endpoint, endpointFrom] = resolveEndpoint();
 
 function resolveEndpoint() {
   if (process.argv[2]) return [process.argv[2], "the command-line argument"];
   if (process.env.PUBLIC_FEE_SCHEDULE_URL)
     return [process.env.PUBLIC_FEE_SCHEDULE_URL, "PUBLIC_FEE_SCHEDULE_URL in the environment"];
-  return [fromDotEnv(), ".env — this reader ignores .env.local and the mode files (#72)"];
+  return [
+    fromDotEnv(),
+    ".env read directly — no .env.local, no mode files, no quote stripping, no `export ` prefix (#72)",
+  ];
 }
 
 function fromDotEnv() {
@@ -171,9 +183,12 @@ async function get(url) {
 }
 
 if (!endpoint) {
+  // The one path with no URL to name, so it names what it did not read instead
+  // — the same disclosure, for the case where there is nothing to disclose (#72).
   skip(
-    "PUBLIC_FEE_SCHEDULE_URL is not set — .env.local and the mode files are not read here (#72), " +
-      "so export it or pass a URL as an argument to run this by hand",
+    "PUBLIC_FEE_SCHEDULE_URL is not set. Only `.env` is read here, verbatim: not .env.local, " +
+      "not the mode files, not a quoted value, not an `export `-prefixed line (#72). " +
+      "Export it or pass a URL as an argument to run this by hand",
   );
 }
 
