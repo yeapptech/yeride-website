@@ -36,31 +36,43 @@ The site will be available at [http://localhost:4321](http://localhost:4321).
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start development server |
-| `npm run build` | Build production site |
+| `npm run checks` | The gates a pull request must pass — no dependencies, no secrets |
+| `npm run test:gates` | The control sets alone (also run first by `npm run checks`) |
+| `npm run build` | `npm run checks`, then the env check, `astro check`, `astro build` and the dist copy gate |
 | `npm run preview` | Preview production build |
-| `npm run astro check` | Run TypeScript checks |
+| `npx astro check` | Type-check alone |
+
+`npm run build` is the only automated verification gate in this repo, and it is a
+chain: what each link asserts, and why, is in [CLAUDE.md](CLAUDE.md). Run
+`npm run checks` before opening a pull request — it is what CI runs.
 
 ## Project Structure
 
 ```
 yeride-website/
 ├── src/
-│   ├── components/     # Reusable UI components
-│   ├── layouts/        # Page layout templates
-│   ├── pages/          # Route pages
-│   ├── data/           # Static data
-│   └── styles/         # Global styles
-├── public/             # Static assets
+│   ├── components/     # One body component per route, plus Header/Footer/form
+│   ├── layouts/        # BaseLayout.astro — the only <html>/<head> in the repo
+│   ├── pages/          # Route pages; every one has an /es/ twin
+│   ├── i18n/           # EN/ES copy, per page — no prose lives in a template
+│   └── lib/            # Backend clients: fareEstimate, feeSchedule, serviceArea
+├── scripts/            # The build gates and their controls
+├── public/             # Static assets, shipped into dist/ byte for byte
 ├── docs/               # Documentation
 └── dist/               # Build output
 ```
+
+There is no `src/data/` or `src/styles/`: `navData.ts` and `main.css` were deleted
+by the brand foundation (wayfinder #35) and must not come back.
 
 ## Documentation
 
 - [Getting Started](docs/getting-started.md) - Setup and installation
 - [Architecture](docs/architecture.md) - Project structure and design
 - [Components](docs/components.md) - Component reference
-- [API Integration](docs/api-integration.md) - Backend integration
+- [Copy map](docs/copy-map.md) - **Every string on the site, EN and ES.** The source
+  of truth for copy: §5 is the gated list both copy gates enforce
+- [API Integration](docs/api-integration.md) - The two backends
 - [Deployment](docs/deployment.md) - CI/CD and hosting
 - [Contributing](docs/contributing.md) - Development workflow
 
@@ -79,7 +91,9 @@ The site deploys automatically to GitHub Pages when changes are pushed to `main`
 
 ## Related Repositories
 
-- [yeride-admin-api](https://github.com/yeapptech/yeride-admin-api) - Backend API
+- [yeride-admin-api](https://github.com/yeapptech/yeride-admin-api) - Pre-registration (`v1/auth/register`)
+- [yeride-functions](https://github.com/yeapptech/yeride-functions) - `getFeeSchedule` (the `/fees` rate card) and the `estimateFares` callable
+- [yeride-brand](https://github.com/yeapptech/yeride-brand) - Tokens, assets and the binding copy/design docs
 
 ## License
 

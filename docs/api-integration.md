@@ -4,7 +4,25 @@ This document describes the API integration for the YeRide website.
 
 ## Overview
 
-The website integrates with the YeRide backend API for user pre-registration. The API handles user data submission and storage.
+The site talks to **two unrelated services**. Don't conflate them — they are different
+repositories, different hosts, different failure modes, and a change to one says
+nothing about the other.
+
+| | Pre-registration | Fares and fees |
+|---|---|---|
+| Repo | [yeride-admin-api](https://github.com/yeapptech/yeride-admin-api) | [yeride-functions](https://github.com/yeapptech/yeride-functions) |
+| Called from | `src/components/PreRegistrationForm.astro` | `src/lib/fareEstimate.ts`, `src/lib/feeSchedule.ts` |
+| Shape | plain `fetch` POST to `${PUBLIC_API_URL}v1/auth/register` | Firebase callable `estimateFares` (region `us-east1`); HTTP `getFeeSchedule` |
+| Pages | `/drivers`, `/riders` | `/fare-estimate`, `/fees` |
+| What it does | writes a `whitelist` row — **it does not create an account** | quotes a fare; publishes the rate card the meter itself uses |
+
+Firebase **Auth and Firestore are not used** — only `firebase/functions`.
+
+The rest of this page covers pre-registration. The fare and fee side is documented
+where the decisions live: `src/lib/fareEstimate.ts` (read its header before adding
+`appCharges`/`appChargesTotal` back — they were withdrawn from the wire on purpose),
+`src/lib/serviceArea.ts` (which market a rider is quoted at, and its three states),
+and [Components](./components.md) for `FeeSchedule` and `FareEstimatePage`.
 
 ## Configuration
 
@@ -44,6 +62,17 @@ missing or empty one (`scripts/check-env.mjs`). The list is `.env.example`.
 
 Registers a new user for the YeRide whitelist.
 
+> **This endpoint is not answering in production** (checked 2026-08-10, #42). The host
+> `PUBLIC_API_URL` resolves to returns the Google frontend's "404 Page not found" for
+> every path and every method — byte for byte what a `*.a.run.app` hostname with no
+> service behind it returns, and `*.a.run.app` is wildcard DNS, so resolving proves
+> nothing. Not a CORS problem and not a routing problem: there is nothing to route to.
+> Every pre-registration from the live site therefore fails and shows the generic
+> network-failure line. Tracked as
+> [yeride-admin-api#5](https://github.com/yeapptech/yeride-admin-api/issues/5) — which
+> was filed on the narrower CORS reading; this is one layer earlier and worse. Confirm
+> against the deployed service before changing anything here.
+
 #### Request
 
 **Headers:**
@@ -71,7 +100,7 @@ Content-Type: application/json
 | `firstName` | string | Yes | User's first name |
 | `lastName` | string | Yes | User's last name |
 | `email` | string | Yes | Valid email address |
-| `phoneNumber` | string | Yes | US phone number with +1 prefix |
+| `phoneNumber` | string | Yes | E.164. A bare ten digits is read as NANP and sent as `+1…`; a `+`-prefixed number is validated as E.164 and sent unchanged |
 | `role` | string | Yes | Either `rider` or `driver` |
 
 #### Response
@@ -94,114 +123,31 @@ Content-Type: application/json
 
 ## Client-Side Implementation
 
-### Form Submission
+### Where it is written
 
-The `PreRegistrationForm.astro` component handles form submission:
+The form is a **bundled** `<script>` in `src/components/PreRegistrationForm.astro`,
+reading `import.meta.env.PUBLIC_API_URL` directly (wayfinder #37 replaced the old
+`is:inline` + `define:vars` script). Its copy — every label, placeholder and error
+line, EN and ES — is in `src/i18n/formCopy.ts`.
 
-```javascript
-async function submitForm(formData) {
-  const apiUrl = import.meta.env.PUBLIC_API_URL;
+This page **does not restate that logic.** It used to: a `submitForm`, a
+`formatPhoneNumber` and a `validateForm` sample sat here, and by the time #42 swept
+them both of the interesting ones were wrong. `formatPhoneNumber` prepended `+1`
+unconditionally, which is exactly what #37 stopped doing — a bare ten digits is
+treated as NANP and gets the `+1`, but an already-`+`-prefixed number is validated as
+E.164 and left alone, so a non-US number is no longer mangled. And `validateForm`
+checked a `role` the person picks, when #37 **deleted the role dropdown**: role is
+pre-set by the page, `driver` on `/drivers` and `rider` on `/riders`. Nothing asserted
+either sample, which is why they drifted. Read the component.
 
-  const response = await fetch(`${apiUrl}v1/auth/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      data: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        role: formData.role,
-      },
-    }),
-  });
+Two behaviours are worth knowing before you touch it, because both are decisions:
 
-  if (!response.ok) {
-    throw new Error('Registration failed');
-  }
-
-  return response.json();
-}
-```
-
-### Phone Number Formatting
-
-Phone numbers are formatted to US standard:
-
-```javascript
-function formatPhoneNumber(value) {
-  // Remove non-digits except leading +
-  let cleaned = value.replace(/[^\d+]/g, '');
-
-  // Ensure +1 prefix
-  if (!cleaned.startsWith('+1')) {
-    cleaned = '+1' + cleaned.replace(/^\+/, '');
-  }
-
-  return cleaned;
-}
-```
-
-### Validation
-
-Client-side validation is performed before submission:
-
-```javascript
-function validateForm(formData) {
-  const errors = [];
-
-  if (!formData.firstName.trim()) {
-    errors.push('First name is required');
-  }
-
-  if (!formData.lastName.trim()) {
-    errors.push('Last name is required');
-  }
-
-  if (!isValidEmail(formData.email)) {
-    errors.push('Valid email is required');
-  }
-
-  if (!isValidPhoneNumber(formData.phoneNumber)) {
-    errors.push('Valid US phone number is required');
-  }
-
-  if (!['rider', 'driver'].includes(formData.role)) {
-    errors.push('Please select a role');
-  }
-
-  return errors;
-}
-```
-
-## Error Handling
-
-### Network Errors
-
-```javascript
-try {
-  const response = await submitForm(formData);
-  showSuccessMessage();
-} catch (error) {
-  if (error.name === 'TypeError') {
-    // Network error
-    showError('Unable to connect. Please check your internet connection.');
-  } else {
-    // API error
-    showError('Registration failed. Please try again.');
-  }
-}
-```
-
-### User Feedback
-
-The form displays appropriate feedback:
-
-- **Loading:** Spinner and disabled submit button
-- **Success:** Green success message
-- **Error:** Red error message with description
+- **`PUBLIC_API_URL` is inlined at build time.** An empty one does not fail at
+  runtime — Rollup folds away the branch that tested it and the submit path is *gone
+  from the bundle*. `scripts/check-env.mjs` fails the build rather than let that ship
+  (#59).
+- **A duplicate phone number gets its own error line**, distinct from the generic
+  failure, because the endpoint reports it as its own code.
 
 ## Testing
 
