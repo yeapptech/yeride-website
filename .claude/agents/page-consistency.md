@@ -38,18 +38,25 @@ offending line.
 2. **No inline header or footer markup**, and no import of `Header.astro` or
    `Footer.astro`. Those have one caller each, `BaseLayout`.
 3. **Thin page file.** Body content lives in one component under
-   `src/components/`, not in the page. The exception is `about.astro`, which
-   still carries its pre-redesign body pending #85 — flag it as known, not as a
-   new finding.
-4. **Copy lives in `src/i18n/`,** not in the component and not in the page. The
+   `src/components/`, not in the page. There is **no exception any more** —
+   `about.astro` was the last one and #85 gave it `AboutPage`, so an inline body
+   is a finding on every route.
+4. **Copy lives in `src/i18n/`,** not in the component and not in the page.
+   Half of this is now **enforced** and you no longer have to catch it: since #88
+   `npm run checks` fails the build on literal prose in an `.astro` **text node**
+   (gate 5). What is left to you is what that gate deliberately does not read —
+   copy passed down as a **prop**, and a string moved into an **expression**
+   (`{"About YeRide"}`), which the gate states as a limit rather than covering. The
    body component takes `lang` alone and resolves its own copy; a page that
    passes resolved copy down as a prop is a finding. `NotFoundPage` and
    `RedirectPage` take **no** props — they render both languages at once — and
    that is the only exception.
 5. **`title` and `description`** are on the page file (not the component) and
    match `docs/copy-map.md` §4 **character for character**. The old
-   `"... - YeRide"` form is stale; §4 uses `"... | YeRide"`. `about.astro` and
-   its title are #85's, as above.
+   `"... - YeRide"` form is stale; §4 uses `"... | YeRide"`. These are literal
+   strings in the page file **on purpose** — #37's review deleted twelve
+   title/description keys from `src/i18n` for duplicating them — which is why
+   gate 5 covers text nodes only and leaves every attribute alone.
 6. **EN/ES twin exists** at the mirrored path with **English slugs** —
    `/example` → `/es/example`, never `/es/ejemplo`. Missing twins must sit in
    `PENDING` in `scripts/check-route-parity.mjs` naming the ticket that retires

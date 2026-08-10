@@ -351,7 +351,13 @@ const TAG_OPEN = /<(?:!--|!\[CDATA\[|!doctype|\?[a-z]|\/?[a-z][a-z0-9:._-]*(?=[\
 /** Whether a tag, comment or CDATA section opens at `raw[i]`. Sticky rather than
  *  applied to a slice: the name run is unbounded, and slicing a fixed two
  *  characters is what made the old test read only the first of them. */
-function opensTag(raw, i) {
+// Exported for scripts/check-astro-prose.mjs (#88), which finds text nodes by
+// running this pair for their COMPLEMENT — the spans between one tag's end and
+// the next tag's start. It imports them rather than writing a second scanner,
+// for the reason #57 gave for one pattern list and #68 for one normaliser: a
+// scanner present in one gate and different in the other reads as agreement when
+// it is not. Both are hardened by the arguments above; neither is a parser.
+export function opensTag(raw, i) {
   TAG_OPEN.lastIndex = i;
   return TAG_OPEN.test(raw);
 }
@@ -366,7 +372,7 @@ function opensTag(raw, i) {
  *  wrote: a ">" inside an HTML comment ("at<!-- see /fees > cost -->market" read
  *  as "at cost"), inside a quoted attribute value, and inside an Astro attribute
  *  expression, where "=>" is an arrow function and not a tag end. */
-function tagEnd(raw, i) {
+export function tagEnd(raw, i) {
   if (raw.startsWith("<!--", i)) {
     const end = raw.indexOf("-->", i + 4);
     return end === -1 ? -1 : end + 3;
@@ -683,4 +689,38 @@ export function matchesIn(views, patterns) {
     }
   }
   return out;
+}
+
+/**
+ * Where each line of `text` begins, and the reverse lookup from an offset back
+ * to its 1-based line number.
+ *
+ * Here because both gates turn a match found in a whole-file reading back into
+ * the file:line an author has to edit, and a binary search written twice is two
+ * places for an off-by-one to live.
+ *
+ * `starts` is returned as well as `at` because the copy gate needs it in the
+ * other direction: its raw per-line pass adds a match index to a line start to
+ * get an offset into the file, which is what lets a raw hit and a normalised hit
+ * be recognised as the same occurrence.
+ *
+ * @returns `{starts, at}` — `starts[n]` is the offset of line n+1, `at(offset)`
+ *   is the 1-based line containing `offset`.
+ */
+export function lineIndex(text) {
+  const starts = [0];
+  for (let i = 0; i < text.length; i++) if (text[i] === "\n") starts.push(i + 1);
+  return {
+    starts,
+    at: (offset) => {
+      let lo = 0;
+      let hi = starts.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (starts[mid] <= offset) lo = mid;
+        else hi = mid - 1;
+      }
+      return lo + 1;
+    },
+  };
 }

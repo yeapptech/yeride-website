@@ -66,6 +66,7 @@ yeride-website/
 │   ├── check-env.mjs               check-dist-copy-gate.mjs
 │   ├── check-env-example.mjs       check-deploy-env.mjs
 │   ├── env-required.mjs            check-fee-labels.mjs  # outside the build
+│   ├── check-astro-prose.mjs       astro-prose.mjs
 │   ├── copy-gate-patterns.mjs      copy-gate-normalise.mjs
 │   └── copy-gate-patterns.test.mjs # Run by hand when the pattern list changes
 │
@@ -158,7 +159,10 @@ picks the mark that is legal on that ground, and `alternates`/`bilingual` are fo
    `FeeSchedule`, `FareEstimatePage`, `LegalDocument`, `ContactPage`,
    `AboutPage`). Each takes
    `lang` **alone** and resolves its own copy from `src/i18n/`. A page that
-   passes resolved copy down as a prop breaks the contract. `NotFoundPage` and
+   passes resolved copy down as a prop breaks the contract. Half of that rule
+   is enforced since #88 — `scripts/check-astro-prose.mjs` fails the build on
+   literal prose in an `.astro` text node — and the prop half is not, because
+   the gate reads text nodes only. `NotFoundPage` and
    `RedirectPage` take no props at all — they render both languages at once.
 4. **Shared blocks** — `AvailabilityBlock`, `PreRegistrationForm`, used by more
    than one body component.
@@ -259,7 +263,7 @@ specifically breaks without it, is in CLAUDE.md and in the `breaks` strings in
 ## Build Process
 
 There is no test runner and no linter. **`npm run build` is the verification
-gate**, and it runs seven things in order — any one of them fails the build:
+gate**, and it runs eight things in order — any one of them fails the build:
 
 1. **Route parity** (`check-route-parity.mjs`) — every route has its `/es/` twin.
 2. **Copy gate** (`check-copy-gate.mjs`) — gated and never-claimed strings
@@ -272,17 +276,22 @@ gate**, and it runs seven things in order — any one of them fails the build:
    secret, truncating once (`>`) and appending after (`>>`). That step is the
    only thing that puts a value into the deploy's `.env`, and missing a line
    there fails the deploy on `main` naming a *secret* that exists.
-5. **Env check** (`check-env.mjs`) — all six `PUBLIC_*` present, non-empty and
+5. **Astro prose gate** (`check-astro-prose.mjs`) — a text node in an `.astro`
+   template must not contain prose; body copy comes from `src/i18n/` (#88).
+   Attributes and props are deliberately not covered — per-page `title` and
+   `description` stay literal in the page files, which is #37's decision. Like
+   1–4 it needs neither dependencies nor secrets.
+6. **Env check** (`check-env.mjs`) — all six `PUBLIC_*` present, non-empty and
    printable ASCII. Astro inlines them at build time, so an empty one becomes a
    falsy literal and Rollup deletes the branch that tested it.
-6. **`astro check`** — a type error fails the build.
-7. **Dist copy gate** (`check-dist-copy-gate.mjs`) — §5 again, over `dist/`,
+7. **`astro check`** — a type error fails the build.
+8. **Dist copy gate** (`check-dist-copy-gate.mjs`) — §5 again, over `dist/`,
    after `astro build`. This is the layer that measures the actual promise.
 
-Items 1–4 are dependency-free and run on every PR (`checks.yml`); 5–7 need
+Items 1–5 are dependency-free and run on every PR (`checks.yml`); 6–8 need
 `npm ci` against the private registry and run on `main` (`deploy-all.yml`).
 
-An eighth gate, **`check-fee-labels.mjs`**, runs *outside* the build because it
+A ninth gate, **`check-fee-labels.mjs`**, runs *outside* the build because it
 needs the network: it asks the live `getFeeSchedule` whether the site can name
 every charge, service-area and ride-tier id it publishes. It fails on drift and
 **skips** when it cannot ask. Deploy-time plus daily on a schedule.

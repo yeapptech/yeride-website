@@ -49,6 +49,12 @@ strings from `src/i18n/exampleCopy.ts` — an object keyed `en`/`es`. Copy is
 Model it on `RidersPage.astro` + `audienceCopy.ts`, or `FeeSchedule.astro` +
 `feesCopy.ts` if the page fetches anything.
 
+This is **enforced**, not advisory: since #88, `scripts/check-astro-prose.mjs`
+fails the build on literal prose in an `.astro` **text node**. Write
+`<p>{t.lead}</p>`, never `<p>Ride now, fair and clear.</p>`. Attributes and props
+are deliberately not covered — the `title` and `description` above stay literal
+in the page file, which is #37's decision.
+
 `BaseLayout` props: `title`, `description`, `lang`, `headerGround`
 (`"paper" | "yellow" | "ink"` — the ground the header sits on, so it picks the
 legible mark), `alternates` (leave default; `false` only for `/404` and
