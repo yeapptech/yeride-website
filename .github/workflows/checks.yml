@@ -1,4 +1,5 @@
-# The four dependency-free build gates, run on every pull request.
+# The dependency-free build gates, run on every pull request AND on every push
+# outside main.
 #
 # deploy-all.yml only triggers on push to main, so without this the gates fire
 # after a merge — main goes red and undeployable, which is the wrong end of the
@@ -42,8 +43,31 @@
 
 name: Build checks
 
+# 🔴 BOTH triggers, and the `push` one is not redundant — it is the fix for a
+# silent hole found on #73's PR (#104).
+#
+# `pull_request` runs against `refs/pull/N/merge`: head already merged into
+# base, which is the right thing to check and the reason it stays first. But
+# GitHub cannot BUILD that ref when the PR has conflicts, so a conflicting PR
+# gets **no run at all** — not a failure, not a skip, an absence. #104 sat
+# conflicting from the moment it was opened (main had moved ten hours earlier)
+# and showed zero checks for its whole life; the event fired by itself within a
+# minute of the conflict being resolved, which is how the cause was found.
+#
+# That fails in the worst direction: the PR least able to merge cleanly is the
+# one told nothing about itself, and "no checks" reads at a glance like "no
+# problems". `push` closes it, because a branch can always be checked on its
+# own even when its merge with main cannot be computed. The two ask different
+# questions — "is the merge result sound?" and "is this branch sound?" — so
+# running both is coverage, not duplication.
+#
+# `branches-ignore: main` because deploy-all.yml already runs this whole chain
+# there, as step one of the deploy.
 on:
   pull_request:
+  push:
+    branches-ignore:
+      - main
   workflow_dispatch:
 
 permissions:
