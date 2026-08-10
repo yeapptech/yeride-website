@@ -687,7 +687,7 @@ Also drop the unused `firebase-admin` dependency (already in ticket #38).
 | Slot | EN | ES |
 |---|---|---|
 | H1 | About YeRide | Sobre YeRide |
-| Identity paragraph | **Verbatim** from brand `docs/identity.md`, "Who we are". Do not shorten except from the top. | **Blocked** — see below. |
+| Identity paragraph | Brand `docs/identity.md`, "Who we are" (EN), **less the origin sentence and the fee sentence** — the exact text is written out below. | The same section's **ES** paragraph, less the same two — written out below. |
 | Mission H2 | Our mission | Nuestra misión |
 | Mission | Make ridesharing fair: drivers keep what they earn, riders pay what the ride is worth. | Hacer justo el transporte compartido: que quien maneja se quede con lo que gana y quien viaja pague lo justo. |
 | Values H2 | What we hold to | En qué nos sostenemos |
@@ -697,10 +697,62 @@ Also drop the unused `firebase-admin` dependency (already in ticket #38).
 | Value 4 | Earn by efficiency, not extraction. | Ganar por eficiencia, no por extracción. |
 | Entity line | YeRide is built by YeAPP TECH LLC, a Florida software company founded by Hernando Sierra. | YeRide es un producto de YeAPP TECH LLC, una empresa de software de la Florida fundada por Hernando Sierra. |
 
-> **`/es/about` is blocked.** `docs/identity.md` carries the identity paragraph in **English
-> only**, and `docs/messaging.md` requires canonical text to be *authored* in each language,
-> not translated. An issue is filed against **yeride-brand** for an authored ES identity
-> paragraph; `/es/about` consumes it verbatim when it lands. Do not improvise it here.
+**The identity paragraph, exactly** *(amended 2026-08-10, #85)*. Both languages now exist in
+brand `docs/identity.md` — [yeride-brand#22](https://github.com/yeapptech/yeride-brand/issues/22)
+landed the authored ES paragraph in `fe5be01`, so the old block is lifted. Neither language can
+be used **whole**, though, so this is the text, and the build ticket takes it from here rather
+than from the brand doc:
+
+**EN**
+
+> **YeRide is a rideshare platform built in South Florida on a simple promise: drivers keep
+> what they earn, and riders pay what the ride is worth.** YeRide takes no commission. The name
+> says the rest: "ye" is the old word for *you*. YeRide is your ride — whichever seat you're in.
+> YeRide is built by YeAPP TECH LLC, a Florida software company.
+
+**ES**
+
+> **YeRide es una plataforma de viajes hecha en el Sur de la Florida sobre una promesa
+> sencilla: lo que el conductor gana es suyo, y el pasajero paga lo justo.** YeRide no cobra
+> comisión. El nombre dice el resto: "ye" es el *you* del inglés antiguo — el "tú" que se le
+> dice a todos. YeRide es tu viaje — vayas en el asiento que vayas. YeRide la construye
+> YeAPP TECH LLC, una compañía de software de la Florida.
+
+Every word above is the brand's, unedited and in its own order. What was done to it is
+**omission only** — two spans are cut, and nothing is rewritten, resequenced or translated. The
+brand doc says "Use each paragraph verbatim … Shorten from the top", and cutting from the middle
+is neither, so this is a **deliberate deviation** recorded here rather than a reading of that
+instruction. It is not a preference: § 5 fails the build on both omitted spans, in both
+languages, and the reason it does is that they are **not true today**.
+
+- **The fee sentence** — EN *"Drivers pay flat, published technology fees, plus trip insurance
+  and card processing passed through at cost …"*, ES *"El conductor paga tarifas de tecnología
+  fijas y publicadas, más el seguro del viaje y el procesamiento de tarjeta al costo …"* —
+  states the suspended pass-through family as fact. YeRide **carries no insurance**, and card
+  processing is not a YeRide pass-through at all: Stripe bills the driver's own connected
+  account directly (§ 3.4, [#47](https://github.com/yeapptech/yeride-website/issues/47)). § 5
+  gates every word it turns on — `insurance`/`seguro`, `at cost`/`al costo`, `passed through`.
+  **Restore it when [#48](https://github.com/yeapptech/yeride-website/issues/48) lands**, which
+  is the ticket that makes it true. The ES half needs a second look even then: *"tarifas de
+  tecnología fijas"* is the construction
+  [#75](https://github.com/yeapptech/yeride-website/issues/75) removed from this site — in
+  Spanish a *tarifa* is a **fare**, so it reads as fixed **fares**, which is false whatever
+  happens to #48. That one is a brand-side wording bug, not a gate artifact.
+- **The origin sentence** — the Hernando Sierra / Uber-and-Lyft story — carries `$100 or $150`,
+  and § 5 admits **no hard-coded money**, because every figure on this site is fetched live.
+  This omission is the softer of the two and it is a **choice, not a forced move**: the figures
+  are Uber's and Lyft's, not YeRide's, so nothing here is a price claim, and a
+  `copy-gate-allow` pragma naming this section would be well within precedent — § 8's privacy
+  and terms copy already carries reader-facing pragmas of exactly that shape. It is cut because
+  the beat it carries is the one an About page can most afford to lose, and because a pragma
+  buys a permanent hole in the one rule that keeps invented money off this site. **Revisit it
+  with brand** if the origin story is wanted: a version without the two figures would need no
+  pragma at all.
+
+What survives carries three of the paragraph's five beats — the promise, the name and the
+entity — plus the no-commission line, and reads as one paragraph without the other two. The
+mission, values and entity rows below are unaffected: they are this document's own copy and
+were never quoted from `identity.md`.
 
 ### 3.7 `/contact` and `/es/contact`
 
@@ -921,7 +973,14 @@ Rider pillar 2 ("Same math every trip." / "Las mismas cuentas en cada viaje.") i
    All three are checked across every area the endpoint serves, not just the default one, and
    the tier ids cover `/fare-estimate` too: `estimateFares` reads the same `rideServices`
    documents.
-3. **`/es/about` is blocked** on the yeride-brand ES identity paragraph.
+3. ~~**`/es/about` is blocked** on the yeride-brand ES identity paragraph.~~ — **cleared
+   2026-08-10 (#85).** [yeride-brand#22](https://github.com/yeapptech/yeride-brand/issues/22)
+   landed the authored ES paragraph (`fe5be01`), so both languages exist. Neither is usable
+   **whole**, though: each states the suspended pass-through family as fact and each carries
+   hard-coded money, so § 5 fails the build on both. § 3.6 now writes out the exact text —
+   the brand's own words, two spans omitted, nothing rewritten — and the build ticket takes
+   it from there rather than from the brand doc. The fee sentence returns with
+   [#48](https://github.com/yeapptech/yeride-website/issues/48).
 4. **`/privacy-policy` and `/terms`** are blocked on the legal-rewrite ticket.
 5. ~~**The ES Tally form** does not exist yet; `/es/contact` cannot ship without its id.~~ —
    **dissolved 2026-08-06 (#39).** There is no form on either contact page; § 3.7 records
