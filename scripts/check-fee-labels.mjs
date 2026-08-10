@@ -38,8 +38,41 @@ const TIMEOUT_MS = 10_000;
 // The same variable the site is built against, so the check reads exactly the
 // data the shipped page will fetch. An argument overrides it for manual runs
 // against another environment.
-const endpoint =
-  process.argv[2] || process.env.PUBLIC_FEE_SCHEDULE_URL || fromDotEnv();
+//
+// WHY THIS READS .env ITSELF RATHER THAN THROUGH VITE (#72). `check-env.mjs`
+// reads the environment through Vite's own `loadEnv` — .env, .env.local,
+// .env.production, .env.production.local, then process.env — and its header
+// argues that re-implementing that precedence "would be a second answer to a
+// question that already has one, free to drift from it". `fromDotEnv` is that
+// second answer. It is kept, deliberately, and these are the three facts that
+// make it cheap rather than dangerous:
+//
+//   - It cannot import Vite. This script runs in deploy-all.yml BEFORE `npm ci`
+//     so that label drift fails the deploy before two minutes go on a registry
+//     install. Running it after the install would make a network-only check
+//     wait on the private registry, and a registry outage would then block a
+//     check that never needed one.
+//   - Neither CI path ever reaches it. deploy-all.yml and fee-label-drift.yml
+//     both hand PUBLIC_FEE_SCHEDULE_URL to this step in its own `env:` block,
+//     so `process.env` answers first and `fromDotEnv` is unreachable in CI.
+//     The divergence is local-only; the deploy gate does not depend on it.
+//   - Locally it degrades loudly. Keys kept in .env.local — which .gitignore
+//     advertises as a supported input — are invisible to it, and the run then
+//     prints SKIPPED and "Nothing was checked" rather than a green tick.
+//
+// What it does NOT do is claim to agree with the build. A URL the two readers
+// disagree on would have this check verify one endpoint while the build ships
+// another, and say nothing. So every run PRINTS WHERE THE URL CAME FROM: the
+// failure this script exists to refuse is success-shaped output over something
+// that was never checked, and that includes checking the wrong thing.
+const [endpoint, endpointFrom] = resolveEndpoint();
+
+function resolveEndpoint() {
+  if (process.argv[2]) return [process.argv[2], "the command-line argument"];
+  if (process.env.PUBLIC_FEE_SCHEDULE_URL)
+    return [process.env.PUBLIC_FEE_SCHEDULE_URL, "PUBLIC_FEE_SCHEDULE_URL in the environment"];
+  return [fromDotEnv(), ".env — this reader ignores .env.local and the mode files (#72)"];
+}
 
 function fromDotEnv() {
   if (!existsSync(".env")) return "";
@@ -51,6 +84,9 @@ function fromDotEnv() {
 
 function skip(why) {
   console.log(`- fee labels SKIPPED — ${why}`);
+  // A skip that does not say which URL it failed to reach cannot be told from a
+  // skip that reached the wrong one (#72).
+  if (endpoint) console.log(`  asked ${endpoint}, URL from ${endpointFrom}`);
   console.log(`  Nothing was checked: ids the site cannot name would not be seen.`);
   process.exit(0);
 }
@@ -135,7 +171,10 @@ async function get(url) {
 }
 
 if (!endpoint) {
-  skip("PUBLIC_FEE_SCHEDULE_URL is not set (pass a URL as an argument to run it by hand)");
+  skip(
+    "PUBLIC_FEE_SCHEDULE_URL is not set — .env.local and the mode files are not read here (#72), " +
+      "so export it or pass a URL as an argument to run this by hand",
+  );
 }
 
 const source = readFileSync(LABELS, "utf8");
@@ -289,10 +328,15 @@ if (errors.length) {
     console.error(`  or it should not have moved (#62).`);
   }
   console.error(`  Endpoint: ${endpoint}`);
+  console.error(`  URL from: ${endpointFrom}`);
   process.exit(1);
 }
 
 console.log(`✓ fee labels (${scope})`);
+// Which endpoint was actually asked, and on whose authority (#72). A green tick
+// over the wrong URL is the one way this check can be success-shaped and empty.
+console.log(`  asked ${endpoint}`);
+console.log(`  URL from ${endpointFrom}`);
 for (const u of unreachable) console.log(`  area not checked: ${u}`);
 // Not a failure: an unused label renders nothing, and prod and stage legitimately
 // publish different areas, so the same source would fight itself between them.
