@@ -50,7 +50,7 @@ export interface ChargeLabel {
   family: ChargeFamily;
   /** Whose money the charge comes out of. */
   payer: "rider" | "driver";
-  /** Charges that exist only on card fares — dropped from the cash footnote. */
+  /** Charges that exist only on card fares — gate the "card fare" total label. */
   cardOnly?: true;
 }
 

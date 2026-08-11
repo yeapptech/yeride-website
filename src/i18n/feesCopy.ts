@@ -7,7 +7,11 @@
 // machine-readable forms — stay a build-side detail the map does not carry.
 // `cardNote` is dead: §3.4 dropped its row when card processing became its own
 // section, and nothing reads it. Left in place rather than removed here, since
-// deleting another ticket's leftover is not this change's business.
+// deleting another ticket's leftover is not this change's business. #107 did
+// edit it — striking "Cash fares have none." — because that sentence is barred
+// by the brand's positioning rather than merely unused, and a barred claim must
+// not sit in `src/` waiting for whoever next un-gates a family. Editing is not
+// deleting: the string still stands, still unread.
 //
 // The page withholds things, and each withholding states its own cause (#47).
 // One string covering every branch was how the live page came to say "until

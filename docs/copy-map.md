@@ -439,20 +439,23 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 > fee"* explicitly, until obligation #5 ships cash payment in the app. So three things went:
 > the conditional **example cash note** (which was gated on a card-only charge and rendered
 > for nobody), and the sentence *"Cash fares have none."* from the **Stripe body** and from
-> the dead `cardNote` string. Two distinctions worth keeping. First, the two claims fail
-> differently: *"cash fares carry no processing fee"* is **not established in either
+> the dead `cardNote` string. Two distinctions worth keeping. **The two claims fail
+> differently.** *"Cash fares carry no processing fee"* is **not established in either
 > direction** — the fare never passes through Stripe, but the tech fee on a cash ride is
 > still a real Stripe charge against the driver's connected account, and whether Stripe's
 > per-transaction cost falls on it was never measured — while *"cash is available"* is
 > simply **false today**, because `yeride-mobile` writes `type: 'card'` and nothing else.
-> The second is the more serious, being a public statement about a capability the product
-> does not have. Second, only **one** of the three ever reached a reader: the Stripe body.
+> The latter is the more serious, being a public statement about a capability the product
+> does not have. **And only one of the three was ever read.** The Stripe body.
 > `cardNote` lost its row when card processing became its own section and nothing reads it,
 > and the cash note's condition is never met — which is exactly why the removal had to be
 > driven off the bar rather than off what a reader can see. **"Total — card fare" stays**:
 > it distinguishes a total that is exact from one taken before Stripe's fee, not a payment
 > method the rider may choose, and it too renders for nobody today. **This section is not
-> the whole bar** — *"Card or cash."* is canonical in `docs/messaging.md` and still runs on
+> the whole bar**, and the review of #107 found it reaches further than #107 knew: the
+> **terms of service** say *"You can pay by card or in cash."* in both languages
+> (`src/i18n/legalCopy.ts`), which is the barred capability claim stated as a term of the
+> agreement rather than as marketing. *"Card or cash."* is canonical in `docs/messaging.md` and still runs on
 > the home page and `/riders` in both languages; positioning §"Never claimed" records that
 > `messaging.md` is stale against it and directs that the disagreement be treated as a bar
 > until [yeride-brand#124](https://github.com/yeapptech/yeride-brand/issues/124) lands. That
