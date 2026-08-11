@@ -336,21 +336,30 @@ const STILL_ACCUSED = [
     { markup: true },
     1,
   ],
-  // THE CASH BAR'S TWO LAYERS (#111), and this group is the whole argument for
-  // there being two. The bare word carries a `permits`; the conjunction does not.
-  //
-  // First, the canonical barred line itself must be accused. It is matched by
-  // both layers — the conjunction and the bare word — and the two spans overlap,
-  // so countOccurrences reports ONE claim, not two.
+  // THE CASH BAR (#111). One bare-word pattern per language, and a permitted
+  // phrase that is THE SENTENCE rather than a fragment of it. This group is the
+  // argument for that length, and every entry is a shape that must stay accused.
   ["the canonical barred line", "<p>Card or cash.</p>", { markup: true }, 1],
   ["the ES canonical barred line", "<p>Tarjeta o efectivo.</p>", { markup: true }, 1],
-  // Then the laundering shape, which is the reason the conjunction layer exists.
-  // `permits` withdraws over OVERLAPPING BYTES, so the permitted phrase sits
-  // directly on top of the barred one here and the bare-word hit IS withdrawn.
-  // Delete the conjunction patterns and this sentence — an offer of two payment
-  // methods, in a document a reader relies on — passes both gates silently.
-  ["a permitted phrase cannot launder an offer built on top of it", "When a rider pays cash or card, the fare passes.", {}, 1],
-  ["the ES laundering shape", "Cuando un pasajero paga en efectivo o con tarjeta, la tarifa va.", {}, 1],
+  //
+  // THE LAUNDERING CLASS, and it is a class rather than a case — which is what
+  // #111's first revision got wrong. Withdrawal is over OVERLAPPING BYTES, so
+  // whatever the permitted phrase covers is excused wherever it appears. That
+  // revision permitted the fragment "a rider pays cash" and reasoned that the
+  // only shape it could excuse was a conjunction, which four separate
+  // conjunction patterns then caught. Both halves of that were wrong: the class
+  // is EVERY sentence that opens with the permitted words, the conjunction is
+  // merely one member, and the review found a member with no conjunction in it
+  // at all — passing the real gate green.
+  //
+  // Each entry below is written so it would be WITHDRAWN under the fragment and
+  // is ACCUSED under the sentence. Shorten either `permits` and this whole group
+  // fails: that is the bound that replaced the deleted conjunction layer.
+  ["an offer built on the permitted opening — no conjunction", "When a rider pays cash, the driver keeps every dollar of it.", {}, 1],
+  ["the ES offer built on the permitted opening", "Cuando un pasajero paga en efectivo, quien maneja se queda con todo.", {}, 1],
+  ["a conjunction built on the permitted opening", "When a rider pays cash or card, the fare passes.", {}, 1],
+  ["the ES conjunction built on the permitted opening", "Cuando un pasajero paga en efectivo o con tarjeta, la tarifa va.", {}, 1],
+  ["the permitted opening trailing off into an offer", "A rider pays cash and keeps it simple.", {}, 1],
   // isPermitted's overlap bound, on the new permissions: the privacy sentence
   // must excuse its own bytes and nothing else in the file.
   [
@@ -455,17 +464,19 @@ for (const [name, files] of [
   const { code, out } = src(files);
   say(code === 1 && /(cash|efectivo)/i.test(out), `the GATE must fail — ${name}`, out.trim());
 }
-// The laundering shape, through the gate. This is the control that would go green
-// if someone "simplified" the two layers down to the bare word alone.
-{
-  const { code, out } = src({
-    "src/i18n/legalCopy.ts": `export const c = {\n  a: "When a rider pays cash or card, the fare passes.",\n};\n`,
-  });
-  say(
-    code === 1 && /cash or card/i.test(out),
-    "the GATE must fail — an offer built on top of the permitted phrase",
-    out.trim(),
-  );
+// The laundering class, through the gate, in BOTH languages — the ES half is not
+// decorative: an earlier revision pinned the EN shape at all three layers and the
+// ES one at the reader alone, which is exactly the coverage copy-gate-suspension
+// .test.mjs's two-layer doctrine exists to distrust. These are the controls that
+// would go green if either permitted phrase were shortened back to a fragment.
+for (const [name, literal] of [
+  ["an offer built on the permitted opening", `When a rider pays cash, the driver keeps every dollar of it.`],
+  ["the ES offer built on the permitted opening", `Cuando un pasajero paga en efectivo, quien maneja se queda con todo.`],
+  ["a conjunction built on the permitted opening", `When a rider pays cash or card, the fare passes.`],
+  ["the ES conjunction built on the permitted opening", `Cuando un pasajero paga en efectivo o con tarjeta, la tarifa va.`],
+]) {
+  const { code, out } = src({ "src/i18n/legalCopy.ts": `export const c = {\n  a: "${literal}",\n};\n` });
+  say(code === 1 && /(cash|efectivo)/i.test(out), `the GATE must fail — ${name}`, out.trim());
 }
 
 // ---- layer 3: the DIST gate, over a fixture dist/ tree.
@@ -532,7 +543,10 @@ for (const [name, html] of [
 for (const [name, html] of [
   ["the canonical barred line", "<p>Card or cash.</p>\n"],
   ["the ES canonical barred line", "<p>Tarjeta o efectivo.</p>\n"],
-  ["an offer built on top of the permitted phrase", "<p>When a rider pays cash or card, the fare passes.</p>\n"],
+  ["an offer built on the permitted opening", "<p>When a rider pays cash, the driver keeps every dollar of it.</p>\n"],
+  ["the ES offer built on the permitted opening", "<p>Cuando un pasajero paga en efectivo, quien maneja se queda con todo.</p>\n"],
+  ["a conjunction built on the permitted opening", "<p>When a rider pays cash or card, the fare passes.</p>\n"],
+  ["the ES conjunction built on the permitted opening", "<p>Cuando un pasajero paga en efectivo o con tarjeta, la tarifa va.</p>\n"],
   // Composed by the build out of parts innocent in the source — the one residual
   // only this gate can see, and the shape a PR author hits by accident.
   ["a claim welded together by the build", "<p>Card or<!-- --> cash.</p>\n"],

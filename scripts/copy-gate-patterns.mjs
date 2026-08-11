@@ -82,23 +82,11 @@ export const PATTERNS = [
   // what stop it coming back. Retire them WITH #277, not with #124 — brand#124
   // settles which document is right, #277 settles whether the claim is true.
   //
-  // TWO LAYERS, and the split is the point.
-  //
-  // Layer 1 is the conjunction, and it carries NO `permits`, so nothing can ever
-  // withdraw it. The canonical barred line — "Card or cash." / "Tarjeta o
-  // efectivo." — is the one string this whole ticket exists to keep out, and a
-  // bar that can be excused is not the right bar for it. "or in cash" and "o en
-  // efectivo" are in the alternation because that is how the terms of service
-  // wrote it ("You can pay by card or in cash."), not as speculation.
-  { re: /\bcards? or (?:in )?cash\b/i, why: "gated on yeride-mobile#277: the app cannot produce a cash trip" },
-  { re: /\bcash or (?:by )?cards?\b/i, why: "gated on yeride-mobile#277: the app cannot produce a cash trip" },
-  { re: /\btarjetas? o (?:en )?efectivo\b/i, why: "gated on yeride-mobile#277: the app cannot produce a cash trip" },
-  { re: /\befectivo o (?:con )?tarjetas?\b/i, why: "gated on yeride-mobile#277: the app cannot produce a cash trip" },
-  //
-  // Layer 2 is the bare word, so a wording nobody has thought of yet still fails
-  // the build — "we accept cash", "cash welcome", "pagas en efectivo". This map
-  // has been bitten before by patterns that enumerate the phrasings someone
-  // happened to write; the bare word is the only shape that does not.
+  // ONE pattern per language: the BARE WORD, so a wording nobody has thought of
+  // yet still fails the build — "we accept cash", "cash welcome", "aceptamos
+  // efectivo". This map has been bitten before by patterns that enumerate the
+  // phrasings someone happened to write; the bare word is the only shape that
+  // does not.
   //
   // It needs the ONE exception §5 grants, and #111 chose `permits` over a
   // per-line pragma deliberately: the privacy policy's Payment paragraph says
@@ -111,20 +99,40 @@ export const PATTERNS = [
   // breaks on an unrelated privacy edit and names the wrong cause when it does.
   // `permits` lives in one place and both gates honour it.
   //
-  // The permitted phrase is POSITIVE and narrow, per permissionsIn's bounds: it
-  // is the privacy sentence's own words, so "Card or cash." cannot borrow it —
-  // withdrawal is over overlapping bytes and those bytes do not contain it. The
-  // one shape it WOULD excuse, "when a rider pays cash or card", is exactly what
-  // layer 1 catches unexcusably. Neither layer is sufficient alone; that is why
-  // there are two, and copy-gate-patterns.test.mjs pins that laundering case.
+  // THE PERMITTED PHRASE IS THE SENTENCE, NOT A FRAGMENT OF IT, and that length
+  // is the whole safety argument — it is not verbosity to be trimmed. Withdrawal
+  // is over OVERLAPPING BYTES, so whatever the permitted phrase covers is excused
+  // wherever it appears. #111's first revision permitted the fragment "a rider
+  // pays cash", and a two-axis review found the consequence from both directions:
+  // ANY offer written on top of that opening escaped the bar entirely — "When a
+  // rider pays cash, the driver keeps every dollar of it." passed the real gate
+  // green, which is a payment-method claim shipping off a §5 the copy map
+  // described as closed. Carrying the clause that follows ("…, the fare passes"
+  // / "…, la tarifa va") is what makes the permission fit the one sentence it was
+  // granted for and nothing else.
+  //
+  // That first revision also carried FOUR conjunction patterns — card-or-cash in
+  // both orders and both languages, with no `permits`, as an unexcusable second
+  // layer. They are gone, and the reason is worth writing down so nobody re-adds
+  // them: with the permission narrowed to the sentence, the bare word accuses
+  // every conjunction shape unexcused, so no control can make a conjunction the
+  // sole accuser. Two of the four were ALREADY unreachable before the narrowing
+  // and mutation-tested green when deleted. CLAUDE.md's rule is that every bound
+  // has a positive control; a pattern no control can hold is padding that reads
+  // as coverage. copy-gate-patterns.test.mjs keeps the conjunction sentences as
+  // controls — they must still be accused, now by the bare word.
+  //
+  // The bound that replaced them: SHORTENING either permitted phrase back to a
+  // fragment fails named controls. That is the mutation to run before touching
+  // these two lines.
   {
     re: /\bcash\b/i,
-    permits: /\ba rider pays cash\b/i,
+    permits: /\ba rider pays cash, the fare passes\b/i,
     why: "gated on yeride-mobile#277: the app cannot produce a cash trip — only the privacy policy's descriptive conditional is permitted (§5)",
   },
   {
     re: /\befectivo\b/i,
-    permits: /\bun pasajero paga en efectivo\b/i,
+    permits: /\bun pasajero paga en efectivo, la tarifa va\b/i,
     why: "gated on yeride-mobile#277: the app cannot produce a cash trip — only the privacy policy's descriptive conditional is permitted (§5)",
   },
 

@@ -315,6 +315,13 @@ moved **up into the hero** and `/fees` demoted to the nav and the paper strip.
 | Limit note | Estimates are estimates — the meter decides. | Un estimado es un estimado — el taxímetro decide. |
 | Link → `/fees` | See the fee schedule | Ver el tarifario |
 
+**The strip runs two facts, not three** *(2026-08-10, #111)*. Fact 3 was "Card or cash." /
+"Tarjeta o efectivo.", barred by `docs/positioning.md` until the app can produce a cash trip;
+§ 5 records the bar. **No replacement fact was authored, deliberately** — canonical copy comes
+from `docs/messaging.md`, which is the document being rewritten in
+[yeride-brand#124](https://github.com/yeapptech/yeride-brand/issues/124), so inventing one
+here is the precedence-invention `positioning.md` refuses.
+
 The home page carries **no pre-registration form**. Its job is the fork.
 
 ### 3.2 `/drivers` and `/es/drivers`
@@ -973,11 +980,9 @@ connected account — but never with a YeRide-published amount, since YeRide doe
 claimed" list. `yeride-mobile` writes `type: 'card'` and nothing else, so cash is an unbuilt
 roadmap capability. These must fail the build until #277 lands:
 
-- `card or cash` / `cash or card` · `tarjeta o efectivo` / `efectivo o tarjeta` — the
-  conjunction, in either order and with or without the preposition ("card or **in** cash",
-  as the terms of service wrote it)
-- `cash` · `efectivo`, bare — so a wording nobody has yet written ("we accept cash",
-  "aceptamos efectivo") fails too, rather than only the phrasings someone happened to use
+- `cash` · `efectivo`, **bare** — one pattern per language, so a wording nobody has yet
+  written ("we accept cash", "aceptamos efectivo") fails too, rather than only the phrasings
+  someone happened to use. The enumeration failure is this map's recurring one.
 
 **Retire these with #277, not with
 [yeride-brand#124](https://github.com/yeapptech/yeride-brand/issues/124).** The two are
@@ -999,11 +1004,24 @@ hand-blessed entry keyed to an exact occurrence count inside a legal document th
 edited, an entry that breaks on an unrelated privacy edit and names the wrong cause when it
 does. These are §5's **second and third** permitted phrases, after "no surge today".
 
-That exception is also why the conjunction is listed **separately** from the bare word.
-Withdrawal is over **overlapping bytes**, so an offer written on top of the permitted phrase —
-*"When a rider pays cash or card, the fare passes"* — would have the bare-word hit withdrawn.
-The conjunction patterns carry **no** `permits` and catch it. Neither layer is sufficient
-alone, and `scripts/copy-gate-patterns.test.mjs` pins that with the laundering sentence itself.
+**Each permitted phrase carries the clause that follows, and that length is the safety
+argument — it is not verbosity to be trimmed.** Withdrawal is over **overlapping bytes**, so
+whatever the permitted phrase covers is excused *wherever it appears*. #111's first revision
+permitted the fragment "a rider pays cash", and a two-axis review found the consequence from
+both directions: **any** offer written on top of that opening escaped the bar entirely —
+*"When a rider pays cash, the driver keeps every dollar of it."* passed the real gate green,
+a payment-method claim shipping off a §5 this document then described as closed. Carrying
+"…, the fare passes" / "…, la tarifa va" fits the permission to the one sentence it was
+granted for. **Shortening either phrase fails named controls** (7 and 6 respectively).
+
+That first revision also carried **four conjunction patterns** — card-or-cash, both orders,
+both languages, with no `permits`, as an unexcusable second layer. **They are gone**, and the
+reason is recorded so nobody re-adds them: with the permission narrowed to the sentence, the
+bare word accuses every conjunction shape unexcused, so **no control can make a conjunction
+the sole accuser**, and two of the four were already unreachable before the narrowing —
+mutation-tested green when deleted. Every bound has a positive control; a pattern no control
+can hold is padding that reads as coverage. `scripts/copy-gate-patterns.test.mjs` keeps the
+conjunction sentences as controls, now accused by the bare word.
 
 **One half of #111's removal no pattern can hold.** `/riders` also lost *"Pay how you actually
 pay."* / *"Paga como pagas tú."* — the same payment-choice claim in other words, carrying no
