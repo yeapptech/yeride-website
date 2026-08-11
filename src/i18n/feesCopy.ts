@@ -7,7 +7,11 @@
 // machine-readable forms — stay a build-side detail the map does not carry.
 // `cardNote` is dead: §3.4 dropped its row when card processing became its own
 // section, and nothing reads it. Left in place rather than removed here, since
-// deleting another ticket's leftover is not this change's business.
+// deleting another ticket's leftover is not this change's business. #107 did
+// edit it — striking "Cash fares have none." — because that sentence is barred
+// by the brand's positioning rather than merely unused, and a barred claim must
+// not sit in `src/` waiting for whoever next un-gates a family. Editing is not
+// deleting: the string still stands, still unread.
 //
 // The page withholds things, and each withholding states its own cause (#47).
 // One string covering every branch was how the live page came to say "until
@@ -63,7 +67,7 @@ export const feesCopy = {
       // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)
       "The coverage Florida requires during a ride. The rider's share and the driver's share are separate, published lines.",
     cardNote:
-      "The card networks' standard rate, borne by the driver on card fares. Cash fares have none.",
+      "The card networks' standard rate, borne by the driver on card fares.",
     // Unclassified charges. "YeRide", not "the platform": every other line on
     // this page owns the charge by name, and distancing language reads as
     // evasion on a page whose whole pitch is transparency (#47).
@@ -86,8 +90,6 @@ export const feesCopy = {
     // Stripe's fee is real, driver-borne and never itemised here, so the driver's
     // total would otherwise overstate take-home on a card fare (#47).
     driverTotalBeforeCard: "Total — before card processing",
-    cashNotePre: "On a cash fare there’s no card processing — the driver keeps ",
-    cashNotePost: ".",
     // withheld ledger — one string per cause, never one string for all of them
     exampleUnpublished: "YeRide hasn’t published an example trip for this area yet.",
     exampleIncomplete:
@@ -100,7 +102,7 @@ export const feesCopy = {
     // a third party's pricing and break copy-map §0.4.
     stripeH2: "Card processing is Stripe’s, not YeRide’s",
     stripeBody:
-      "On card fares, Stripe charges its processing fee directly to the driver’s own account. YeRide never touches it and doesn’t set it. Cash fares have none.",
+      "On card fares, Stripe charges its processing fee directly to the driver’s own account. YeRide never touches it and doesn’t set it.",
     stripeLink: "See Stripe’s pricing",
     surgeH2: "No surge today",
     surgeBody:
@@ -144,7 +146,7 @@ export const feesCopy = {
       // copy-gate-allow: pass-through family suspended — no charge is filed into it, so this never renders (#48)
       "La cobertura que la Florida exige durante el viaje. La parte de quien viaja y la de quien maneja son líneas separadas y publicadas.",
     cardNote:
-      "La tarifa estándar de las redes de tarjetas, que paga quien maneja en viajes con tarjeta. Los viajes en efectivo no la tienen.",
+      "La tarifa estándar de las redes de tarjetas, que paga quien maneja en viajes con tarjeta.",
     otherFamilyH2: "Otros cargos",
     otherFamilyLead: "Cargos que YeRide publica y que esta página todavía no describe.",
     gapNote:
@@ -158,9 +160,6 @@ export const feesCopy = {
     colTotal: "Total",
     driverTotalCard: "Total — viaje con tarjeta",
     driverTotalBeforeCard: "Total — antes del procesamiento de tarjeta",
-    cashNotePre:
-      "En un viaje en efectivo no hay procesamiento de tarjeta — a quien maneja le quedan ",
-    cashNotePost: ".",
     exampleUnpublished:
       "YeRide todavía no publica un viaje de ejemplo para esta área.",
     exampleIncomplete:
@@ -169,7 +168,7 @@ export const feesCopy = {
       "El ejemplo no está disponible hasta que cada cargo publicado esté descrito arriba.",
     stripeH2: "El procesamiento de tarjeta es de Stripe, no de YeRide",
     stripeBody:
-      "En los viajes con tarjeta, Stripe le cobra su cargo de procesamiento directamente a la cuenta de quien maneja. YeRide nunca lo toca ni lo fija. Los viajes en efectivo no lo tienen.",
+      "En los viajes con tarjeta, Stripe le cobra su cargo de procesamiento directamente a la cuenta de quien maneja. YeRide nunca lo toca ni lo fija.",
     stripeLink: "Mira los precios de Stripe",
     surgeH2: "Hoy no hay recargo por demanda",
     surgeBody:

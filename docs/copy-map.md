@@ -431,8 +431,36 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 > amount, so the driver's column cannot be exact on a card fare — a bare "Total" would
 > overstate take-home. It reads **"Total — before card processing"**, with the Stripe section
 > immediately below answering it. The "Total — card fare" label returns automatically if a
-> card-only charge is ever itemised; the cash note is conditional on the same thing, and
-> renders for nobody today.
+> card-only charge is ever itemised.
+>
+> **The cash copy is gone, and it is barred rather than merely removed (2026-08-10, #107).**
+> `docs/positioning.md` demoted differentiator #5 and put **cash — in any form** on the
+> "Never claimed" list, naming both *"cash or card"* and *"cash fares carry no processing
+> fee"* explicitly, until obligation #5 ships cash payment in the app. So three things went:
+> the conditional **example cash note** (which was gated on a card-only charge and rendered
+> for nobody), and the sentence *"Cash fares have none."* from the **Stripe body** and from
+> the dead `cardNote` string. Two distinctions worth keeping. **The two claims fail
+> differently.** *"Cash fares carry no processing fee"* is **not established in either
+> direction** — the fare never passes through Stripe, but the tech fee on a cash ride is
+> still a real Stripe charge against the driver's connected account, and whether Stripe's
+> per-transaction cost falls on it was never measured — while *"cash is available"* is
+> simply **false today**, because `yeride-mobile` writes `type: 'card'` and nothing else.
+> The latter is the more serious, being a public statement about a capability the product
+> does not have. **And only one of the three was ever read.** The Stripe body.
+> `cardNote` lost its row when card processing became its own section and nothing reads it,
+> and the cash note's condition is never met — which is exactly why the removal had to be
+> driven off the bar rather than off what a reader can see. **"Total — card fare" stays**:
+> it distinguishes a total that is exact from one taken before Stripe's fee, not a payment
+> method the rider may choose, and it too renders for nobody today. **This section is not
+> the whole bar**, and the review of #107 found it reaches further than #107 knew: the
+> **terms of service** say *"You can pay by card or in cash."* in both languages
+> (`src/i18n/legalCopy.ts`), which is the barred capability claim stated as a term of the
+> agreement rather than as marketing. *"Card or cash."* is canonical in `docs/messaging.md` and still runs on
+> the home page and `/riders` in both languages; positioning §"Never claimed" records that
+> `messaging.md` is stale against it and directs that the disagreement be treated as a bar
+> until [yeride-brand#124](https://github.com/yeapptech/yeride-brand/issues/124) lands. That
+> removal, and the copy-gate entries that would keep all of it out, are
+> [#111](https://github.com/yeapptech/yeride-website/issues/111).
 >
 > **The rows #40 authored are now blessed and owned by this map (2026-08-02, #47).** They
 > were **Other-charges H2 / lead**, the neutral panel an unclassifiable charge falls into
@@ -507,9 +535,8 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 | Example row: rider total | Total | Total |
 | Example row: driver total — **default** | Total — before card processing | Total — antes del procesamiento de tarjeta |
 | Example row: driver total — *only if a card-only charge is itemised* | Total — card fare | Total — viaje con tarjeta |
-| Example cash note **(conditional — renders only if a card-only charge is itemised; none is today)** | On a cash fare there’s no card processing — the driver keeps {amount}. | En un viaje en efectivo no hay procesamiento de tarjeta — a quien maneja le quedan {amount}. |
 | Stripe H2 | Card processing is Stripe’s, not YeRide’s | El procesamiento de tarjeta es de Stripe, no de YeRide |
-| Stripe body | On card fares, Stripe charges its processing fee directly to the driver’s own account. YeRide never touches it and doesn’t set it. Cash fares have none. | En los viajes con tarjeta, Stripe le cobra su cargo de procesamiento directamente a la cuenta de quien maneja. YeRide nunca lo toca ni lo fija. Los viajes en efectivo no lo tienen. |
+| Stripe body | On card fares, Stripe charges its processing fee directly to the driver’s own account. YeRide never touches it and doesn’t set it. | En los viajes con tarjeta, Stripe le cobra su cargo de procesamiento directamente a la cuenta de quien maneja. YeRide nunca lo toca ni lo fija. |
 | Stripe link → `https://stripe.com/pricing` | See Stripe’s pricing | Mira los precios de Stripe |
 | Surge H2 | No surge today | Hoy no hay recargo por demanda |
 | Surge body | There is no demand surcharge right now. If we ever add one, these rules hold: it will be published and capped, shown to you before you request a ride, and 100% of it goes to the driver. YeRide’s fees never change with demand. | Ahora mismo no hay recargo por demanda. Si algún día agregamos uno, estas reglas se cumplen: será publicado y con tope, se te muestra antes de pedir el viaje, y el 100% es para quien maneja. Los cargos de YeRide nunca cambian con la demanda. |

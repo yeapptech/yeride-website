@@ -459,13 +459,12 @@ const esPrefix = lang === "es" ? "/es" : "";
     const riderCharges = ids((l) => l.payer === "rider");
     const driverCharges = ids((l) => l.payer === "driver");
     // Charges that exist only on card fares — today there are none, since
-    // Stripe's fee is not a YeRide charge. The cash footnote and the
-    // "card fare" qualifier are meaningless without one, so both are gated.
+    // Stripe's fee is not a YeRide charge. The "card fare" qualifier is
+    // meaningless without one, so it is gated.
     const cardOnly = driverCharges.filter((c) => label(c)?.cardOnly);
 
     const riderTotal = ex.fare + sum(riderCharges);
     const driverCard = ex.fare - sum(driverCharges);
-    const driverCash = ex.fare - sum(driverCharges.filter((c) => !label(c)?.cardOnly));
 
     const service = schedule.rideServices.find((s) => s.id === ex.serviceId);
     const miles = Math.round(metersToMiles(ex.distanceMeters) * 10) / 10;
@@ -502,13 +501,6 @@ const esPrefix = lang === "es" ? "/es" : "";
               usd(driverCard) ?? GAP,
             )}
           </ul>
-          ${
-            cardOnly.length
-              ? `<p class="text-[12.5px] text-paper/50">${esc(t.cashNotePre)}<span class="font-bold text-paper/75">${esc(
-                  usd(driverCash) ?? GAP,
-                )}</span>${esc(t.cashNotePost)}</p>`
-              : ""
-          }
         </div>
       </div>`;
   }
