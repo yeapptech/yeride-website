@@ -71,6 +71,71 @@ export const PATTERNS = [
   { re: /\bcoverage\b/i, why: "gated on #48: YeRide carries no coverage" },
   { re: /\bcobertura\b/i, why: "gated on #48: YeRide carries no coverage" },
 
+  // Gated until the app can produce a cash trip: positioning obligation #5,
+  // yeapptech/yeride-mobile#277 — yeride-mobile writes `type: 'card'` and
+  // nothing else, so cash is an unbuilt roadmap capability, not a live one.
+  // docs/positioning.md demoted differentiator #5 and put cash IN ANY FORM on
+  // its "Never claimed" list; it also records that docs/messaging.md is stale
+  // against that bar, refuses to rank the two documents, and directs that the
+  // disagreement be treated as a bar until yeapptech/yeride-brand#124 lands.
+  // Wayfinder #111 acted on that stopgap and struck the copy; these patterns are
+  // what stop it coming back. Retire them WITH #277, not with #124 — brand#124
+  // settles which document is right, #277 settles whether the claim is true.
+  //
+  // ONE pattern per language: the BARE WORD, so a wording nobody has thought of
+  // yet still fails the build — "we accept cash", "cash welcome", "aceptamos
+  // efectivo". This map has been bitten before by patterns that enumerate the
+  // phrasings someone happened to write; the bare word is the only shape that
+  // does not.
+  //
+  // It needs the ONE exception §5 grants, and #111 chose `permits` over a
+  // per-line pragma deliberately: the privacy policy's Payment paragraph says
+  // "When a rider pays cash, the fare passes from rider to driver in person",
+  // which is a CONDITIONAL describing what YeRide would store in a case that
+  // cannot arise — not an offer of a payment method. A source pragma cannot
+  // solve it, because the build strips pragmas and that paragraph is SHIPPED, so
+  // the dist gate would need its own hand-blessed entry keyed to an exact
+  // occurrence count inside a legal document that gets edited — an entry that
+  // breaks on an unrelated privacy edit and names the wrong cause when it does.
+  // `permits` lives in one place and both gates honour it.
+  //
+  // THE PERMITTED PHRASE IS THE SENTENCE, NOT A FRAGMENT OF IT, and that length
+  // is the whole safety argument — it is not verbosity to be trimmed. Withdrawal
+  // is over OVERLAPPING BYTES, so whatever the permitted phrase covers is excused
+  // wherever it appears. #111's first revision permitted the fragment "a rider
+  // pays cash", and a two-axis review found the consequence from both directions:
+  // ANY offer written on top of that opening escaped the bar entirely — "When a
+  // rider pays cash, the driver keeps every dollar of it." passed the real gate
+  // green, which is a payment-method claim shipping off a §5 the copy map
+  // described as closed. Carrying the clause that follows ("…, the fare passes"
+  // / "…, la tarifa va") is what makes the permission fit the one sentence it was
+  // granted for and nothing else.
+  //
+  // That first revision also carried FOUR conjunction patterns — card-or-cash in
+  // both orders and both languages, with no `permits`, as an unexcusable second
+  // layer. They are gone, and the reason is worth writing down so nobody re-adds
+  // them: with the permission narrowed to the sentence, the bare word accuses
+  // every conjunction shape unexcused, so no control can make a conjunction the
+  // sole accuser. Two of the four were ALREADY unreachable before the narrowing
+  // and mutation-tested green when deleted. CLAUDE.md's rule is that every bound
+  // has a positive control; a pattern no control can hold is padding that reads
+  // as coverage. copy-gate-patterns.test.mjs keeps the conjunction sentences as
+  // controls — they must still be accused, now by the bare word.
+  //
+  // The bound that replaced them: SHORTENING either permitted phrase back to a
+  // fragment fails named controls. That is the mutation to run before touching
+  // these two lines.
+  {
+    re: /\bcash\b/i,
+    permits: /\ba rider pays cash, the fare passes\b/i,
+    why: "gated on yeride-mobile#277: the app cannot produce a cash trip — only the privacy policy's descriptive conditional is permitted (§5)",
+  },
+  {
+    re: /\befectivo\b/i,
+    permits: /\bun pasajero paga en efectivo, la tarifa va\b/i,
+    why: "gated on yeride-mobile#277: the app cannot produce a cash trip — only the privacy policy's descriptive conditional is permitted (§5)",
+  },
+
   // Never claimed, gate or no gate.
   { re: /\blocked\b/i, why: "never claimed: fares are metered, not locked" },
   { re: /\bupfront (price|pricing)\b/i, why: "never claimed: fares are metered, not locked" },

@@ -209,8 +209,13 @@ lifts.
 
 ### RidersPage
 
-`/riders` and `/es/riders` — copy-map §3.3. Reserves nothing: rider pillar 2 is ungated and
-runs. "Card or cash." renders as a support line, never a section headline.
+`/riders` and `/es/riders` — copy-map §3.3. Rider pillar 2 is ungated and runs; **rider
+pillar 3 is gated and absent** (#111), so this page and DriversPage each reserve exactly one
+slot and run two pillars at launch. The gated slot was the couplet "Card or cash." / "Pay how
+you actually pay.", barred until the app can produce a cash trip
+([yeapptech/yeride-mobile#277](https://github.com/yeapptech/yeride-mobile/issues/277)); §5
+fails the build on the cash half if it returns, and the support half is human review at copy
+time. The component header carries the reasoning.
 
 ### AvailabilityBlock
 

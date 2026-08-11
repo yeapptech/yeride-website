@@ -94,6 +94,35 @@ const FORBIDDEN = [
   // belongs here rather than being implied by the exception's own controls below.
   ["EN bare surge claim", "No surge, ever."],
   ["EN surge claim mid-sentence", "Flat fees and no surge."],
+  // The cash bar (#111). Every entry down to the "not written by anyone" group
+  // is a string that WAS LIVE IN PRODUCTION — the five #111 struck plus the two
+  // #107 struck before it — so this list is the record of what shipped, not a
+  // set of examples. The gate could not carry them until the copy was gone, and
+  // that is why the removal and these patterns are one commit.
+  ["EN home fact 3, as shipped", "Card or cash."],
+  ["ES home fact 3, as shipped", "Tarjeta o efectivo."],
+  ["EN /riders meta, as shipped", "Published rates — base, miles, minutes. The same math every trip, and every fee published. Card or cash."],
+  ["ES /riders meta, as shipped", "Tarifas publicadas — base, millas, minutos. Las mismas cuentas en cada viaje y cada cargo publicado. Tarjeta o efectivo."],
+  ["EN terms §4, as shipped", "You can pay by card or in cash."],
+  ["ES terms §4, as shipped", "Usted puede pagar con tarjeta o en efectivo."],
+  ["EN terms §4 second block, as shipped", "Cash is handed to the driver directly; YeRide is not part of that exchange beyond recording that the ride was paid in cash."],
+  ["ES terms §4 second block, as shipped", "El efectivo se le entrega directamente al conductor; YeRide no participa en ese intercambio más allá de registrar que el viaje se pagó en efectivo."],
+  ["EN /fees line struck by #107", "Cash fares have none."],
+  ["ES /fees line struck by #107", "Los viajes en efectivo no la tienen."],
+  ["EN /fees footnote struck by #107", "On a cash fare there’s no card processing — the driver keeps "],
+  ["ES /fees footnote struck by #107", "En un viaje en efectivo no hay procesamiento de tarjeta — a quien maneja le quedan "],
+  // Wordings NOBODY WROTE. This is the half a conjunction-only rule would miss,
+  // and the reason the bare word is in the list at all: the enumeration failure
+  // is this map's recurring one, and a bar that only knows the phrasings someone
+  // happened to use is not a bar.
+  ["EN unwritten — accept", "We accept cash."],
+  ["EN unwritten — welcome", "Cash welcome on every ride."],
+  ["EN unwritten — reversed conjunction", "Cash or card, your choice."],
+  ["EN unwritten — 'in cash or by card'", "Pay in cash or by card."],
+  ["ES unwritten — aceptamos", "Aceptamos efectivo."],
+  ["ES unwritten — imperative", "Paga en efectivo si prefieres."],
+  ["ES unwritten — reversed conjunction", "Efectivo o tarjeta, como prefieras."],
+  ["ES unwritten — 'efectivo o con tarjeta'", "Puedes pagar en efectivo o con tarjeta."],
 ];
 
 // ------------------------------------------------------------ must NOT fire
@@ -146,6 +175,23 @@ const ALLOWED = [
   ["EN estimate note", "Every estimate here uses this area's rates, even for a route outside it — a price is not a promise that YeRide operates there."],
   ["EN rule kind", 'case "flat": {'],
   ["EN type member", '| { kind: "flat"; amount: number }'],
+  // CARD copy, which the cash bar must leave entirely alone (#111). Card is the
+  // one payment method the product implements, so every line here is live and
+  // correct; a cash pattern that reached any of them would be barring the truth
+  // in order to bar a falsehood. "card fare" and "viaje con tarjeta" are the
+  // closest calls, being a payment word beside a fare word.
+  ["EN Stripe body", "On card fares, Stripe charges its processing fee directly to the driver’s own account. YeRide never touches it and doesn’t set it."],
+  ["EN Stripe H2", "Card processing is Stripe’s, not YeRide’s"],
+  ["EN driver total, card", "Total — card fare"],
+  ["EN driver total, before card", "Total — before card processing"],
+  ["EN terms §4 as it now reads", "You pay by card."],
+  ["EN terms §4 Stripe block", "Card payments are processed by Stripe, and paying by card means accepting Stripe's terms as well as these."],
+  ["EN privacy card details", "Payment — card details are entered into Stripe, not into YeRide, and we never see or store a card number."],
+  ["ES Stripe H2", "El procesamiento de tarjeta es de Stripe, no de YeRide"],
+  ["ES driver total, card", "Total — viaje con tarjeta"],
+  ["ES driver total, before card", "Total — antes del procesamiento de tarjeta"],
+  ["ES terms §4 as it now reads", "Usted paga con tarjeta."],
+  ["ES terms §4 Stripe block", "Los pagos con tarjeta los procesa Stripe, y pagar con tarjeta implica aceptar también los términos de Stripe."],
 ];
 
 // ------------------------------------------------------- catastrophic backtracking
@@ -239,6 +285,18 @@ const PERMITTED = [
   // comes from a view that removed the tag from the middle of the claim, and
   // comparing outer ranges would leave this accused.
   ["the claim itself split by a tag", "<h2>No <b>surge</b> today</h2>", { markup: true }],
+  // §5's SECOND and THIRD permitted phrases, added by #111: the privacy policy's
+  // Payment paragraph, in both languages. It is a CONDITIONAL describing what
+  // YeRide would store in a case that cannot arise, not an offer of a payment
+  // method, so the bar does not reach it — and `permits` was chosen over a
+  // per-line pragma because that paragraph SHIPS: pragmas are stripped by the
+  // build, so a pragma would have left the dist gate needing a hand-blessed
+  // entry keyed to an exact occurrence count inside a legal document.
+  ["EN privacy conditional, as shipped", `"a rider pays cash, the fare passes from rider to driver in person; "`, {}],
+  ["ES privacy conditional, as shipped", `"un pasajero paga en efectivo, la tarifa va del pasajero al conductor "`, {}],
+  ["EN privacy conditional, word emphasised", "<p>When a rider pays <b>cash</b>, the fare passes.</p>", { markup: true }],
+  ["EN privacy conditional, wrapped by a formatter", "<p>When a rider\n  pays cash, the fare passes.</p>", { markup: true }],
+  ["ES privacy conditional, non-breaking space", "<p>Cuando un pasajero paga en&nbsp;efectivo, la tarifa va.</p>", { markup: true }],
 ];
 
 // Still accused. Each is a bound from permissionsIn or isPermitted, written as
@@ -276,6 +334,44 @@ const STILL_ACCUSED = [
     "a claim inside a reference run the permitted phrase spans",
     `const a = "No surge&nbsp;today";\nconst b = "no surge, ever.";`,
     { markup: true },
+    1,
+  ],
+  // THE CASH BAR (#111). One bare-word pattern per language, and a permitted
+  // phrase that is THE SENTENCE rather than a fragment of it. This group is the
+  // argument for that length, and every entry is a shape that must stay accused.
+  ["the canonical barred line", "<p>Card or cash.</p>", { markup: true }, 1],
+  ["the ES canonical barred line", "<p>Tarjeta o efectivo.</p>", { markup: true }, 1],
+  //
+  // THE LAUNDERING CLASS, and it is a class rather than a case — which is what
+  // #111's first revision got wrong. Withdrawal is over OVERLAPPING BYTES, so
+  // whatever the permitted phrase covers is excused wherever it appears. That
+  // revision permitted the fragment "a rider pays cash" and reasoned that the
+  // only shape it could excuse was a conjunction, which four separate
+  // conjunction patterns then caught. Both halves of that were wrong: the class
+  // is EVERY sentence that opens with the permitted words, the conjunction is
+  // merely one member, and the review found a member with no conjunction in it
+  // at all — passing the real gate green.
+  //
+  // Each entry below is written so it would be WITHDRAWN under the fragment and
+  // is ACCUSED under the sentence. Shorten either `permits` and this whole group
+  // fails: that is the bound that replaced the deleted conjunction layer.
+  ["an offer built on the permitted opening — no conjunction", "When a rider pays cash, the driver keeps every dollar of it.", {}, 1],
+  ["the ES offer built on the permitted opening", "Cuando un pasajero paga en efectivo, quien maneja se queda con todo.", {}, 1],
+  ["a conjunction built on the permitted opening", "When a rider pays cash or card, the fare passes.", {}, 1],
+  ["the ES conjunction built on the permitted opening", "Cuando un pasajero paga en efectivo o con tarjeta, la tarifa va.", {}, 1],
+  ["the permitted opening trailing off into an offer", "A rider pays cash and keeps it simple.", {}, 1],
+  // isPermitted's overlap bound, on the new permissions: the privacy sentence
+  // must excuse its own bytes and nothing else in the file.
+  [
+    "the privacy permit does not excuse a bare cash claim elsewhere",
+    `const a = "When a rider pays cash, the fare passes.";\nconst b = "We accept cash.";`,
+    {},
+    1,
+  ],
+  [
+    "the ES privacy permit does not excuse a bare claim elsewhere",
+    `const a = "Cuando un pasajero paga en efectivo, la tarifa va.";\nconst b = "Aceptamos efectivo.";`,
+    {},
     1,
   ],
 ];
@@ -351,6 +447,38 @@ for (const [name, files] of [
   );
 }
 
+// The cash bar through the real gate (#111). Same reason as the surge controls
+// above: `permits` is honoured by pass 1's raw line matcher, the comment-stripping
+// pass and the import wiring, none of which layer 1 can reach.
+{
+  const { code, out } = src({
+    "src/i18n/legalCopy.ts": `export const c = {\n  a: "When a rider pays cash, the fare passes from rider to driver in person.",\n  b: "Cuando un pasajero paga en efectivo, la tarifa va del pasajero al conductor en persona.",\n};\n`,
+  });
+  say(code === 0, "the GATE must pass — the privacy conditional, both languages", out.trim());
+}
+for (const [name, files] of [
+  ["EN canonical barred line", { "src/i18n/homeCopy.ts": `export const c = { facts: ["Card or cash."] };\n` }],
+  ["ES canonical barred line", { "src/i18n/homeCopy.ts": `export const c = { facts: ["Tarjeta o efectivo."] };\n` }],
+  ["a wording nobody wrote", { "src/components/Riders.astro": `<p>We accept cash.</p>\n` }],
+]) {
+  const { code, out } = src(files);
+  say(code === 1 && /(cash|efectivo)/i.test(out), `the GATE must fail — ${name}`, out.trim());
+}
+// The laundering class, through the gate, in BOTH languages — the ES half is not
+// decorative: an earlier revision pinned the EN shape at all three layers and the
+// ES one at the reader alone, which is exactly the coverage copy-gate-suspension
+// .test.mjs's two-layer doctrine exists to distrust. These are the controls that
+// would go green if either permitted phrase were shortened back to a fragment.
+for (const [name, literal] of [
+  ["an offer built on the permitted opening", `When a rider pays cash, the driver keeps every dollar of it.`],
+  ["the ES offer built on the permitted opening", `Cuando un pasajero paga en efectivo, quien maneja se queda con todo.`],
+  ["a conjunction built on the permitted opening", `When a rider pays cash or card, the fare passes.`],
+  ["the ES conjunction built on the permitted opening", `Cuando un pasajero paga en efectivo o con tarjeta, la tarifa va.`],
+]) {
+  const { code, out } = src({ "src/i18n/legalCopy.ts": `export const c = {\n  a: "${literal}",\n};\n` });
+  say(code === 1 && /(cash|efectivo)/i.test(out), `the GATE must fail — ${name}`, out.trim());
+}
+
 // ---- layer 3: the DIST gate, over a fixture dist/ tree.
 // Both gates import the same pattern list and the same normaliser, but each
 // calls isPermitted itself, so "the source gate withdraws" is not evidence that
@@ -393,6 +521,38 @@ for (const [name, html] of [
     "the DIST gate must still report — a fabricating view cannot excuse",
     lines.join("\n      "),
   );
+}
+
+// The cash bar through the DIST gate (#111). Same reason again, and it bites
+// harder here: the privacy policy is SHIPPED, so this gate — not the source gate —
+// is the one that reads the permitted conditional out of real page HTML, through
+// the two views that can invent a phrase and may therefore accuse but never excuse.
+const cashVerdict = (html) =>
+  runGate(DIST_GATE, { "dist/privacy-policy/index.html": html })
+    .out.split("\n")
+    .filter((line) => /"[^"]*(cash|efectivo)/i.test(line));
+
+for (const [name, html] of [
+  ["EN privacy conditional", "<p>When a rider pays cash, the fare passes from rider to driver in person.</p>\n"],
+  ["ES privacy conditional", "<p>Cuando un pasajero paga en efectivo, la tarifa va del pasajero al conductor en persona.</p>\n"],
+  ["EN privacy conditional, word emphasised", "<p>When a rider pays <b>cash</b>, the fare passes.</p>\n"],
+]) {
+  const lines = cashVerdict(html);
+  say(lines.length === 0, `the DIST gate must not report — permitted, ${name}`, lines.join("\n      "));
+}
+for (const [name, html] of [
+  ["the canonical barred line", "<p>Card or cash.</p>\n"],
+  ["the ES canonical barred line", "<p>Tarjeta o efectivo.</p>\n"],
+  ["an offer built on the permitted opening", "<p>When a rider pays cash, the driver keeps every dollar of it.</p>\n"],
+  ["the ES offer built on the permitted opening", "<p>Cuando un pasajero paga en efectivo, quien maneja se queda con todo.</p>\n"],
+  ["a conjunction built on the permitted opening", "<p>When a rider pays cash or card, the fare passes.</p>\n"],
+  ["the ES conjunction built on the permitted opening", "<p>Cuando un pasajero paga en efectivo o con tarjeta, la tarifa va.</p>\n"],
+  // Composed by the build out of parts innocent in the source — the one residual
+  // only this gate can see, and the shape a PR author hits by accident.
+  ["a claim welded together by the build", "<p>Card or<!-- --> cash.</p>\n"],
+]) {
+  const lines = cashVerdict(html);
+  say(lines.length >= 1, `the DIST gate must report — ${name}`, lines.join("\n      "));
 }
 
 console.log(`${failures ? "✗" : "✓"} copy-gate patterns: ${checks} controls, ${failures} failure${failures === 1 ? "" : "s"}`);

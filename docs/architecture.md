@@ -146,7 +146,7 @@ import RidersPage from "../components/RidersPage.astro";
 
 <BaseLayout
   title="Pay what the ride is worth. | YeRide for riders"
-  description="Published rates — base, miles, minutes. The same math every trip, and every fee published. Card or cash."
+  description="Published rates — base, miles, minutes. The same math every trip, and every fee published."
   lang="en"
   headerGround="yellow"
 >

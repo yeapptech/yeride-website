@@ -499,7 +499,10 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
 export const termsCopy: Record<Lang, LegalDoc> = {
   en: {
     h1: "Terms of Service",
-    updated: "Last updated: 2 August 2026",
+    // Moves whenever a term changes in substance. §4 "Paying" lost its cash half
+    // on this date (wayfinder #111); the privacy policy is untouched and keeps
+    // its own date.
+    updated: "Last updated: 10 August 2026",
     lead:
       "These terms are an agreement between you and YeAPP TECH LLC, a Florida " +
       "limited liability company that operates YeRide. They cover www.yeride.com " +
@@ -541,11 +544,15 @@ export const termsCopy: Record<Lang, LegalDoc> = {
       {
         heading: "4. Paying",
         blocks: [
-          "You can pay by card or in cash.",
+          // A term of the agreement, not marketing: this used to say "You can pay
+          // by card or in cash." and the app cannot produce a cash trip
+          // (obligation #5, yeapptech/yeride-mobile#277). Barred by
+          // docs/positioning.md; struck by wayfinder #111. Card is the only method
+          // the product implements, so the section states that rather than going
+          // silent on how you pay. Restore the cash half only with #277.
+          "You pay by card.",
           "Card payments are processed by Stripe, and paying by card means accepting " +
-            "Stripe's terms as well as these. Cash is handed to the driver directly; " +
-            "YeRide is not part of that exchange beyond recording that the ride was " +
-            "paid in cash.",
+            "Stripe's terms as well as these.",
           "Every rate YeRide meters and every charge it applies is published on the " +
             "fee schedule at www.yeride.com/fees. A change to those takes effect when " +
             "it is published there.",
@@ -644,7 +651,7 @@ export const termsCopy: Record<Lang, LegalDoc> = {
 
   es: {
     h1: "Términos de servicio",
-    updated: "Última actualización: 2 de agosto de 2026",
+    updated: "Última actualización: 10 de agosto de 2026",
     lead:
       "Estos términos constituyen un acuerdo entre usted y YeAPP TECH LLC, una " +
       "sociedad de responsabilidad limitada de la Florida que opera YeRide. " +
@@ -688,11 +695,10 @@ export const termsCopy: Record<Lang, LegalDoc> = {
       {
         heading: "4. El pago",
         blocks: [
-          "Usted puede pagar con tarjeta o en efectivo.",
+          // Ver la nota en la versión en inglés: wayfinder #111.
+          "Usted paga con tarjeta.",
           "Los pagos con tarjeta los procesa Stripe, y pagar con tarjeta implica " +
-            "aceptar también los términos de Stripe. El efectivo se le entrega " +
-            "directamente al conductor; YeRide no participa en ese intercambio más " +
-            "allá de registrar que el viaje se pagó en efectivo.",
+            "aceptar también los términos de Stripe.",
           "Cada tarifa que YeRide mide y cada cargo que aplica están publicados en " +
             "el tarifario, en www.yeride.com/es/fees. Un cambio en ellos entra en " +
             "vigor cuando se publica allí.",

@@ -3,14 +3,23 @@
 // same "The Hail" language and the same block vocabulary as /drivers: eyebrow,
 // pillars, fee pointer, form, availability.
 //
-// /riders RESERVES NOTHING. Rider pillar 2 is ungated (§5) and runs at launch
-// in its natural position, so at launch this page carries one support couplet
-// more than /drivers — symmetry is block vocabulary, not section count (#43).
+// Rider pillar 2 is ungated (§5) and runs at launch in its natural position.
+// Rider pillar 3 is GATED and absent, which makes this page and /drivers
+// symmetric at launch — two pillars each, one gated slot each — and /drivers
+// runs one more once ITS gate lifts (#43, amended by #111). Symmetry is block
+// vocabulary, not section count.
 //
-// "Card or cash." is canonical but marked *supporting* in docs/messaging.md: it
-// runs as a lead-in line inside the pillar stack and never as a headline (§3.3).
-// Cleared to run by research/cash-statute.md — Fla. Stat. § 627.748 imposes no
-// electronic-payment mandate.
+// The gated slot was the couplet "Card or cash." / "Pay how you actually pay.",
+// canonical in docs/messaging.md and marked *supporting* there. It is barred by
+// docs/positioning.md, which demoted differentiator #5 and put cash in any form
+// on its "Never claimed" list until the app can produce a cash trip (obligation
+// #5, yeapptech/yeride-mobile#277 — yeride-mobile writes `type: 'card'` and
+// nothing else). The two brand documents disagree; positioning refuses to rank
+// them and directs that the disagreement be treated as a bar until
+// yeapptech/yeride-brand#124 lands, and this map acted on that stopgap (#111).
+// research/cash-statute.md is NOT the live question — Fla. Stat. § 627.748
+// imposes no electronic-payment mandate, so the law permits cash; the product
+// cannot produce it. Lifting the gate is an insert here, not a redesign.
 import { ridersCopy } from "../i18n/audienceCopy";
 import type { Lang } from "../i18n/feesCopy";
 import PreRegistrationForm from "./PreRegistrationForm.astro";
@@ -61,18 +70,7 @@ const esPrefix = lang === "es" ? "/es" : "";
           {t.pillar2Support}
         </p>
       </section>
-
-      {/* pillar 3 — a support couplet, deliberately not an H2 */}
-      <section class="py-10 md:py-14">
-        <p class="text-[18px] font-bold text-paper sm:text-[20px]">
-          {t.payLine}
-        </p>
-        <p
-          class="mt-2 max-w-2xl text-[16px] leading-relaxed text-paper/70 sm:text-[17px]"
-        >
-          {t.paySupport}
-        </p>
-      </section>
+      {/* pillar 3's support couplet was here — gated and absent, see the header */}
     </div>
   </section>
 
