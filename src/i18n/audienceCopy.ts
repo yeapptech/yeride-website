@@ -46,10 +46,14 @@ export const ridersCopy = {
     pillar2H2: "Same math every trip.",
     pillar2Support:
       "Published rates — base, miles, minutes. The fare follows the ride, not what an app thinks you'll pay.",
-    // Canonical, and marked *supporting* in docs/messaging.md — it renders as a
-    // lead-in line inside the pillar stack, never as a section headline (§3.3).
-    payLine: "Card or cash.",
-    paySupport: "Pay how you actually pay.",
+    // Rider pillar 3 is GATED and absent, symmetric to driver pillar 2. It was
+    // the couplet "Card or cash." / "Pay how you actually pay." — canonical in
+    // docs/messaging.md, barred by docs/positioning.md until the app can produce
+    // a cash trip (obligation #5, yeapptech/yeride-mobile#277). Both halves went,
+    // not just the line: "Pay how you actually pay." is the same payment-choice
+    // claim in other words, and it means nothing without a choice (wayfinder
+    // #111). The slot is an insert when the gate lifts, not a redesign — see
+    // docs/copy-map.md §3.3.
     feeH3: "Every fee, published.",
     feeLink: "See the fee schedule",
     estimateLink: "Estimate a fare",
@@ -64,8 +68,6 @@ export const ridersCopy = {
     pillar2H2: "Las mismas cuentas en cada viaje.",
     pillar2Support:
       "Tarifas publicadas — base, millas, minutos. El precio sigue al viaje, no lo que la app cree que puedes pagar.",
-    payLine: "Tarjeta o efectivo.",
-    paySupport: "Paga como pagas tú.",
     feeH3: "Cada cargo, publicado.",
     feeLink: "Ver el tarifario",
     estimateLink: "Estima una tarifa",

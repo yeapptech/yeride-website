@@ -3,6 +3,17 @@
 // on the page files, as they do for /fees.
 //
 // The H1s and the two Ink-band H2s are canonical `docs/messaging.md` lines.
+//
+// The Paper strip runs TWO facts, not three. Fact 3 was "Card or cash." /
+// "Tarjeta o efectivo." — canonical in `docs/messaging.md` and barred by
+// `docs/positioning.md`, which demoted differentiator #5 and put cash in any
+// form on its "Never claimed" list until the app can produce a cash trip
+// (obligation #5, `yeapptech/yeride-mobile#277`). The two documents disagree
+// and positioning refuses to rank them, directing that the disagreement be
+// treated as a bar until yeapptech/yeride-brand#124 lands (wayfinder #111).
+// Do not author a third fact to fill the gap: canonical copy comes from
+// `messaging.md`, which is the stale document being rewritten. §5 now fails
+// the build on the strings, so restoring one is a red build, not a silent edit.
 import type { Lang } from "./feesCopy";
 
 export const homeCopy = {
@@ -19,7 +30,7 @@ export const homeCopy = {
     riderH2: "Pay what the ride is worth.",
     riderSupport:
       "Your fare goes to the person driving — not to a percentage cut.",
-    facts: ["No commission.", "Flat, published fees.", "Card or cash."],
+    facts: ["No commission.", "Flat, published fees."],
     limitNote: "Estimates are estimates — the meter decides.",
     feesLink: "See the fee schedule",
   },
@@ -36,7 +47,7 @@ export const homeCopy = {
     riderH2: "Paga lo justo.",
     riderSupport:
       "Tu tarifa es para la persona que maneja — no para la comisión de una app.",
-    facts: ["Sin comisión.", "Cargos fijos y publicados.", "Tarjeta o efectivo."],
+    facts: ["Sin comisión.", "Cargos fijos y publicados."],
     limitNote: "Un estimado es un estimado — el taxímetro decide.",
     feesLink: "Ver el tarifario",
   },

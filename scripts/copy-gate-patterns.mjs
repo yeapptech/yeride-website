@@ -71,6 +71,63 @@ export const PATTERNS = [
   { re: /\bcoverage\b/i, why: "gated on #48: YeRide carries no coverage" },
   { re: /\bcobertura\b/i, why: "gated on #48: YeRide carries no coverage" },
 
+  // Gated until the app can produce a cash trip: positioning obligation #5,
+  // yeapptech/yeride-mobile#277 — yeride-mobile writes `type: 'card'` and
+  // nothing else, so cash is an unbuilt roadmap capability, not a live one.
+  // docs/positioning.md demoted differentiator #5 and put cash IN ANY FORM on
+  // its "Never claimed" list; it also records that docs/messaging.md is stale
+  // against that bar, refuses to rank the two documents, and directs that the
+  // disagreement be treated as a bar until yeapptech/yeride-brand#124 lands.
+  // Wayfinder #111 acted on that stopgap and struck the copy; these patterns are
+  // what stop it coming back. Retire them WITH #277, not with #124 — brand#124
+  // settles which document is right, #277 settles whether the claim is true.
+  //
+  // TWO LAYERS, and the split is the point.
+  //
+  // Layer 1 is the conjunction, and it carries NO `permits`, so nothing can ever
+  // withdraw it. The canonical barred line — "Card or cash." / "Tarjeta o
+  // efectivo." — is the one string this whole ticket exists to keep out, and a
+  // bar that can be excused is not the right bar for it. "or in cash" and "o en
+  // efectivo" are in the alternation because that is how the terms of service
+  // wrote it ("You can pay by card or in cash."), not as speculation.
+  { re: /\bcards? or (?:in )?cash\b/i, why: "gated on yeride-mobile#277: the app cannot produce a cash trip" },
+  { re: /\bcash or (?:by )?cards?\b/i, why: "gated on yeride-mobile#277: the app cannot produce a cash trip" },
+  { re: /\btarjetas? o (?:en )?efectivo\b/i, why: "gated on yeride-mobile#277: the app cannot produce a cash trip" },
+  { re: /\befectivo o (?:con )?tarjetas?\b/i, why: "gated on yeride-mobile#277: the app cannot produce a cash trip" },
+  //
+  // Layer 2 is the bare word, so a wording nobody has thought of yet still fails
+  // the build — "we accept cash", "cash welcome", "pagas en efectivo". This map
+  // has been bitten before by patterns that enumerate the phrasings someone
+  // happened to write; the bare word is the only shape that does not.
+  //
+  // It needs the ONE exception §5 grants, and #111 chose `permits` over a
+  // per-line pragma deliberately: the privacy policy's Payment paragraph says
+  // "When a rider pays cash, the fare passes from rider to driver in person",
+  // which is a CONDITIONAL describing what YeRide would store in a case that
+  // cannot arise — not an offer of a payment method. A source pragma cannot
+  // solve it, because the build strips pragmas and that paragraph is SHIPPED, so
+  // the dist gate would need its own hand-blessed entry keyed to an exact
+  // occurrence count inside a legal document that gets edited — an entry that
+  // breaks on an unrelated privacy edit and names the wrong cause when it does.
+  // `permits` lives in one place and both gates honour it.
+  //
+  // The permitted phrase is POSITIVE and narrow, per permissionsIn's bounds: it
+  // is the privacy sentence's own words, so "Card or cash." cannot borrow it —
+  // withdrawal is over overlapping bytes and those bytes do not contain it. The
+  // one shape it WOULD excuse, "when a rider pays cash or card", is exactly what
+  // layer 1 catches unexcusably. Neither layer is sufficient alone; that is why
+  // there are two, and copy-gate-patterns.test.mjs pins that laundering case.
+  {
+    re: /\bcash\b/i,
+    permits: /\ba rider pays cash\b/i,
+    why: "gated on yeride-mobile#277: the app cannot produce a cash trip — only the privacy policy's descriptive conditional is permitted (§5)",
+  },
+  {
+    re: /\befectivo\b/i,
+    permits: /\bun pasajero paga en efectivo\b/i,
+    why: "gated on yeride-mobile#277: the app cannot produce a cash trip — only the privacy policy's descriptive conditional is permitted (§5)",
+  },
+
   // Never claimed, gate or no gate.
   { re: /\blocked\b/i, why: "never claimed: fares are metered, not locked" },
   { re: /\bupfront (price|pricing)\b/i, why: "never claimed: fares are metered, not locked" },

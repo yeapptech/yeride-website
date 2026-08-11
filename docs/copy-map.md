@@ -312,7 +312,6 @@ moved **up into the hero** and `/fees` demoted to the nav and the paper strip.
 |---|---|---|
 | Fact 1 | No commission. | Sin comisión. |
 | Fact 2 | Flat, published fees. | Cargos fijos y publicados. |
-| Fact 3 | Card or cash. | Tarjeta o efectivo. |
 | Limit note | Estimates are estimates — the meter decides. | Un estimado es un estimado — el taxímetro decide. |
 | Link → `/fees` | See the fee schedule | Ver el tarifario |
 
@@ -354,10 +353,17 @@ nothing. Because the page is a stack of identically-shaped pillar sections, lift
 an insert, not a redesign.
 
 **The home page never carries pillar 2.** § 3.1's Ink band is a symmetric 2-up fork; its job is
-to fork, not to carry a pillar set. **/riders reserves nothing** — rider pillar 2 is ungated
-(§ 5) and runs at launch in its natural position (§ 3.3). The two pages are symmetric in block
-vocabulary — eyebrow, pillars, fee pointer, form, availability — not in section count; at
-launch /riders runs one support couplet more, and that inverts once the driver gate lifts.
+to fork, not to carry a pillar set. The two pages are symmetric in block vocabulary — eyebrow,
+pillars, fee pointer, form, availability — not in section count.
+
+**Each audience page now reserves exactly one slot** *(2026-08-10, #111; this paragraph
+previously said "/riders reserves nothing")*. `/drivers` gates pillar 2 on obligations 1–3;
+`/riders` gates pillar 3 on obligation #5, the cash capability
+([yeapptech/yeride-mobile#277](https://github.com/yeapptech/yeride-mobile/issues/277)). Rider
+pillar 2 is ungated (§ 5) and runs at launch in its natural position. So at launch the two
+pages run **two pillars each**, and `/drivers` runs one more once **its** gate lifts — the
+reverse of the imbalance this paragraph used to record. Because each page is a stack of
+identically-shaped pillar sections, lifting either gate is an insert, not a redesign.
 
 **Uber and Lyft are named here and only here** — `docs/positioning.md` licenses driver-facing
 copy to say "run YeRide alongside Uber and Lyft", and says rider copy should not name them.
@@ -373,8 +379,6 @@ appears anywhere.
 | Support | Your fare goes to the person driving — not to a percentage cut. | Tu tarifa es para la persona que maneja — no para la comisión de una app. |
 | H2 **(canonical, pillar 2)** | Same math every trip. | Las mismas cuentas en cada viaje. |
 | Support | Published rates — base, miles, minutes. The fare follows the ride, not what an app thinks you'll pay. | Tarifas publicadas — base, millas, minutos. El precio sigue al viaje, no lo que la app cree que puedes pagar. |
-| Support line **(canonical, pillar 3 — never a headline)** | Card or cash. | Tarjeta o efectivo. |
-| — its support | Pay how you actually pay. | Paga como pagas tú. |
 | Fee pointer H3 | Every fee, published. | Cada cargo, publicado. |
 | Fee pointer link → `/fees` | See the fee schedule | Ver el tarifario |
 | Estimate link → `/fare-estimate` | Estimate a fare | Estima una tarifa |
@@ -382,10 +386,20 @@ appears anywhere.
 | Form sub | Takes a minute. | Toma un minuto. |
 
 Form `role` is pre-set to `rider`. Availability block (§ 2.1) sits beneath the form.
-"Card or cash." runs as a support line, **never as a section headline** — `docs/messaging.md`
-marks it supporting. Cleared to run by
-[`research/cash-statute.md`](https://github.com/yeapptech/yeride-website/blob/research/cash-statute/research/cash-statute.md):
-Fla. Stat. § 627.748 imposes no electronic-payment mandate.
+
+**Rider pillar 3 is gated and absent** *(2026-08-10, #111)*. It was the support couplet
+"Card or cash." / "Pay how you actually pay." — canonical in `docs/messaging.md`, marked
+*supporting* there, and it ran as a lead-in line inside the pillar stack, never as a section
+headline. It is barred by `docs/positioning.md` until the app can produce a cash trip
+(obligation #5, [yeapptech/yeride-mobile#277](https://github.com/yeapptech/yeride-mobile/issues/277));
+§ 5 records the bar and the two patterns that now fail the build on it. **Both halves went**,
+not just the line: "Pay how you actually pay." is the same payment-choice claim in other
+words and means nothing without a choice — but it carries no cash word, so no gate holds it
+and it is human review at copy time.
+
+[`research/cash-statute.md`](https://github.com/yeapptech/yeride-website/blob/research/cash-statute/research/cash-statute.md)
+is **not** the live question and should not be read as clearing the line: Fla. Stat. § 627.748
+imposes no electronic-payment mandate, so the law permits cash. The product cannot produce it.
 
 ### 3.4 `/fees` and `/es/fees`
 
@@ -455,12 +469,16 @@ breakdown whose money reconciles across both columns. *(Amended 2026-07-31 per t
 > the whole bar**, and the review of #107 found it reaches further than #107 knew: the
 > **terms of service** say *"You can pay by card or in cash."* in both languages
 > (`src/i18n/legalCopy.ts`), which is the barred capability claim stated as a term of the
-> agreement rather than as marketing. *"Card or cash."* is canonical in `docs/messaging.md` and still runs on
+> agreement rather than as marketing. *"Card or cash."* is canonical in `docs/messaging.md` and also ran on
 > the home page and `/riders` in both languages; positioning §"Never claimed" records that
 > `messaging.md` is stale against it and directs that the disagreement be treated as a bar
-> until [yeride-brand#124](https://github.com/yeapptech/yeride-brand/issues/124) lands. That
-> removal, and the copy-gate entries that would keep all of it out, are
-> [#111](https://github.com/yeapptech/yeride-website/issues/111).
+> until [yeride-brand#124](https://github.com/yeapptech/yeride-brand/issues/124) lands.
+> **All of that is now done** — [#111](https://github.com/yeapptech/yeride-website/issues/111)
+> struck the terms-of-service block, the home fact and the `/riders` couplet in both
+> languages, **acted on positioning's stopgap rather than waiting for brand#124**, and gave
+> § 5 the two pattern layers that fail the build if any of it returns. brand#124 was still
+> open when it landed, and § 5 records why that did not block: brand#124 settles which
+> document is right, obligation #5 settles whether the claim is true.
 >
 > **The rows #40 authored are now blessed and owned by this map (2026-08-02, #47).** They
 > were **Other-charges H2 / lead**, the neutral panel an unclassifiable charge falls into
@@ -828,10 +846,17 @@ here exposes nothing new, and yeride-mobile's store obligation is a reachable su
 
 ### 3.8 `/privacy-policy` and `/es/privacy-policy`
 
-**Not specified here.** The current policy is boilerplate dated 30 Sep 2024 that predates the
-fee structure, the cash option, and the location data the meter uses. The decision is to
-**rewrite the English policy to match what YeRide actually does, then translate it** — a
-legal-review task, not a copy-map entry. Tracked as its own ticket.
+**Not specified here.** The policy this entry was written against was boilerplate dated
+30 Sep 2024 that predated the fee structure, payment handling, and the location data the meter
+uses. The decision was to **rewrite the English policy to match what YeRide actually does,
+then translate it** — a legal-review task, not a copy-map entry. Tracked as its own ticket.
+
+Its Payment paragraph holds § 5's **permitted cash exception** *(2026-08-10, #111)*: *"When a
+rider pays cash, the fare passes from rider to driver in person"* and its ES twin describe
+what YeRide would store in a case that cannot arise, which is not an offer of a payment
+method. They are the only cash strings on the site the gates allow, and they are allowed by
+`permits` rather than by a pragma — see § 5. **Rewording them will fail the build**, because
+the permitted phrase is matched on its own words; change § 5's `permits` in the same commit.
 
 Two strings are fixed now, and appear on **both** language versions:
 
@@ -847,6 +872,15 @@ exception to § 0.2.
 
 **New page.** The footer promised "Terms of Service" via a dead `#` link; the page now exists.
 Content is authored under the same legal pass as § 3.8 and is not specified here.
+
+**§ 4 "Paying" lost its cash half** *(2026-08-10, #111)*. It said *"You can pay by card or in
+cash."* and now says *"You pay by card."* / *"Usted paga con tarjeta."*, and the block below it
+dropped the sentence about cash being handed to the driver. This is the barred capability
+stated as a **term of the agreement** rather than as marketing — the instance a reader would
+most reasonably rely on — so it went with the marketing copy rather than being left for a
+separate pass. The section states the one method the product implements instead of going
+silent on how you pay, and `updated` moved with it; the privacy policy's date did not, being
+untouched. Restore the cash half only with obligation #5.
 
 | Slot | EN | ES |
 |---|---|---|
@@ -893,8 +927,8 @@ structured data, and analytics remain out of scope for this ticket.
 | `/es/` | Tu viaje, justo y claro. \| YeRide | Transporte compartido hecho en el Sur de la Florida. Sin comisión, cargos fijos y publicados, y un tarifario que cualquiera puede leer. |
 | `/drivers` | Keep what you earn. \| YeRide for drivers | No commission — YeRide's fees are flat, published, and never a percentage of the fare. Run YeRide alongside Uber and Lyft. |
 | `/es/drivers` | Lo que ganas es tuyo. \| YeRide | Sin comisión — los cargos de YeRide son fijos, publicados y nunca un porcentaje de la tarifa. Usa YeRide junto a Uber y Lyft. |
-| `/riders` | Pay what the ride is worth. \| YeRide for riders | Published rates — base, miles, minutes. The same math every trip, and every fee published. Card or cash. |
-| `/es/riders` | Paga lo justo. \| YeRide | Tarifas publicadas — base, millas, minutos. Las mismas cuentas en cada viaje y cada cargo publicado. Tarjeta o efectivo. |
+| `/riders` | Pay what the ride is worth. \| YeRide for riders | Published rates — base, miles, minutes. The same math every trip, and every fee published. |
+| `/es/riders` | Paga lo justo. \| YeRide | Tarifas publicadas — base, millas, minutos. Las mismas cuentas en cada viaje y cada cargo publicado. |
 | `/fees` | The fee schedule \| YeRide | Every fee YeRide charges, with current amounts fetched live. |
 | `/es/fees` | El tarifario \| YeRide | Cada cargo que cobra YeRide, con los montos actuales en vivo. |
 | `/fare-estimate` | Estimate a fare \| YeRide | See what a ride would cost at today's published rates. Estimates are estimates — the meter decides. |
@@ -932,6 +966,49 @@ there is no insurance today, and card processing is not a YeRide pass-through, s
 
 Stripe's fee **can** still be described honestly — the driver pays it directly from their own
 connected account — but never with a YeRide-published amount, since YeRide does not set it.
+
+**Gated on the app being able to produce a cash trip** *(added 2026-08-10, #111; tracked by
+[yeapptech/yeride-mobile#277](https://github.com/yeapptech/yeride-mobile/issues/277))* —
+`docs/positioning.md` demoted differentiator #5 and put **cash in any form** on its "Never
+claimed" list. `yeride-mobile` writes `type: 'card'` and nothing else, so cash is an unbuilt
+roadmap capability. These must fail the build until #277 lands:
+
+- `card or cash` / `cash or card` · `tarjeta o efectivo` / `efectivo o tarjeta` — the
+  conjunction, in either order and with or without the preposition ("card or **in** cash",
+  as the terms of service wrote it)
+- `cash` · `efectivo`, bare — so a wording nobody has yet written ("we accept cash",
+  "aceptamos efectivo") fails too, rather than only the phrasings someone happened to use
+
+**Retire these with #277, not with
+[yeride-brand#124](https://github.com/yeapptech/yeride-brand/issues/124).** The two are
+different questions: brand#124 settles which brand document is right, #277 settles whether
+the claim is *true*. `docs/messaging.md` still carries "Cash or card." in its Do column and
+is canonical; `positioning.md` records that `messaging.md` is **stale against its own bar**,
+**refuses to invent a precedence rule**, and directs that the disagreement be treated as a
+bar until brand#124 lands. #111 acted on that stopgap rather than waiting, because the
+disagreement is about which document to cite and not about whether the claim is false.
+
+**The permitted exception — the privacy policy's Payment paragraph, both languages.** § 3.8
+says *"When a rider pays cash, the fare passes from rider to driver in person"* / *"Cuando un
+pasajero paga en efectivo, la tarifa va del pasajero al conductor en persona"*. That is a
+**conditional describing what YeRide would store in a case that cannot arise**, not an offer
+of a payment method, so the bar does not reach it. It is expressed as `permits` — §5's
+withdrawal mechanism (#82) — and **not** as a per-line `copy-gate-allow` pragma, because the
+build strips pragmas and that paragraph *ships*: a pragma would leave the dist gate needing a
+hand-blessed entry keyed to an exact occurrence count inside a legal document that gets
+edited, an entry that breaks on an unrelated privacy edit and names the wrong cause when it
+does. These are §5's **second and third** permitted phrases, after "no surge today".
+
+That exception is also why the conjunction is listed **separately** from the bare word.
+Withdrawal is over **overlapping bytes**, so an offer written on top of the permitted phrase —
+*"When a rider pays cash or card, the fare passes"* — would have the bare-word hit withdrawn.
+The conjunction patterns carry **no** `permits` and catch it. Neither layer is sufficient
+alone, and `scripts/copy-gate-patterns.test.mjs` pins that with the laundering sentence itself.
+
+**One half of #111's removal no pattern can hold.** `/riders` also lost *"Pay how you actually
+pay."* / *"Paga como pagas tú."* — the same payment-choice claim in other words, carrying no
+cash word for a gate to match. It was struck on judgement, and it is human review at copy
+time, like the three §5 rules named at the top of `scripts/copy-gate-patterns.mjs`.
 
 **Never claimed** — these never run, gate or no gate:
 
