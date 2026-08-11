@@ -77,13 +77,18 @@ export function templateStart(source) {
  *  skipped wholesale — a <script> is JavaScript and a <style> is CSS, and
  *  reading either as template text reports every string literal in the bundled
  *  form logic as prose. */
-const RAW_ELEMENT = /^<[ \t]*(script|style)\b/i;
-const SELF_CLOSING = /\/[ \t]*>$/;
+// EXPORTED for scripts/check-contrast.mjs (#76), which needs the same four
+// answers to walk element nesting and find what sits on a Cab Yellow ground.
+// Exported rather than copied, for the reason #57 gives for one pattern list and
+// #68 for one normaliser: "what counts as an element tag" living in two files is
+// two claims about nesting, and the day they drift both gates still look right.
+export const RAW_ELEMENT = /^<[ \t]*(script|style)\b/i;
+export const SELF_CLOSING = /\/[ \t]*>$/;
 
 /** A tag that opens or closes a real element, as opposed to a comment, a
  *  doctype, a CDATA section or a processing instruction — none of which nest. */
-const ELEMENT_TAG = /^<\/?[a-z]/i;
-const CLOSING_TAG = /^<[ \t]*\//;
+export const ELEMENT_TAG = /^<\/?[a-z]/i;
+export const CLOSING_TAG = /^<[ \t]*\//;
 
 /** HTML's void elements: they have no closing tag, so an author may write
  *  `<br>` or `<img …>` with no slash and nothing will ever close it. Counting
@@ -94,7 +99,8 @@ const VOID = new Set([
   "area", "base", "br", "col", "embed", "hr", "img", "input",
   "link", "meta", "source", "track", "wbr",
 ]);
-const isVoid = (tag) => VOID.has((tag.match(/^<[ \t]*([a-z][a-z0-9]*)/i)?.[1] ?? "").toLowerCase());
+export const isVoid = (tag) =>
+  VOID.has((tag.match(/^<[ \t]*([a-z][a-z0-9]*)/i)?.[1] ?? "").toLowerCase());
 
 /**
  * Every non-blank text node in an .astro template.

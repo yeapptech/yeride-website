@@ -79,7 +79,7 @@ yeride-website/
 │
 ├── .github/
 │   └── workflows/
-│       ├── checks.yml        # The control sets + gates 1-5, no deps. Every PR
+│       ├── checks.yml        # The control sets + gates 1-6, no deps. Every PR
 │                             # AND every push outside main (#104)
 │       ├── deploy-all.yml    # Full chain + deploy, on main
 │       └── fee-label-drift.yml     # Daily fee-label check
@@ -271,7 +271,7 @@ specifically breaks without it, is in CLAUDE.md and in the `breaks` strings in
 ## Build Process
 
 There is no test runner and no linter. **`npm run build` is the verification
-gate**, and it runs eight things in order — any one of them fails the build:
+gate**, and it runs nine things in order — any one of them fails the build:
 
 1. **Route parity** (`check-route-parity.mjs`) — every route has its `/es/` twin.
 2. **Copy gate** (`check-copy-gate.mjs`) — gated and never-claimed strings
@@ -289,17 +289,26 @@ gate**, and it runs eight things in order — any one of them fails the build:
    Attributes and props are deliberately not covered — per-page `title` and
    `description` stay literal in the page files, which is #37's decision. Like
    1–4 it needs neither dependencies nor secrets.
-6. **Env check** (`check-env.mjs`) — all six `PUBLIC_*` present, non-empty and
+6. **Contrast gate** (`check-contrast.mjs`) — every `text-ink`/`text-paper`
+   opacity is one of the two allowed steps (`/75` secondary, `/65` tertiary) and
+   both still clear WCAG AA against the brand colours (#76). It also checks the
+   **ground**: on Cab Yellow the tertiary step measures 3.84:1 and does not
+   exist, so a class nested inside a `bg-cab-yellow` element must be `/75` or
+   darker. Markup built in a `<script>` and injected into a slot cannot be
+   traced statically, so in a file that paints yellow those classes must declare
+   their ground with a `// contrast-ground: …` comment; an undeclared one is an
+   error. Like 1–5 it needs neither dependencies nor secrets.
+7. **Env check** (`check-env.mjs`) — all six `PUBLIC_*` present, non-empty and
    printable ASCII. Astro inlines them at build time, so an empty one becomes a
    falsy literal and Rollup deletes the branch that tested it.
-7. **`astro check`** — a type error fails the build.
-8. **Dist copy gate** (`check-dist-copy-gate.mjs`) — §5 again, over `dist/`,
+8. **`astro check`** — a type error fails the build.
+9. **Dist copy gate** (`check-dist-copy-gate.mjs`) — §5 again, over `dist/`,
    after `astro build`. This is the layer that measures the actual promise.
 
-Items 1–5 are dependency-free and run on every PR (`checks.yml`); 6–8 need
+Items 1–6 are dependency-free and run on every PR (`checks.yml`); 7–9 need
 `npm ci` against the private registry and run on `main` (`deploy-all.yml`).
 
-A ninth gate, **`check-fee-labels.mjs`**, runs *outside* the build because it
+A tenth gate, **`check-fee-labels.mjs`**, runs *outside* the build because it
 needs the network: it asks the live `getFeeSchedule` whether the site can name
 every charge, service-area and ride-tier id it publishes. It fails on drift and
 **skips** when it cannot ask. Deploy-time plus daily on a schedule.

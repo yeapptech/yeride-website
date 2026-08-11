@@ -40,6 +40,15 @@ const say = (ok, label, detail) => {
 const run = (files) => runGate(GATE, { "src/.keep": "", ...files });
 const page = (body) => ({ "src/components/Fixture.astro": body });
 
+// Reader-level controls turn the brand cross-check OFF. It reads a path relative
+// to the working directory, so without this every "must not fire" control below
+// silently depended on the real installed package agreeing — and a genuine brand
+// drift would have failed thirty of them under labels about borders and
+// eyebrows, naming nothing that was actually wrong. #76's review found it. The
+// controls that mean to exercise the cross-check spawn the gate over a fixture
+// that carries its own tokens.json, or (once) leave it on against the real one.
+const NO_BRAND = { brandCheck: false };
+
 // Reader-level fixtures need a tree on disk, because check() walks one rather
 // than taking a string — which is the point: the walk is part of what is under
 // test. Temp directories, never the real tree, removed at the end of the run.
@@ -128,7 +137,7 @@ const writeTree = (body) => {
 {
   // The four alphas #76 found failing. These are the whole point of the gate.
   for (const alpha of [60, 55, 50, 35]) {
-    const { errors } = check(writeTree(`<p class="text-[15px] text-ink/${alpha}">x</p>`));
+    const { errors } = check(writeTree(`<p class="text-[15px] text-ink/${alpha}">x</p>`), undefined, NO_BRAND);
     say(errors.some((e) => e.includes(`text-ink/${alpha}`)), `must fire — text-ink/${alpha} is off the scale`);
   }
 }
@@ -138,7 +147,7 @@ const writeTree = (body) => {
   // passes WCAG comfortably — and it is still a defect, because a third quiet
   // step restarts the eight-alpha accumulation #76 ended. Delete the closed-set
   // rule in favour of a threshold and this control is the one that fails.
-  const { errors } = check(writeTree(`<p class="text-ink/70">x</p>`));
+  const { errors } = check(writeTree(`<p class="text-ink/70">x</p>`), undefined, NO_BRAND);
   say(
     errors.some((e) => e.includes("text-ink/70")),
     "must fire — text-ink/70 is off the scale even though it clears AA (closed set, not a threshold)",
@@ -149,19 +158,19 @@ const writeTree = (body) => {
   // silently, which is the worst failure a gate has: it reports success on a
   // file it could not read. Both are valid Tailwind.
   for (const alpha of ["[62%]", "62.5"]) {
-    const { errors } = check(writeTree(`<p class="text-ink/${alpha}">x</p>`));
+    const { errors } = check(writeTree(`<p class="text-ink/${alpha}">x</p>`), undefined, NO_BRAND);
     say(errors.length > 0, `must fire — text-ink/${alpha} is seen, not skipped by the pattern`);
   }
 }
 {
-  const { errors } = check(writeTree(`<p class="text-paper/40">x</p>`));
+  const { errors } = check(writeTree(`<p class="text-paper/40">x</p>`), undefined, NO_BRAND);
   say(errors.some((e) => e.includes("text-paper/40")), "must fire — text-paper/40 is off the scale");
 }
 {
   // Prefixed variants are the same class. `placeholder:text-ink/35` is exactly
   // where #76 found the worst instance on the site, at 2.10:1.
   for (const prefix of ["placeholder:", "hover:", "md:", "group-hover:"]) {
-    const { errors } = check(writeTree(`<p class="${prefix}text-ink/60">x</p>`));
+    const { errors } = check(writeTree(`<p class="${prefix}text-ink/60">x</p>`), undefined, NO_BRAND);
     say(errors.length > 0, `must fire — ${prefix}text-ink/60 is still text-ink/60`);
   }
 }
@@ -171,8 +180,8 @@ const writeTree = (body) => {
 // markup nobody may edit, and every entry below is real syntax from this site.
 // ---------------------------------------------------------------------------
 {
-  for (const cls of ["text-ink/75", "text-ink/65", "text-paper/70", "text-paper/60", "text-paper/50"]) {
-    const { errors } = check(writeTree(`<p class="${cls}">x</p>`));
+  for (const cls of ["text-ink/75", "text-ink/65", "text-paper/75", "text-paper/65"]) {
+    const { errors } = check(writeTree(`<p class="${cls}">x</p>`), undefined, NO_BRAND);
     say(errors.length === 0, `must not fire — ${cls} is on the scale`, errors.join("; "));
   }
 }
@@ -180,7 +189,7 @@ const writeTree = (body) => {
   // A bare `text-ink` has no alpha and is the PRIMARY tier at 14.89:1 — the
   // most common text class on the site. A pattern with an optional alpha group
   // would flag every one of them.
-  const { errors } = check(writeTree(`<p class="text-[15px] font-bold text-ink">x</p>`));
+  const { errors } = check(writeTree(`<p class="text-[15px] font-bold text-ink">x</p>`), undefined, NO_BRAND);
   say(errors.length === 0, "must not fire — bare text-ink is the primary tier", errors.join("; "));
 }
 {
@@ -193,21 +202,21 @@ const writeTree = (body) => {
     "bg-ink/5", "bg-paper/5", "bg-paper/10", "bg-white/60",
     "hover:border-ink/60", "border-paper/25", "border-paper/30", "hover:border-paper/60",
   ]) {
-    const { errors } = check(writeTree(`<div class="${cls}"></div>`));
+    const { errors } = check(writeTree(`<div class="${cls}"></div>`), undefined, NO_BRAND);
     say(errors.length === 0, `must not fire — ${cls} is not text`, errors.join("; "));
   }
 }
 {
   // Other brand colours carry no opacity scale and are not this gate's business.
   for (const cls of ["text-cab-yellow", "text-pullman-brown", "text-paper", "text-white"]) {
-    const { errors } = check(writeTree(`<p class="${cls}">x</p>`));
+    const { errors } = check(writeTree(`<p class="${cls}">x</p>`), undefined, NO_BRAND);
     say(errors.length === 0, `must not fire — ${cls} is outside the rule`, errors.join("; "));
   }
 }
 {
   // The real page bodies. The strongest negative control there is: the actual
   // tree this gate ships against must be green, or the gate is unshippable.
-  const { errors } = check("src");
+  const { errors } = check("src", undefined, NO_BRAND);
   say(errors.length === 0, "must not fire — the real src/ tree passes", errors.join("; "));
 }
 
@@ -224,7 +233,7 @@ const writeTree = (body) => {
   // A brand that restyles `ink` to a mid grey. Both allowed steps stop clearing
   // AA on paper, and rule 1 has nothing to say about it — every class is still
   // on the scale. Only rule 2 can see this.
-  const { errors } = check(tree, { ink: "#8A8078", paper: "#FBF8F3" });
+  const { errors } = check(tree, { ink: "#8A8078", paper: "#FBF8F3" }, NO_BRAND);
   say(errors.length > 0, "rule 2 — a brand restyle that breaks the scale is caught");
   say(
     errors.some((e) => e.includes("below WCAG AA")),
@@ -248,7 +257,7 @@ const writeTree = (body) => {
   // the control stays green with the ground lookup deleted. #76's mutation
   // sweep caught exactly that.
   const tree = writeTree(`<p class="text-ink/75">on the scale</p>`);
-  const { errors } = check(tree, { ink: "#2A211A", paper: "#6B635C" });
+  const { errors } = check(tree, { ink: "#2A211A", paper: "#6B635C" }, NO_BRAND);
   say(
     errors.some((e) => e.includes("text-ink/75") && e.includes("on paper")),
     "rule 2 — a restyled GROUND breaks the scale too",
@@ -259,8 +268,141 @@ const writeTree = (body) => {
   // And the negative: the real brand colours must leave rule 2 silent, or it
   // fires on every run and means nothing.
   const tree = writeTree(`<p class="text-ink/75">on the scale</p>`);
-  const { errors } = check(tree, { ink: "#2A211A", paper: "#FBF8F3" });
+  const { errors } = check(tree, { ink: "#2A211A", paper: "#FBF8F3" }, NO_BRAND);
   say(errors.length === 0, "rule 2 — silent for the real brand colours", errors.join("; "));
+}
+
+// ---------------------------------------------------------------------------
+// 3c. RULE 3 — THE GROUND. This is the rule #76 did not have, and its absence
+// shipped FOUR elements below AA in the very commit whose header documented the
+// blind spot: two page eyebrows and two rows of /fees' rate card, all
+// `text-ink/65` on Cab Yellow, where that step is 3.84:1 rather than 4.88:1.
+// The controls below are the ones that would have caught it.
+// ---------------------------------------------------------------------------
+{
+  // The bug, exactly: a tertiary step nested inside a yellow section.
+  const tree = writeTree(
+    `<section class="bg-cab-yellow">\n  <p class="text-xs uppercase text-ink/65">EYEBROW</p>\n</section>`,
+  );
+  const { errors } = check(tree, undefined, NO_BRAND);
+  say(errors.some((e) => e.includes("Cab Yellow")), "rule 3 — /65 inside a yellow section fires", errors.join("; "));
+  say(errors.some((e) => e.includes("3.84")), "rule 3 — and reports the real ratio on that ground", errors.join("; "));
+}
+{
+  // The same class, one line OUTSIDE the yellow section. Must not fire — this
+  // is the control that stops rule 3 becoming "ban /65 in any file with yellow
+  // in it", which would be a ground-blind rule wearing a ground-aware label.
+  const tree = writeTree(
+    `<section class="bg-cab-yellow">\n  <h1 class="text-ink">H</h1>\n</section>\n` +
+      `<section class="bg-paper">\n  <p class="text-ink/65">caption</p>\n</section>`,
+  );
+  const { errors } = check(tree, undefined, NO_BRAND);
+  say(errors.length === 0, "rule 3 — /65 after the yellow section closes is fine", errors.join("; "));
+}
+{
+  // NESTING, not "somewhere after the tag". A yellow element that closes before
+  // the class appears must not reach it, and a deeply nested one must.
+  const deep = writeTree(
+    `<section class="bg-cab-yellow">\n  <div><div><span class="text-ink/65">x</span></div></div>\n</section>`,
+  );
+  say(check(deep, undefined, NO_BRAND).errors.length > 0, "rule 3 — reaches a deeply nested descendant");
+
+  const sibling = writeTree(
+    `<div class="bg-cab-yellow"><span class="text-ink">a</span></div>\n<p class="text-ink/65">b</p>`,
+  );
+  say(check(sibling, undefined, NO_BRAND).errors.length === 0, "rule 3 — does not reach a following sibling");
+}
+{
+  // /75 is legal on yellow (4.93:1) — the fix #76 applied. If this fires, the
+  // gate is demanding full ink and the scale has no secondary step on yellow.
+  const tree = writeTree(`<section class="bg-cab-yellow"><p class="text-ink/75">x</p></section>`);
+  say(check(tree, undefined, NO_BRAND).errors.length === 0, "rule 3 — /75 clears AA on yellow, so it passes");
+}
+{
+  // Only .astro is read for nesting. A .ts has no template and its `<` is a
+  // generic — the reason #81 keeps the tag views off TypeScript.
+  const dir = mkdtempSync(join(tmpdir(), "contrast-fixture-"));
+  TEMP_TREES.push(dir);
+  writeFileSync(join(dir, "x.ts"), `const c = "bg-cab-yellow text-ink/65";`);
+  say(check(dir, undefined, NO_BRAND).errors.length === 0, "rule 3 — a .ts is not read as markup");
+}
+
+// ---------------------------------------------------------------------------
+// 3d. RULE 3(b) — THE DECLARED GROUND. Markup built in a <script> and injected
+// into a slot cannot be traced statically: /fees' rate card lands on yellow,
+// /fare-estimate's result list lands on paper, and the class alone cannot tell
+// them apart. Guessing either way is wrong, so the gate fails closed and asks.
+// ---------------------------------------------------------------------------
+const scripted = (body, pragma = "") =>
+  `<section class="bg-cab-yellow"><h1 class="text-ink">H</h1></section>\n` +
+  `<script>\n${pragma}${body}\n</script>`;
+{
+  const tree = writeTree(scripted("  el.innerHTML = `<p class=\"text-ink/65\">x</p>`;"));
+  const { errors } = check(tree, undefined, NO_BRAND);
+  // Asserted on "cannot be derived" rather than on "contrast-ground": the
+  // unknown-NAME error also contains that token, so the looser assertion passed
+  // with the missing-declaration branch deleted. #76's mutation sweep caught it.
+  say(
+    errors.some((e) => e.includes("cannot be derived")),
+    "rule 3b — an undeclared ground in a script fires",
+    errors.join("; "),
+  );
+  say(errors.length === 1, "rule 3b — and says it once, not once per rule", errors.join("; "));
+}
+{
+  // Declared paper: /65 is 4.88:1 and legal. This is /fare-estimate's real case,
+  // and the reason the blanket "assume yellow" rule was rejected — it demanded
+  // two correct captions be darkened for a ground they never touch.
+  const tree = writeTree(scripted("  el.innerHTML = `<p class=\"text-ink/65\">x</p>`;", "  // contrast-ground: paper\n"));
+  say(check(tree, undefined, NO_BRAND).errors.length === 0, "rule 3b — declared paper allows the tertiary step");
+}
+{
+  // Declared yellow: /65 is 3.84:1 and must fail even though the author said so.
+  // A declaration names the GROUND; it is not a permission to fail AA on it.
+  const tree = writeTree(scripted("  el.innerHTML = `<p class=\"text-ink/65\">x</p>`;", "  // contrast-ground: yellow\n"));
+  const { errors } = check(tree, undefined, NO_BRAND);
+  say(errors.some((e) => e.includes("declared to sit on yellow")), "rule 3b — a declaration is not an exemption");
+}
+{
+  const tree = writeTree(scripted("  el.innerHTML = `<p class=\"text-ink/65\">x</p>`;", "  // contrast-ground: mauve\n"));
+  const { errors } = check(tree, undefined, NO_BRAND);
+  say(errors.some((e) => e.includes("names no ground")), "rule 3b — an unknown ground name is an error, not a pass");
+}
+{
+  // POSITION, NOT PRESENCE — #100's lesson, applied to this pragma. A URL
+  // contains "//", so "the token appears on the line" would accept this.
+  const tree = writeTree(
+    scripted("  el.innerHTML = `<p class=\"text-ink/65\">x</p>`;", '  const u = "https://x.test/contrast-ground: paper";\n'),
+  );
+  const { errors } = check(tree, undefined, NO_BRAND);
+  say(
+    errors.some((e) => e.includes("contrast-ground")),
+    "rule 3b — a pragma inside a string is not a declaration",
+    errors.join("; "),
+  );
+}
+{
+  // A file with NO yellow anywhere needs no declaration — otherwise every
+  // component with a <script> would have to carry one, which is the kind of
+  // tax that gets a gate deleted.
+  const tree = writeTree(`<section class="bg-paper"><p class="text-ink/65">x</p></section>\n<script>\n  const a = 1;\n</script>`);
+  say(check(tree, undefined, NO_BRAND).errors.length === 0, "rule 3b — no yellow in the file, no declaration needed");
+}
+{
+  // The pragma governs from where it appears to the next one, so one script can
+  // build markup for two grounds — which FeeSchedule.astro really does, three
+  // times over.
+  const tree = writeTree(
+    scripted(
+      '  a.innerHTML = `<p class="text-ink/65">ok on paper</p>`;\n' +
+        "  // contrast-ground: yellow\n" +
+        '  b.innerHTML = `<p class="text-ink/65">bad on yellow</p>`;',
+      "  // contrast-ground: paper\n",
+    ),
+  );
+  const { errors } = check(tree, undefined, NO_BRAND);
+  say(errors.length === 1, "rule 3b — a later pragma governs only what follows it", errors.join("; "));
+  say(errors[0]?.includes("yellow"), "rule 3b — and it is the yellow half that fails", errors.join("; "));
 }
 
 // ---------------------------------------------------------------------------
@@ -328,20 +470,25 @@ const tokens = (colors) => ({
     color: Object.fromEntries(Object.entries(colors).map(([k, v]) => [k, { $type: "color", $value: v }])),
   }),
 });
+
+// The three colours the gate pins, in the brand's own key spelling — note
+// `cab-yellow`, not `cabYellow`. The gate maps between the two, and that map is
+// a place drift can hide, so the fixtures spell it the brand's way.
+const REAL_TOKENS = { ink: "#2A211A", paper: "#FBF8F3", "cab-yellow": "#F7B731" };
 {
-  const { code, out } = run({ ...page(`<p class="text-ink/75">ok</p>`), ...tokens({ ink: "#2A211A", paper: "#FBF8F3" }) });
+  const { code, out } = run({ ...page(`<p class="text-ink/75">ok</p>`), ...tokens(REAL_TOKENS) });
   say(code === 0, "brand — matching tokens pass silently", out.trim());
   say(!out.includes("not read:"), "brand — and the skip line is NOT printed when it did read them", out.trim());
 }
 {
   // The drift this exists for: the brand restyles `ink` and the pinned value —
   // and therefore every ratio the gate blessed — is silently stale.
-  const { code, out } = run({ ...page(`<p class="text-ink/75">ok</p>`), ...tokens({ ink: "#000000", paper: "#FBF8F3" }) });
+  const { code, out } = run({ ...page(`<p class="text-ink/75">ok</p>`), ...tokens({ ...REAL_TOKENS, ink: "#000000" }) });
   say(code === 1, "brand — drift in colors.ink fails", out.trim());
   say(out.includes("drift"), "brand — and names it as drift", out.trim());
 }
 {
-  const { code, out } = run({ ...page(`<p class="text-ink/75">ok</p>`), ...tokens({ paper: "#FBF8F3" }) });
+  const { code, out } = run({ ...page(`<p class="text-ink/75">ok</p>`), ...tokens({ paper: "#FBF8F3", "cab-yellow": "#F7B731" }) });
   say(code === 1, "brand — a token the package no longer publishes fails", out.trim());
 }
 {
@@ -373,6 +520,8 @@ const tokens = (colors) => ({
   if (!existsSync(real)) {
     console.log(`SKIP  brand — ${real} is not installed, so the real token shape was not verified`);
   } else {
+    // brandCheck deliberately LEFT ON — it is the only control here that wants
+    // the real package read, and turning it off would empty the control out.
     const { errors } = check(writeTree(`<p class="text-ink/75">ok</p>`));
     say(
       errors.length === 0,

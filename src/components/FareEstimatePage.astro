@@ -461,6 +461,10 @@ if (!areaName) {
     });
   }
 
+  // contrast-ground: paper
+  // This writes into <div data-results>, which is in the page's `bg-paper`
+  // landing section — not the Cab Yellow hero above it. The tertiary step is
+  // legal here (4.88:1); it would not be on yellow.
   function renderEstimates(estimates: ServiceEstimate[]) {
     estimatesList.innerHTML = [...estimates]
       // Cheapest first, as the page has always ordered them — but a gap is not
