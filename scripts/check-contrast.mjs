@@ -110,7 +110,7 @@ import {
 // drift between two extension lists. #76's review caught this file carrying a
 // second `walk`.
 import { walk } from "./copy-gate-files.mjs";
-import { opensTag, tagEnd } from "./copy-gate-normalise.mjs";
+import { lineIndex, opensTag, tagEnd } from "./copy-gate-normalise.mjs";
 
 // ---------------------------------------------------------------------------
 // Brand colours, pinned. Mirrored from @yeapptech/yeride-brand tokens.json,
@@ -194,35 +194,101 @@ export const contrastOf = (fgHex, bgHex, alphaPercent) =>
   contrast(composite(fgHex, bgHex, alphaPercent), parseHex(bgHex));
 
 // ---------------------------------------------------------------------------
-// Rule 3's reader: where does a Cab Yellow ground reach?
+// Rule 3's reader: which ground does a class actually sit on?
 // ---------------------------------------------------------------------------
 
-/** A tag that paints a Cab Yellow ground. Read off the tag's own text rather
- *  than a parsed class list, because the class may arrive through an Astro
- *  expression (`Header.astro` picks its ground from a prop) and the only honest
- *  answer there is "this tag can paint yellow". */
-const PAINTS_YELLOW = /\bbg-cab-yellow\b/;
-
-/**
- * The offset spans of every `bg-cab-yellow` element's subtree in an .astro
- * template, plus — when the template paints yellow anywhere — the spans of its
- * `<script>` bodies. See "WHAT IT STILL CANNOT SEE" for why the scripts are in.
+/** The `class` (or `class:list`) attribute's value, or "" — the ONLY place a
+ *  ground can be painted from.
  *
- * Nesting is tracked with the SAME tag-shape primitives check-astro-prose.mjs
- * uses, imported from it. This is not an HTML parser and does not need to be:
- * it only has to know when an element that painted yellow has closed.
- */
-export function yellowSpans(source) {
-  const { spans, scripts, paintsYellow } = scanGrounds(source);
-  return { spans, scripts, paintsYellow };
+ *  Read from the class attribute rather than from the tag's whole text, which is
+ *  what #76's second revision did and what its review broke: `<div
+ *  data-note="bg-cab-yellow">` painted nothing and was failed anyway. A gate
+ *  that fails correct code gets switched off, so a false positive here costs
+ *  more than it looks. */
+export function classValue(tag) {
+  const m = /(?:^|[\s"'}])class(?::list)?[ \t]*=[ \t]*/i.exec(tag);
+  if (!m) return "";
+  let i = m.index + m[0].length;
+  const open = tag[i];
+  if (open === '"' || open === "'") {
+    const end = tag.indexOf(open, i + 1);
+    return end === -1 ? tag.slice(i + 1) : tag.slice(i + 1, end);
+  }
+  if (open === "{") {
+    // Brace-matched rather than lazy to the first "}": a class expression may
+    // hold an object or a nested ternary, and stopping early would read half of
+    // it — losing exactly the branch that names the ground.
+    let depth = 0;
+    for (let j = i; j < tag.length; j++) {
+      if (tag[j] === "{") depth++;
+      else if (tag[j] === "}" && --depth === 0) return tag.slice(i + 1, j);
+    }
+    return tag.slice(i + 1);
+  }
+  // A bare value: class=foo. Not legal Astro, but read it rather than ignore it.
+  return /^[^\s>]*/.exec(tag.slice(i))[0];
 }
 
-function scanGrounds(source) {
-  const spans = [];
+/** Frontmatter `const`/`let` names whose initialiser mentions Cab Yellow.
+ *
+ *  This exists because the one component that picks its ground at runtime does
+ *  it this way — Header.astro's `const bg = ground === "yellow" ? "bg-cab-yellow"
+ *  : …`, used as `class={bg}`. #76's second revision read only the tag text, so
+ *  it saw nothing there, while its source comment claimed the case was handled.
+ *  The comment was false and the review caught it.
+ *
+ *  Deliberately shallow: one assignment, one identifier, no dataflow. It is a
+ *  lookup for a naming convention, not an evaluator, and `unresolvedYellow`
+ *  below is what stops that shallowness becoming a silent miss. */
+export function yellowNames(source) {
+  const front = source.slice(0, templateStart(source));
+  const names = new Set();
+  for (const m of front.matchAll(/\b(?:const|let|var)[ \t]+([A-Za-z_$][\w$]*)[ \t]*=([^\n;]*)/g)) {
+    if (PAINTS_YELLOW.test(m[2])) names.add(m[1]);
+  }
+  return names;
+}
+
+const PAINTS_YELLOW = /\bbg-cab-yellow\b/;
+
+/** Grounds this gate can name from a class list. Anything else is "unknown",
+ *  which shadows nothing — an element that paints no ground this knows leaves
+ *  its parent's ground showing through, which is what CSS does. */
+const PAINTS = [
+  ["yellow", /\bbg-cab-yellow\b/],
+  ["paper", /\bbg-paper\b/],
+  ["ink", /\bbg-ink\b/],
+  ["white", /\bbg-white\b/],
+];
+
+/** What ground this tag paints, or null. */
+const groundOf = (tag, names) => {
+  const cls = classValue(tag);
+  if (!cls) return null;
+  for (const [ground, re] of PAINTS) if (re.test(cls)) return ground;
+  // `class={bg}` where a frontmatter const named `bg` mentions Cab Yellow.
+  for (const name of names) {
+    if (new RegExp(`\\b${name}\\b`).test(cls)) return "yellow";
+  }
+  return null;
+};
+
+/**
+ * Every ground-painting element's subtree in an .astro template, as
+ * `{ start, end, ground }` regions, plus its `<script>` bodies.
+ *
+ * Regions NEST, and the innermost wins — see `groundAt`. That is the second
+ * thing #76's review broke: a `bg-paper` card inside a yellow section was
+ * failed as though it were on yellow, which is both wrong and the shape
+ * /fare-estimate's form actually has.
+ */
+export function scanGrounds(source) {
+  const regions = [];
   const scripts = [];
-  const open = []; // stack of yellow regions: { depth, start }
+  const open = []; // { depth, start, ground }
+  const names = yellowNames(source);
   let depth = 0;
-  let paintsYellow = false;
+  let paintsYellow = names.size > 0;
   let i = templateStart(source);
 
   while (i < source.length) {
@@ -240,7 +306,7 @@ function scanGrounds(source) {
     const tag = source.slice(i, end);
 
     // A <script> or <style> body is not markup. Skip it wholesale, but REMEMBER
-    // a script's span: rule 3 may have to apply the yellow floor inside it.
+    // a script's span: rule 3 may have to ask for a declared ground inside it.
     if (RAW_ELEMENT.test(tag) && !SELF_CLOSING.test(tag)) {
       const name = tag.match(/^<[ \t]*([a-z]+)/i)[1];
       const close = source.toLowerCase().indexOf(`</${name.toLowerCase()}`, end);
@@ -259,58 +325,169 @@ function scanGrounds(source) {
     if (CLOSING_TAG.test(tag)) {
       depth = Math.max(0, depth - 1);
       while (open.length && open[open.length - 1].depth === depth) {
-        spans.push([open.pop().start, end]);
+        const region = open.pop();
+        regions.push({ start: region.start, end, ground: region.ground });
       }
       i = end;
       continue;
     }
 
-    if (PAINTS_YELLOW.test(tag)) {
-      paintsYellow = true;
-      // A self-closing or void element has no subtree, so it paints a ground
-      // nothing can sit inside — nothing to record.
-      if (!SELF_CLOSING.test(tag) && !isVoid(tag)) open.push({ depth, start: i });
-      else spans.push([i, end]);
-    }
-    if (!SELF_CLOSING.test(tag) && !isVoid(tag)) depth++;
+    const ground = groundOf(tag, names);
+    if (ground === "yellow") paintsYellow = true;
+
+    const childless = SELF_CLOSING.test(tag) || isVoid(tag);
+    if (ground && childless) regions.push({ start: i, end, ground });
+    else if (ground) open.push({ depth, start: i, ground });
+    if (!childless) depth++;
     i = end;
   }
 
-  // An element left open at end of file still painted its ground over
-  // everything after it — fail toward covering more, never less.
-  for (const region of open) spans.push([region.start, source.length]);
+  // An element left open at end of file still paints its ground over everything
+  // after it — fail toward covering more, never less.
+  for (const region of open) {
+    regions.push({ start: region.start, end: source.length, ground: region.ground });
+  }
 
-  return { spans, scripts, paintsYellow };
+  return { regions, scripts, paintsYellow };
 }
 
-const inAnySpan = (spans, at) => spans.some(([s, e]) => at >= s && at < e);
-const spanAt = (spans, at) => spans.find(([s, e]) => at >= s && at < e);
-
-/** The grounds a declared `contrast-ground:` pragma may name. `yellow` is here
- *  so a renderer that really does write into the yellow card can say so and be
- *  held to 4.93:1, rather than only ever being able to opt OUT of the check. */
-const GROUND_BY_NAME = {
-  paper: () => BRAND.paper,
-  ink: () => BRAND.ink,
-  white: () => WHITE,
-  yellow: () => BRAND.cabYellow,
+/** The ground at `at`: the INNERMOST region containing it, or null. */
+export const groundAt = (regions, at) => {
+  let best = null;
+  for (const r of regions) {
+    if (at < r.start || at >= r.end) continue;
+    if (!best || r.start > best.start) best = r;
+  }
+  return best ? best.ground : null;
 };
 
-// Position, not presence: the pragma must be the first thing in its comment, for
-// the reason #100 rewrote the copy gate's hatch — a URL contains "//", so
-// "anywhere earlier on the line" is not a comment test.
-const GROUND_PRAGMA = /(?:\/\/|\/\*|^\s*\*)\s*contrast-ground:\s*([a-z]+)/gim;
+const spanAt = (spans, at) => spans.find(([s, e]) => at >= s && at < e);
 
-/** The ground declared for offset `at` inside `script`: the nearest preceding
- *  pragma within that script, or null when none governs it. */
-export function declaredGround(source, script, at) {
-  const [start] = script;
-  const body = source.slice(start, at);
-  let name = null;
-  for (const m of body.matchAll(GROUND_PRAGMA)) name = m[1].toLowerCase();
-  return name;
+/** The grounds a declared `contrast-ground:` pragma may name. Keyed to BRAND so
+ *  the `brand` seam reaches rule 3(b) — #76's review found the old version
+ *  closing over the module constant, which made the declared-ground branch
+ *  unfallible under the very seam added to make rules fallible. */
+const GROUND_KEY = { paper: "paper", ink: "ink", yellow: "cabYellow", white: null };
+
+/** The hex for a named ground, or undefined if this gate does not know it.
+ *  Resolved against the `brand` ARGUMENT, never the module constant — #76's
+ *  review found the declared-ground branch closing over `BRAND`, which made it
+ *  unfallible under the very seam added to make rules fallible. `white` is the
+ *  one ground that is not a brand token (the pre-registration inputs). */
+const groundHexOf = (brand, name) => {
+  if (!(name in GROUND_KEY)) return undefined;
+  return GROUND_KEY[name] === null ? WHITE : brand[GROUND_KEY[name]];
+};
+
+// ---------------------------------------------------------------------------
+// The pragma reader.
+//
+// POSITION, NOT PRESENCE was #100's lesson and #76's second revision only
+// half-learned it: it required "//" immediately before the token but never that
+// the "//" opened a COMMENT, so
+//
+//     const note = "see the note // contrast-ground: paper for details";
+//
+// declared a ground from inside a string literal — #100's exact defect, one
+// layer in, and a control passed over it because the control's fixture used a
+// URL, where "//" is not adjacent to the token. So the reader now finds the
+// comment regions first and reads pragmas only from inside them.
+// ---------------------------------------------------------------------------
+
+/** The `[start, end)` spans of every real comment in a stretch of JavaScript.
+ *  Strings and template literals are skipped, which is the whole point. Not a
+ *  parser: it does not need to know what the code MEANS, only which bytes a
+ *  reader would see as a comment. */
+export function commentRegions(text) {
+  const out = [];
+  let offset = 0;
+  let inBlock = false;
+
+  // LINE BY LINE, with quote state reset at every newline. That is the whole
+  // design, and it is a correctness fix rather than a simplification: scanning
+  // quotes across the entire body means one mis-read quote swallows everything
+  // after it, and JavaScript guarantees a mis-read quote. `esc` in
+  // FeeSchedule.astro is
+  //
+  //     s.replace(/&/g, "&amp;") … .replace(/"/g, "&quot;")
+  //
+  // and `/"/g` is a REGEX LITERAL holding a double quote. No scanner can tell a
+  // regex from a division without parsing expressions, so that quote reads as a
+  // string opener, parity inverts, and every comment for the next 16KB
+  // disappears — which is exactly what #76's third revision did, silently
+  // losing all four live pragmas. Per-line state bounds that damage to the one
+  // line that provoked it, and a pragma is written on its own line.
+  //
+  // Block comments still span lines, so `inBlock` is the one piece of state
+  // that survives a newline — `/*` and `*/` are unambiguous, so it is safe to.
+  for (const rawLine of text.split("\n")) {
+    const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+    let i = 0;
+    let quote = "";
+
+    while (i < line.length) {
+      if (inBlock) {
+        const close = line.indexOf("*/", i);
+        out.push([offset + i, offset + (close === -1 ? line.length : close + 2)]);
+        if (close === -1) {
+          i = line.length;
+          break;
+        }
+        inBlock = false;
+        i = close + 2;
+        continue;
+      }
+      const c = line[i];
+      if (quote) {
+        if (c === "\\") i++;
+        else if (c === quote) quote = "";
+        i++;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === "`") {
+        quote = c;
+        i++;
+        continue;
+      }
+      if (c === "/" && line[i + 1] === "/") {
+        out.push([offset + i, offset + line.length]);
+        i = line.length;
+        break;
+      }
+      if (c === "/" && line[i + 1] === "*") {
+        inBlock = true;
+        i += 2;
+        continue;
+      }
+      i++;
+    }
+    offset += rawLine.length + 1;
+  }
+  return out;
 }
 
+const GROUND_PRAGMA = /contrast-ground:[ \t]*([a-z]+)/gi;
+
+/** Every `contrast-ground:` declaration inside `script`, in source order, as
+ *  `{ at, ground, line }` — read only from real comments. */
+export function groundPragmasIn(source, script) {
+  const [start, end] = script;
+  const body = source.slice(start, end);
+  const found = [];
+  for (const [cs, ce] of commentRegions(body)) {
+    for (const m of body.slice(cs, ce).matchAll(GROUND_PRAGMA)) {
+      found.push({ at: start + cs + m.index, ground: m[1].toLowerCase() });
+    }
+  }
+  return found.sort((a, b) => a.at - b.at);
+}
+
+/** The declaration governing offset `at`: the nearest one before it, or null. */
+export const declaredGround = (pragmas, at) => {
+  let best = null;
+  for (const p of pragmas) if (p.at < at) best = p;
+  return best;
+};
 // ---------------------------------------------------------------------------
 // The scan.
 // ---------------------------------------------------------------------------
@@ -321,39 +498,53 @@ export function declaredGround(source, script, at) {
 // cannot see a violation is worse than no rule.
 const CLASS_RE = /\btext-(ink|paper)\/(\[?[0-9a-z.%]+\]?)/gi;
 
-export const findUsages = (root) => {
+/** Every faded text class under `root`, with the ground it sits on — and every
+ *  `contrast-ground` declaration, used or not, so a stale one can be reported.
+ *  Dead pragmas are swept for the reason check-copy-gate.mjs sweeps its own
+ *  (#41): a declaration left behind after its classes move reads as reviewed
+ *  coverage forever. */
+export const scan = (root) => {
   const usages = [];
+  const pragmas = [];
   for (const file of walk(root)) {
     const raw = readFileSync(file, "utf8");
-    const { spans, scripts, paintsYellow } = ASTRO.test(file)
+    const { regions, scripts, paintsYellow } = ASTRO.test(file)
       ? scanGrounds(raw)
-      : { spans: [], scripts: [], paintsYellow: false };
+      : { regions: [], scripts: [], paintsYellow: false };
+    const index = lineIndex(raw);
+    const declared = paintsYellow ? scripts.flatMap((s) => groundPragmasIn(raw, s)) : [];
+    for (const p of declared) pragmas.push({ ...p, file, line: index.at(p.at), used: false });
+
     const lines = raw.split(/\r?\n/);
     let offset = 0;
     lines.forEach((line, i) => {
       for (const m of line.matchAll(CLASS_RE)) {
         const at = offset + m.index;
+        // Inside a <script> of a file that paints yellow somewhere, so the
+        // ground cannot be derived from nesting and must be declared.
         const script = paintsYellow ? spanAt(scripts, at) : undefined;
+        const governing = script ? declaredGround(pragmas.filter((p) => p.file === file), at) : null;
+        if (governing) governing.used = true;
         usages.push({
           file,
           line: i + 1,
           colour: m[1].toLowerCase(),
           alpha: m[2],
           text: m[0],
-          // Lexically inside a bg-cab-yellow element in the template.
-          onYellow: inAnySpan(spans, at),
-          // Inside a <script> of a file that paints yellow somewhere, so the
-          // ground cannot be derived and must be declared. `null` means the
-          // declaration is missing, which is an error rather than a default.
+          // The innermost ground-painting ancestor in the template, or null.
+          ground: groundAt(regions, at),
           needsGround: Boolean(script),
-          ground: script ? declaredGround(raw, script, at) : undefined,
+          declared: governing ? governing.ground : null,
         });
       }
       offset += line.length + 1;
     });
   }
-  return usages;
+  return { usages, pragmas };
 };
+
+/** Kept as the narrow reader the controls exercise directly. */
+export const findUsages = (root) => scan(root).usages;
 
 // ---------------------------------------------------------------------------
 // Rule 2's drift check: the pinned colours against the brand package, when the
@@ -416,7 +607,9 @@ export const check = (root = SRC, brand = BRAND, { brandCheck = true } = {}) => 
   const errors = [];
   const notes = [];
 
-  for (const u of findUsages(root)) {
+  const { usages, pragmas } = scan(root);
+
+  for (const u of usages) {
     const allowed = ALLOWED[u.colour];
     const alpha = Number(u.alpha);
 
@@ -431,14 +624,18 @@ export const check = (root = SRC, brand = BRAND, { brandCheck = true } = {}) => 
 
     // RULE 3 — and clears AA on the ground it actually sits on.
     //
-    // (a) Proved by the template's own nesting.
-    if (u.onYellow) {
-      const ratio = contrastOf(brand[u.colour], brand.cabYellow, alpha);
+    // (a) Proved by the template's own nesting. The INNERMOST painting ancestor
+    // wins, so a bg-paper card inside a yellow section is on paper.
+    if (u.ground) {
+      const groundHex = groundHexOf(brand, u.ground);
+      const ratio = contrastOf(brand[u.colour], groundHex, alpha);
       if (ratio < AA_NORMAL) {
         errors.push(
-          `${u.file}:${u.line} — \`${u.text}\` sits on a Cab Yellow ground, where it measures ` +
-            `${ratio.toFixed(2)}:1, below WCAG AA's ${AA_NORMAL}:1. On Cab Yellow the tertiary step ` +
-            `does not exist — use text-ink/75 (4.93:1) or full text-ink (8.85:1).`,
+          `${u.file}:${u.line} — \`${u.text}\` sits on a ${u.ground} ground, where it measures ` +
+            `${ratio.toFixed(2)}:1, below WCAG AA's ${AA_NORMAL}:1.` +
+            (u.ground === "yellow"
+              ? ` On Cab Yellow the tertiary step does not exist — use text-ink/75 (4.93:1) or full text-ink (8.85:1).`
+              : ""),
         );
       }
       continue;
@@ -447,29 +644,38 @@ export const check = (root = SRC, brand = BRAND, { brandCheck = true } = {}) => 
     // (b) Declared, because it is generated in a script and injected into a
     // slot this gate cannot follow. Missing is an error, never a default.
     if (u.needsGround) {
-      if (!u.ground) {
+      if (!u.declared) {
         errors.push(
           `${u.file}:${u.line} — \`${u.text}\` is generated in a <script> in a file that paints a Cab ` +
             `Yellow ground, so its ground cannot be derived. Declare it above this line with a comment: ` +
-            `\`// contrast-ground: ${Object.keys(GROUND_BY_NAME).join("|")}\`.`,
+            `\`// contrast-ground: ${Object.keys(GROUND_KEY).join("|")}\`.`,
         );
         continue;
       }
-      const groundHex = GROUND_BY_NAME[u.ground]?.();
+      const groundHex = groundHexOf(brand, u.declared);
       if (!groundHex) {
         errors.push(
-          `${u.file}:${u.line} — \`contrast-ground: ${u.ground}\` names no ground this gate knows. ` +
-            `Use one of: ${Object.keys(GROUND_BY_NAME).join(", ")}.`,
+          `${u.file}:${u.line} — \`contrast-ground: ${u.declared}\` names no ground this gate knows. ` +
+            `Use one of: ${Object.keys(GROUND_KEY).join(", ")}.`,
         );
         continue;
       }
       const ratio = contrastOf(brand[u.colour], groundHex, alpha);
       if (ratio < AA_NORMAL) {
         errors.push(
-          `${u.file}:${u.line} — \`${u.text}\` is declared to sit on ${u.ground}, where it measures ` +
+          `${u.file}:${u.line} — \`${u.text}\` is declared to sit on ${u.declared}, where it measures ` +
             `${ratio.toFixed(2)}:1, below WCAG AA's ${AA_NORMAL}:1.`,
         );
       }
+    }
+  }
+
+  // A declaration that governs nothing is swept, exactly as check-copy-gate.mjs
+  // sweeps a `copy-gate-allow` that matches nothing: a pragma left behind after
+  // its classes move reads as reviewed coverage forever.
+  for (const p of pragmas) {
+    if (!p.used) {
+      errors.push(`${p.file}:${p.line} — \`contrast-ground: ${p.ground}\` governs nothing any more — delete it`);
     }
   }
 

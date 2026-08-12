@@ -49,6 +49,12 @@ const page = (body) => ({ "src/components/Fixture.astro": body });
 // that carries its own tokens.json, or (once) leave it on against the real one.
 const NO_BRAND = { brandCheck: false };
 
+// The pinned colours in the GATE's key spelling (`cabYellow`), as opposed to
+// REAL_TOKENS below, which uses the brand package's (`cab-yellow`). The two
+// spellings and the map between them are a place drift can hide, so both are
+// written down rather than derived from each other.
+const REAL_BRAND = { ink: "#2A211A", paper: "#FBF8F3", cabYellow: "#F7B731" };
+
 // Reader-level fixtures need a tree on disk, because check() walks one rather
 // than taking a string — which is the point: the walk is part of what is under
 // test. Temp directories, never the real tree, removed at the end of the run.
@@ -406,6 +412,297 @@ const scripted = (body, pragma = "") =>
 }
 
 // ---------------------------------------------------------------------------
+// 3e. WHAT THE SECOND REVIEW BROKE. Every control below reproduces a defect a
+// reviewer found in #76's rule 3, verbatim. They are grouped because they share
+// a moral: each one passed a control that tested a WEAKER case than the real
+// exploit, and green was read as coverage.
+// ---------------------------------------------------------------------------
+{
+  // THE SPOOF. The old pragma rule required `//` immediately before the token
+  // but never that the `//` OPENED a comment, so a string literal declared a
+  // ground. #100's exact defect, one layer in. The control that was supposed to
+  // catch it used a URL — where `//` is NOT adjacent to the token — so it
+  // passed while the real exploit walked through.
+  const tree = writeTree(
+    scripted(
+      '  el.innerHTML = `<p class="text-ink/65">x</p>`;',
+      '  const note = "see the note // contrast-ground: paper for details";\n',
+    ),
+  );
+  const { errors } = check(tree, undefined, NO_BRAND);
+  say(
+    errors.some((e) => e.includes("cannot be derived")),
+    "spoof — a pragma inside a string literal declares nothing",
+    errors.join("; "),
+  );
+}
+{
+  // The same shape one level meaner: the string ENDS with the pragma, so there
+  // is no trailing text to give it away.
+  const tree = writeTree(
+    scripted('  el.innerHTML = `<p class="text-ink/65">x</p>`;', '  const s = "// contrast-ground: paper";\n'),
+  );
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("cannot be derived")),
+    "spoof — even when the string ends at the pragma",
+  );
+}
+{
+  // A REGEX LITERAL HOLDING A QUOTE. `s.replace(/"/g, "&quot;")` is real code in
+  // FeeSchedule.astro, and a whole-body quote scanner reads that `"` as a string
+  // opener, inverts parity and loses every comment for the next 16KB — which
+  // silently dropped all four live pragmas. This is why comment state is
+  // per-line. Without the fix the pragma below is invisible and the control
+  // fails with "cannot be derived".
+  const tree = writeTree(
+    scripted(
+      '  const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");\n' +
+        "  // contrast-ground: paper\n" +
+        '  el.innerHTML = `<p class="text-ink/65">${esc(x)}</p>`;',
+    ),
+  );
+  say(
+    check(tree, undefined, NO_BRAND).errors.length === 0,
+    "regex literal — a quote inside /…/ must not swallow the comments after it",
+    check(tree, undefined, NO_BRAND).errors.join("; "),
+  );
+}
+{
+  // A pragma in a BLOCK comment is still a pragma, and a block comment spans
+  // lines — the one piece of state that must survive a newline.
+  const tree = writeTree(
+    scripted('  el.innerHTML = `<p class="text-ink/65">x</p>`;', "  /*\n   * contrast-ground: paper\n   */\n"),
+  );
+  say(check(tree, undefined, NO_BRAND).errors.length === 0, "pragma — a multi-line block comment declares too");
+}
+{
+  // A BLOCK COMMENT THAT CLOSES ON ITS OWN LINE must stop there. If it ran to
+  // the end of the line instead, the string after it would be read as comment
+  // text and its contents would declare a ground — a spoof by another door.
+  const tree = writeTree(
+    scripted(
+      '  el.innerHTML = `<p class="text-ink/65">x</p>`;',
+      '  /* nothing */ const s = "// contrast-ground: paper";\n',
+    ),
+  );
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("cannot be derived")),
+    "pragma — a closed block comment does not swallow the rest of its line",
+    check(tree, undefined, NO_BRAND).errors.join("; "),
+  );
+}
+{
+  // …and it must also stop being a block comment for the LINES that follow.
+  // Leaving `inBlock` set turns every later line into comment text, which turns
+  // a string literal into a declaration — the spoof again, arriving through the
+  // block-comment door instead of the `//` one.
+  const tree = writeTree(
+    scripted(
+      '  el.innerHTML = `<p class="text-ink/65">x</p>`;',
+      '  /* a note */\n  const s = "// contrast-ground: paper";\n',
+    ),
+  );
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("cannot be derived")),
+    "pragma — a block comment that closes stops applying to the next line",
+    check(tree, undefined, NO_BRAND).errors.join("; "),
+  );
+}
+{
+  // THE FRONTMATTER VARIABLE. Header.astro really does
+  // `const bg = ground === "yellow" ? "bg-cab-yellow" : …` and then `class={bg}`.
+  // The old reader saw only the tag text, so it saw nothing — while its own
+  // source comment claimed the case was handled. The comment was false.
+  const tree = writeTree(`---\nconst cls = "bg-cab-yellow";\n---\n<div class={cls}><p class="text-ink/65">x</p></div>`);
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("yellow")),
+    "frontmatter — a ground named by a const reaches the class that uses it",
+  );
+}
+{
+  // And Header's actual shape: a ternary in the frontmatter, not a bare string.
+  const tree = writeTree(
+    `---\nconst bg = g === "yellow" ? "bg-cab-yellow" : "bg-paper";\n---\n<header class={bg}><p class="text-ink/65">x</p></header>`,
+  );
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("yellow")),
+    "frontmatter — including the ternary form Header.astro uses",
+  );
+}
+{
+  // FALSE POSITIVE: the literal text in a NON-class attribute. Reading the whole
+  // tag failed `<div data-note="bg-cab-yellow">`, which paints nothing. A gate
+  // that fails correct code gets switched off, so this costs more than it looks.
+  const tree = writeTree(`<div data-note="bg-cab-yellow"><p class="text-ink/65">x</p></div>`);
+  say(
+    check(tree, undefined, NO_BRAND).errors.length === 0,
+    "false positive — bg-cab-yellow in a non-class attribute paints nothing",
+    check(tree, undefined, NO_BRAND).errors.join("; "),
+  );
+}
+{
+  // FALSE POSITIVE: a bg-paper card NESTED inside a yellow section. The
+  // innermost painting ancestor wins, which is what CSS does — and this is the
+  // exact shape of /fare-estimate's form, a paper card inside the yellow hero.
+  const tree = writeTree(
+    `<section class="bg-cab-yellow">\n  <div class="bg-paper"><p class="text-ink/65">caption</p></div>\n</section>`,
+  );
+  say(
+    check(tree, undefined, NO_BRAND).errors.length === 0,
+    "shadowing — a bg-paper card inside a yellow section is on paper",
+    check(tree, undefined, NO_BRAND).errors.join("; "),
+  );
+}
+{
+  // A GROUND AMONG OTHER CLASSES. The quoted-value branch of `classValue` is
+  // only observable when the value has more than one class in it: with a single
+  // class the bare-value fallback happens to read the same bytes, so an
+  // exhaustive mutation sweep found the branch deletable until this existed.
+  const tree = writeTree(`<section class="mt-8 bg-cab-yellow px-5 py-7"><p class="text-ink/65">x</p></section>`);
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("yellow")),
+    "classValue — a ground among other classes in a quoted value",
+  );
+}
+{
+  // AN EXPRESSION VALUE, brace-matched. Same story: with `class={cls}` the bare
+  // fallback reads the same bytes, so the brace branch only shows up once the
+  // expression contains whitespace — which every real one does.
+  const tree = writeTree(`<div class={c ? "bg-cab-yellow" : "bg-paper"}><p class="text-ink/65">x</p></div>`);
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("yellow")),
+    "classValue — a ternary expression value is read whole, not to the first space",
+  );
+}
+{
+  // AN UNTERMINATED TAG closes nothing and must not swallow the rest of the
+  // file — a browser treats the "<" as text and so do the copy gate's readers.
+  const tree = writeTree(`<section class="bg-cab-yellow"><p>a < b</p><p class="text-ink/65">x</p></section>`);
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("yellow")),
+    "unterminated — a stray '<' does not lose the ground that encloses it",
+  );
+}
+{
+  // A TAG THAT NEVER CLOSES AT ALL — no ">" anywhere after it. It paints
+  // nothing, because there is no element. Reading it as one would invent a
+  // ground out of an unfinished line and fail the class above it.
+  const tree = writeTree(`<p class="text-ink/65">x</p>\n<div class="bg-cab-yellow"`);
+  say(
+    check(tree, undefined, NO_BRAND).errors.length === 0,
+    "unterminated — a tag with no '>' paints no ground",
+    check(tree, undefined, NO_BRAND).errors.join("; "),
+  );
+}
+{
+  // THE CLASS ATTRIBUTE, AND ONLY IT. An expression value must be read to its
+  // matching brace and stop — not run on into a later attribute that happens to
+  // contain the ground's name. Without the bound this is a false positive.
+  const tree = writeTree(`<div class={cls} data-note="bg-cab-yellow"><p class="text-ink/65">x</p></div>`);
+  say(
+    check(tree, undefined, NO_BRAND).errors.length === 0,
+    "classValue — an expression value stops at its brace, not at a later attribute",
+    check(tree, undefined, NO_BRAND).errors.join("; "),
+  );
+}
+{
+  // The same bound for an unquoted value. Not legal Astro, but the reader has a
+  // branch for it, and a branch nothing exercises is a branch nobody can trust.
+  const tree = writeTree(`<div class=bg-paper data-note="bg-cab-yellow"><p class="text-ink/65">x</p></div>`);
+  say(
+    check(tree, undefined, NO_BRAND).errors.length === 0,
+    "classValue — a bare value stops at whitespace",
+    check(tree, undefined, NO_BRAND).errors.join("; "),
+  );
+}
+{
+  // COMMENTS AND DOCTYPES DO NOT NEST. Counting one as an element shifts depth
+  // and the yellow region then closes on the wrong tag — so a class AFTER the
+  // section would inherit a ground it never sits on.
+  const tree = writeTree(
+    `<section class="bg-cab-yellow">\n  <!-- a note -->\n  <h1 class="text-ink">H</h1>\n</section>\n<p class="text-ink/65">safe</p>`,
+  );
+  say(
+    check(tree, undefined, NO_BRAND).errors.length === 0,
+    "nesting — an HTML comment inside the section does not shift the depth",
+    check(tree, undefined, NO_BRAND).errors.join("; "),
+  );
+}
+{
+  // …and the reverse: yellow nested inside paper is still yellow.
+  const tree = writeTree(
+    `<section class="bg-paper">\n  <div class="bg-cab-yellow"><p class="text-ink/65">x</p></div>\n</section>`,
+  );
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("yellow")),
+    "shadowing — and yellow nested inside paper is still yellow",
+  );
+}
+{
+  // THE BRAND SEAM MUST REACH RULE 3(b). The declared-ground branch used to
+  // close over the module constant, so it could not fail under the seam added
+  // to make rules fallible — the same defect rule 2 had, in the branch added to
+  // fix it.
+  const tree = writeTree(
+    scripted('  el.innerHTML = `<p class="text-ink/65">x</p>`;', "  // contrast-ground: paper\n"),
+  );
+  const { errors } = check(tree, { ...REAL_BRAND, paper: "#2A211A" }, NO_BRAND);
+  say(
+    errors.some((e) => e.includes("declared to sit on paper")),
+    "seam — rule 3(b) measures against the brand ARGUMENT, not the module constant",
+    errors.join("; "),
+  );
+}
+{
+  // DEAD PRAGMAS ARE SWEPT, as check-copy-gate.mjs sweeps a `copy-gate-allow`
+  // that matches nothing: a declaration left behind after its classes move
+  // reads as reviewed coverage forever.
+  const tree = writeTree(scripted("  const a = 1;", "  // contrast-ground: paper\n"));
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("governs nothing")),
+    "dead pragma — a declaration that governs nothing is reported",
+    check(tree, undefined, NO_BRAND).errors.join("; "),
+  );
+}
+{
+  // AN UNCLOSED yellow element paints everything after it — fail toward
+  // covering more, never less. Mutation-testing found this bound unheld.
+  const tree = writeTree(`<section class="bg-cab-yellow">\n<p class="text-ink/65">x</p>`);
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("yellow")),
+    "unclosed — a yellow element left open still covers what follows",
+  );
+}
+{
+  // A VOID or SELF-CLOSING element has no subtree, so a ground on it reaches
+  // nothing after it. Also unheld until mutation-testing said so.
+  for (const tag of [`<img class="bg-cab-yellow" />`, `<hr class="bg-cab-yellow">`, `<br class="bg-cab-yellow">`]) {
+    const tree = writeTree(`${tag}\n<p class="text-ink/65">x</p>`);
+    say(
+      check(tree, undefined, NO_BRAND).errors.length === 0,
+      `childless — ${tag.slice(0, 12)}… paints no subtree`,
+      check(tree, undefined, NO_BRAND).errors.join("; "),
+    );
+  }
+}
+{
+  // CRLF. Some files in this repo are CRLF and there is no .gitattributes, so a
+  // reader that splits on "\n" and forgets the "\r" is one edit from a silent
+  // miss. Both a pragma and a ground must survive it.
+  const tree = writeTree(
+    `<section class="bg-cab-yellow">\r\n  <p class="text-ink/65">x</p>\r\n</section>`,
+  );
+  say(
+    check(tree, undefined, NO_BRAND).errors.some((e) => e.includes("yellow")),
+    "CRLF — a yellow ground is found in a CRLF file",
+  );
+  const scriptTree = writeTree(
+    `<section class="bg-cab-yellow"><h1 class="text-ink">H</h1></section>\r\n<script>\r\n  // contrast-ground: paper\r\n  el.innerHTML = \`<p class="text-ink/65">x</p>\`;\r\n</script>`,
+  );
+  say(check(scriptTree, undefined, NO_BRAND).errors.length === 0, "CRLF — and a pragma is read in a CRLF file");
+}
+
+// ---------------------------------------------------------------------------
 // 4. THE SCANNER. What findUsages sees, independently of what check() decides.
 // ---------------------------------------------------------------------------
 {
@@ -490,6 +787,13 @@ const REAL_TOKENS = { ink: "#2A211A", paper: "#FBF8F3", "cab-yellow": "#F7B731" 
 {
   const { code, out } = run({ ...page(`<p class="text-ink/75">ok</p>`), ...tokens({ paper: "#FBF8F3", "cab-yellow": "#F7B731" }) });
   say(code === 1, "brand — a token the package no longer publishes fails", out.trim());
+  // ASSERTED ON THE MESSAGE. Without the guard, `live.toLowerCase()` throws and
+  // the gate still exits 1, so the exit code alone kept this control green with
+  // the branch deleted — the same "fires for the wrong reason" shape as the
+  // missing-src/ control. Only the deliberate wording separates a handled cause
+  // from a crash.
+  say(out.includes("does not publish"), "brand — and names the missing token rather than crashing", out.trim());
+  say(!out.includes("TypeError"), "brand — no raw TypeError, which would mean the guard is gone", out.trim());
 }
 {
   // Absent is the dependency-free CI case (checks.yml installs nothing, #41).
