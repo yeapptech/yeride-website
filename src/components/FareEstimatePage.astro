@@ -108,7 +108,7 @@ if (!areaName) {
           {t.submit}
         </button>
 
-        <p data-loading hidden class="mt-4 text-[15px] font-semibold text-ink/60">
+        <p data-loading hidden class="mt-4 text-[15px] font-semibold text-ink/75">
           {t.calculating}
         </p>
 
@@ -157,24 +157,24 @@ if (!areaName) {
       */}
       {/*
         Contrast: the area name carries the whole claim, so it sits at full
-        `text-ink` (14.9:1) rather than the `text-ink/60` used for secondary
-        prose — which measures 4.16:1 on paper and so misses WCAG AA's 4.5:1
-        for normal text. The note is secondary but is still a disclosure, so it
-        takes `/70` (5.7:1) — the smallest step that clears AA while staying
-        visibly quieter than the fact above it.
+        `text-ink` (14.9:1) rather than the secondary step. The note is
+        secondary but is still a disclosure, so it takes `text-ink/75`
+        (6.7:1) — visibly quieter than the fact above it, and clear of WCAG
+        AA's 4.5:1 for normal text. Those are the only two quiet steps on the
+        site; #76 fixed the scale and `scripts/check-contrast.mjs` holds it.
       */}
       <p class="mt-6 max-w-xl text-[15px] text-ink">
         <span class="font-bold">{t.areaLabel}:</span>
         <span data-area-name>{areaName}</span>
       </p>
-      <p class="mt-1 max-w-xl text-[15px] text-ink/70">{t.areaNote}</p>
+      <p class="mt-1 max-w-xl text-[15px] text-ink/75">{t.areaNote}</p>
 
       {/*
         The limit note stands in every state, not only alongside a result: it is
         what this page is for, and a rider reading an error or waiting on a
         quote is owed it as much as one reading a number.
       */}
-      <p class="mt-4 max-w-xl text-[15px] text-ink/60">{t.limitNote}</p>
+      <p class="mt-4 max-w-xl text-[15px] text-ink/75">{t.limitNote}</p>
 
       <div data-results hidden>
         <section class="mt-10">
@@ -185,7 +185,7 @@ if (!areaName) {
           </h2>
           <dl class="mt-4 flex flex-wrap gap-x-12 gap-y-4">
             <div>
-              <dt class="text-xs font-bold uppercase tracking-caps text-ink/50">
+              <dt class="text-xs font-bold uppercase tracking-caps text-ink/65">
                 {t.distance}
               </dt>
               <dd
@@ -195,7 +195,7 @@ if (!areaName) {
               </dd>
             </div>
             <div>
-              <dt class="text-xs font-bold uppercase tracking-caps text-ink/50">
+              <dt class="text-xs font-bold uppercase tracking-caps text-ink/65">
                 {t.duration}
               </dt>
               <dd
@@ -461,6 +461,10 @@ if (!areaName) {
     });
   }
 
+  // contrast-ground: paper
+  // This writes into <div data-results>, which is in the page's `bg-paper`
+  // landing section — not the Cab Yellow hero above it. The tertiary step is
+  // legal here (4.88:1); it would not be on yellow.
   function renderEstimates(estimates: ServiceEstimate[]) {
     estimatesList.innerHTML = [...estimates]
       // Cheapest first, as the page has always ordered them — but a gap is not
@@ -489,12 +493,12 @@ if (!areaName) {
           <div class="flex items-start justify-between gap-4">
             <div>
               <p class="text-[17px] font-extrabold text-ink">${esc(serviceName(estimate.serviceId, estimate.name, lang))}</p>
-              ${seats ? `<p class="mt-0.5 text-[13px] font-semibold text-ink/50">${esc(seats)}</p>` : ""}
-              ${blurb ? `<p class="mt-1.5 max-w-xs text-[14px] text-ink/60">${esc(blurb)}</p>` : ""}
+              ${seats ? `<p class="mt-0.5 text-[13px] font-semibold text-ink/65">${esc(seats)}</p>` : ""}
+              ${blurb ? `<p class="mt-1.5 max-w-xs text-[14px] text-ink/75">${esc(blurb)}</p>` : ""}
             </div>
             <div class="shrink-0 text-right">
               <p class="text-[24px] font-extrabold tabular-nums text-ink">${fareText(estimate.fare)}</p>
-              <p class="text-[12px] text-ink/50">${esc(t.fareCaption)}</p>
+              <p class="text-[12px] text-ink/65">${esc(t.fareCaption)}</p>
             </div>
           </div>
         </li>`;

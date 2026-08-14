@@ -35,10 +35,10 @@ const esPrefix = lang === "es" ? "/es" : "";
     >
       {t.h1}
     </h1>
-    <p class="mt-4 max-w-xl text-[16px] text-paper/70 sm:text-[18px]">{t.lead}</p>
+    <p class="mt-4 max-w-xl text-[16px] text-paper/75 sm:text-[18px]">{t.lead}</p>
 
     <div data-fee-state="loading" class="mt-12">
-      <p class="text-[15px] text-paper/60">{t.loading}</p>
+      <p class="text-[15px] text-paper/75">{t.loading}</p>
       <div
         class="mt-6 h-64 max-w-md animate-pulse rounded-2xl bg-paper/10"
         aria-hidden="true"
@@ -63,7 +63,7 @@ const esPrefix = lang === "es" ? "/es" : "";
     <div data-fee-state="loaded" hidden>
       {/* every figure on the page is per-area — changing this re-fetches */}
       <label class="mt-8 flex items-center gap-3">
-        <span class="text-xs font-bold uppercase tracking-caps text-paper/50"
+        <span class="text-xs font-bold uppercase tracking-caps text-paper/65"
           >{t.areaLabel}</span
         >
         <select
@@ -84,7 +84,7 @@ const esPrefix = lang === "es" ? "/es" : "";
             </div>
             <div data-fee-card></div>
           </div>
-          <p class="mt-3 max-w-sm text-[13px] text-paper/50">{t.unitNote}</p>
+          <p class="mt-3 max-w-sm text-[13px] text-paper/65">{t.unitNote}</p>
         </div>
 
         <div
@@ -111,7 +111,7 @@ const esPrefix = lang === "es" ? "/es" : "";
       <h2 class="font-extrabold tracking-headline text-[1.35rem] text-paper">
         {t.stripeH2}
       </h2>
-      <p class="mt-3 text-[15px] leading-relaxed text-paper/70 sm:text-[16px]">
+      <p class="mt-3 text-[15px] leading-relaxed text-paper/75 sm:text-[16px]">
         {t.stripeBody}
       </p>
       <a
@@ -128,7 +128,7 @@ const esPrefix = lang === "es" ? "/es" : "";
       <h2 class="font-extrabold tracking-headline text-[1.35rem] text-paper">
         {t.surgeH2}
       </h2>
-      <p class="mt-3 text-[15px] leading-relaxed text-paper/70 sm:text-[16px]">
+      <p class="mt-3 text-[15px] leading-relaxed text-paper/75 sm:text-[16px]">
         {t.surgeBody}
       </p>
     </section>
@@ -267,13 +267,18 @@ const esPrefix = lang === "es" ? "/es" : "";
       [t.rateRows.cancellation, rate(s.cancelationFee)],
     ] as const;
 
+  // contrast-ground: yellow
+  // This writes into <div data-fee-card>, which sits inside the rate card's
+  // `bg-cab-yellow` panel. On Cab Yellow there is no tertiary step — /65 is
+  // 3.84:1 — so everything faded here is /75 (4.93:1) or full ink. #76 shipped
+  // two rows of this card at /65 before the gate could see the ground.
   function renderCard(services: RideService[]): string {
     // Six columns don't fit a 390px card, so below sm each service transposes to
     // its own mini-ledger; the services-as-rows table holds from sm up (#36).
     const miniLedgers = services
       .map(
         (s) => `<div class="mt-4 border-t-2 border-ink/25 pt-2 first:mt-2">
-          <p class="text-[12px] font-bold uppercase tracking-caps text-ink/60">${esc(serviceName(s.id, s.name, lang))}</p>
+          <p class="text-[12px] font-bold uppercase tracking-caps text-ink/75">${esc(serviceName(s.id, s.name, lang))}</p>
           <ul class="text-[14px] tabular-nums text-ink">${rateColumns(s)
             .map(
               ([label, amount]) =>
@@ -308,7 +313,7 @@ const esPrefix = lang === "es" ? "/es" : "";
     return `<div class="mt-1 sm:hidden">${miniLedgers}</div>
       <table class="mt-4 hidden w-full text-[14px] tabular-nums sm:table">
         <thead>
-          <tr class="border-b border-ink/25 text-[11px] uppercase tracking-caps text-ink/60">
+          <tr class="border-b border-ink/25 text-[11px] uppercase tracking-caps text-ink/75">
             <th class="py-2 pr-2 text-left font-bold"></th>${head}
           </tr>
         </thead>
@@ -335,6 +340,10 @@ const esPrefix = lang === "es" ? "/es" : "";
   // rather than leaking an English guess (copy-map §2.3).
   const chargeName = (c: AppCharge) => label(c)?.[lang] ?? c.description;
 
+  // contrast-ground: paper
+  // Each family is its own `bg-paper` card, built below — so although the slot
+  // it lands in sits on the ink page, the faded text inside these panels is on
+  // paper.
   function renderFamilies(charges: AppCharge[]): string {
     const panels: {
       h2: string;
@@ -370,7 +379,7 @@ const esPrefix = lang === "es" ? "/es" : "";
       .map(
         (p) => `<section class="rounded-2xl bg-paper px-6 py-6">
           <h2 class="font-extrabold tracking-headline text-[1.15rem] leading-snug text-ink">${esc(p.h2)}</h2>
-          <p class="mt-2 text-[14px] text-ink/65">${esc(p.lead)}</p>
+          <p class="mt-2 text-[14px] text-ink/75">${esc(p.lead)}</p>
           <ul class="mt-3 text-[14px]">${p.charges
             .map(
               (c) => `<li class="border-b border-ink/10 py-2.5 last:border-b-0">
@@ -380,7 +389,7 @@ const esPrefix = lang === "es" ? "/es" : "";
                 </div>
                 ${
                   p.notes[c.id]
-                    ? `<p class="mt-1.5 text-[12.5px] text-ink/50">${esc(p.notes[c.id])}</p>`
+                    ? `<p class="mt-1.5 text-[12.5px] text-ink/75">${esc(p.notes[c.id])}</p>`
                     : ""
                 }
               </li>`,
@@ -396,7 +405,7 @@ const esPrefix = lang === "es" ? "/es" : "";
             // carry em dashes themselves, so the note must not be phrased around
             // the glyph and the test must not look for it.
             p.charges.some((c) => ruleText(c.rule) === null)
-              ? `<p class="mt-3 text-[12.5px] text-ink/50">${esc(t.gapNote)}</p>`
+              ? `<p class="mt-3 text-[12.5px] text-ink/75">${esc(t.gapNote)}</p>`
               : ""
           }
         </section>`,
@@ -418,6 +427,9 @@ const esPrefix = lang === "es" ? "/es" : "";
       <span class="text-[1.5rem] font-extrabold leading-none text-cab-yellow">${esc(amount)}</span>
     </li>`;
 
+  // contrast-ground: ink
+  // The worked example writes into <div data-fee-example>, directly on the
+  // page's `bg-ink` ground — hence `text-paper` rather than `text-ink`.
   function renderExample(schedule: FeeSchedule): string {
     const ex = schedule.example;
     // The ledger's claim is that the money reconciles across both columns. An
@@ -439,7 +451,7 @@ const esPrefix = lang === "es" ? "/es" : "";
     // branches, three strings: two of them sharing one message reintroduced the
     // same bug on the surviving branch, which is what the review of #47 caught.
     const withheld = (message: string) =>
-      `<p class="mt-3 max-w-xl text-[14px] text-paper/60">${esc(message)}</p>`;
+      `<p class="mt-3 max-w-xl text-[14px] text-paper/75">${esc(message)}</p>`;
     if (!ex) return withheld(t.exampleUnpublished);
     if (!classified) return withheld(t.exampleUnavailable);
     if (!priced) return withheld(t.exampleIncomplete);
@@ -479,7 +491,7 @@ const esPrefix = lang === "es" ? "/es" : "";
       .filter(Boolean)
       .join(" · ");
 
-    return `<p class="mt-1.5 text-[13px] text-paper/50">${esc(trip)} — ${esc(t.exampleNote)}</p>
+    return `<p class="mt-1.5 text-[13px] text-paper/65">${esc(trip)} — ${esc(t.exampleNote)}</p>
       <div class="mt-8 grid max-w-3xl gap-10 tabular-nums md:grid-cols-2 md:gap-14">
         <div>
           <p class="text-xs font-bold uppercase tracking-caps text-cab-yellow">${esc(t.riderColH)}</p>
