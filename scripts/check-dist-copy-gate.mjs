@@ -148,17 +148,23 @@ const ALLOWED = [
     why: "§3.4 pass-through family suspended — bundled but unreachable, no charge carries the family (#48)",
   })),
 
-  // The legal pages (#44). Two of these sentences DENY that YeRide has
-  // insurance; the other three name the vehicle insurance policy number as a
-  // field the app collects. §5 cannot tell either from a claim, and both are the
-  // honest thing to publish, so they ship. When #48 lands the denials become
+  // The legal pages (#44). The privacy sentences name the vehicle insurance
+  // policy number as a field the app collects; the terms §7 sentences state the
+  // driver's own duty under Fla. Stat. § 627.748(7), that YeRide does not
+  // currently maintain a policy of its own, and § 627.748(8)(a)2's warning that
+  // a personal policy might provide no coverage. None is a claim that YeRide
+  // carries any; §5 cannot tell a duty or a denial from a claim, and the honest
+  // statement has to ship. When #48 lands the current-position sentences become
   // false and must be rewritten — which is why the entries name it rather than
   // being deleted.
   { file: "privacy-policy/index.html", text: "insurance", count: 1, why: "factual: a field the app collects (the vehicle's policy number), not a claim YeRide carries any — rewrite when #48 lands" },
   { file: "es/privacy-policy/index.html", text: "póliza", count: 1, why: "factual: a field the app collects, not a claim YeRide carries any — rewrite when #48 lands" },
   { file: "es/privacy-policy/index.html", text: "seguro", count: 1, why: "part of \"póliza de seguro\" — the same collected field — rewrite when #48 lands" },
-  { file: "terms/index.html", text: "insurance", count: 1, why: "the denial the gate exists to protect — YeRide has none and says so; rewrite when #48 lands" },
-  { file: "es/terms/index.html", text: "seguro", count: 1, why: "the denial the gate exists to protect — YeRide has none and says so; rewrite when #48 lands" },
+  { file: "terms/index.html", text: "insurance", count: 4, why: "terms §7: the driver's § 627.748(7) duty and the honest current position, not a claim YeRide carries any — rewrite when #48 lands" },
+  { file: "terms/index.html", text: "coverage", count: 1, why: "terms §7: § 627.748(8)(a)2's warning that a personal policy might provide none — rewrite when #48 lands" },
+  { file: "es/terms/index.html", text: "seguro", count: 4, why: "terms §7: the driver's § 627.748(7) duty and the honest current position, not a claim YeRide carries any — rewrite when #48 lands" },
+  { file: "es/terms/index.html", text: "póliza", count: 3, why: "terms §7: the same duty-and-current-position statement, ES — rewrite when #48 lands" },
+  { file: "es/terms/index.html", text: "cobertura", count: 1, why: "terms §7: § 627.748(8)(a)2's warning that a personal policy might provide none — rewrite when #48 lands" },
 
   // An XML comment inside the brand lockup, describing why the typeface is fixed:
   // "Typeface locked by the brand-typography decision (issue #8)". Not copy, not
