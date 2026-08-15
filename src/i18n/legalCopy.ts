@@ -22,8 +22,10 @@
 //   4. RIGHTS ARE GRANTED VOLUNTARILY. No US statute compels them at this size
 //      (Florida's Digital Bill of Rights starts at $1B revenue; CCPA at $25M),
 //      and they are offered to everyone anyway, with no residency test.
-//   5. THE TERMS STATE PLAINLY THAT YERIDE PROVIDES NO INSURANCE — see the
-//      copy-gate note below.
+//   5. THE TERMS STATE THE INSURANCE POSITION AS IT IS TODAY — the driver's
+//      own duty under Fla. Stat. § 627.748(7), that nothing of YeRide's own is
+//      currently in force, and § 627.748(8)(a)2's warning that a personal
+//      policy might provide no coverage — see the copy-gate note below.
 //   6. FLORIDA LAW AND FLORIDA COURTS. No arbitration clause and no
 //      class-action waiver: a defective one is routinely struck, and it is the
 //      clause that most needs a lawyer rather than an agent.
@@ -585,11 +587,22 @@ export const termsCopy: Record<Lang, LegalDoc> = {
       {
         heading: "7. Risk on a ride",
         blocks: [
-          // copy-gate-allow: the denial the gate exists to protect — YeRide has none and says so; rewrite when #48 lands
-          "YeRide does not provide insurance for rides, riders, drivers or vehicles.",
-          "Each driver is responsible for carrying whatever their vehicle and their " +
-            "driving require of them by law. A ride is an arrangement between a rider " +
-            "and a driver, and YeRide is not a party to it.",
+          "To drive on YeRide you must maintain primary automobile " +
+            // copy-gate-allow: the driver's own duty under Fla. Stat. § 627.748(7), stated to the driver — not a claim YeRide carries any; rewrite when #48 lands
+            "insurance that meets the requirements of section 627.748(7), " +
+            "Florida Statutes, for transportation network company drivers, " +
+            "while you are logged on to the network and during every ride.",
+          // copy-gate-allow: the honest current position, stated as current — nothing of YeRide's own exists and the terms say so; rewrite when #48 lands
+          "YeRide does not currently maintain an automobile insurance policy " +
+            // copy-gate-allow: nothing a driver enters is checked, and the terms say so rather than imply otherwise; rewrite when #48 lands
+            "of its own, and it does not verify the insurance a driver " +
+            "carries. Your own automobile " +
+            // copy-gate-allow: § 627.748(8)(a)2's own warning, restated to the driver; rewrite when #48 lands
+            "insurance policy might not provide any coverage while you are " +
+            "logged on to the network or during a ride, depending on the " +
+            "terms of that policy.",
+          "A ride is an arrangement between a rider and a driver, and YeRide is " +
+            "not a party to it.",
         ],
       },
       {
@@ -735,11 +748,26 @@ export const termsCopy: Record<Lang, LegalDoc> = {
       {
         heading: "7. El riesgo de un viaje",
         blocks: [
-          // copy-gate-allow: la negación que la compuerta existe para proteger — YeRide no tiene ninguno y lo dice; reescribir cuando entre #48
-          "YeRide no ofrece ningún seguro para los viajes, los pasajeros, los conductores ni los vehículos.",
-          "Cada conductor es responsable de contar con lo que la ley le exija por su " +
-            "vehículo y por su conducción. Un viaje es un acuerdo entre un pasajero y " +
-            "un conductor, y YeRide no es parte de él.",
+          "Para conducir en YeRide usted debe mantener un " +
+            // copy-gate-allow: el deber propio del conductor bajo Fla. Stat. § 627.748(7), dicho al conductor — no una afirmación de que YeRide tenga alguno; reescribir cuando entre #48
+            "seguro de automóvil primario que cumpla los requisitos de la " +
+            "sección 627.748(7) de los Estatutos de la Florida para los " +
+            "conductores de empresas de redes de transporte, mientras esté " +
+            "conectado a la red y durante cada viaje.",
+          // copy-gate-allow: la posición honesta de hoy, dicha como actual — YeRide no tiene nada propio en vigor y lo dice; reescribir cuando entre #48
+          "YeRide no mantiene actualmente una póliza de seguro de automóvil " +
+            // copy-gate-allow: nada de lo que el conductor escribe se comprueba, y los términos lo dicen en vez de sugerir lo contrario; reescribir cuando entre #48
+            "propia, y no verifica el seguro que un conductor tenga " +
+            "contratado. Su propia " +
+            // copy-gate-allow: la advertencia del propio § 627.748(8)(a)2, dicha al conductor; reescribir cuando entre #48
+            "póliza de seguro de automóvil podría no ofrecerle ninguna " +
+            // copy-gate-allow: continuación de la misma advertencia del § 627.748(8)(a)2; reescribir cuando entre #48
+            "cobertura mientras usted esté conectado a la red o durante un " +
+            "viaje, según los términos de esa " +
+            // copy-gate-allow: cierre de la misma advertencia; reescribir cuando entre #48
+            "póliza.",
+          "Un viaje es un acuerdo entre un pasajero y un conductor, y YeRide no " +
+            "es parte de él.",
         ],
       },
       {
