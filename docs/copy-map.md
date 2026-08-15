@@ -889,6 +889,29 @@ separate pass. The section states the one method the product implements instead 
 silent on how you pay, and `updated` moved with it; the privacy policy's date did not, being
 untouched. Restore the cash half only with obligation #5.
 
+**§ 7 "Risk on a ride" replaced a denial with the position as it stands** *(2026-08-15, #118)*.
+It said *"YeRide does not provide insurance for rides, riders, drivers or vehicles."* / *"YeRide
+no ofrece ningún seguro…"* — one flat sentence — and now states three things: the driver's own
+duty to carry primary automobile insurance meeting Fla. Stat. § 627.748(7) while logged on and
+during every ride; that YeRide **does not currently** maintain a policy of its own and does not
+verify what a driver carries; and § 627.748(8)(a)2's own warning that the driver's personal
+policy might provide no coverage in either state. The sentence about a ride being an arrangement
+between rider and driver survives unchanged. Body copy is still not transcribed here, per the
+paragraph above; what is recorded is the **shape** of the claim, because § 5 is written against
+it and two things follow from the change.
+
+**The first is a tense.** The denial was timeless and the replacement is dated — *"does not
+**currently** maintain"*, *"no mantiene **actualmente**"*. That is the honest statement while
+#48 is open and a **false** one the day it lands, so #48 no longer merely relaxes a gate: it
+must rewrite this section. The old one-sentence denial would have needed the same rewrite, but a
+reader could tell at a glance; a present-tense qualifier reads as durable and will not announce
+itself. **The second is the count.** These sentences ship, and they are allowed by per-line
+`copy-gate-allow` pragmas, so the dist gate carries hand-blessed entries keyed to exact
+occurrence counts — `insurance` ×4 and `coverage` ×1 in EN, `seguro` ×4, `póliza` ×3 and
+`cobertura` ×1 in ES. **Any edit to § 7 that adds or drops one of those words fails the deploy**,
+and § 5 argues at length against exactly this arrangement in a legal document that gets edited;
+see the note there before editing this section or extending the pattern.
+
 | Slot | EN | ES |
 |---|---|---|
 | H1 | Terms of Service | Términos de servicio |
@@ -969,7 +992,32 @@ there is no insurance today, and card processing is not a YeRide pass-through, s
 "passed through at cost" family has zero members. These must fail the build until #48 lands:
 
 - `at cost` · `al costo` · `passes through` / `pass-through` · `zero markup` · `sin recargo`
-- `insurance` · `seguro`, wherever it claims YeRide carries or forwards coverage
+- `insurance` · `coverage` · `seguro` / `seguros` · `aseguranza` · `póliza` · `cobertura`,
+  wherever it claims YeRide carries or forwards coverage. **The gate matches all six as bare
+  words**, and it always has — this list said `insurance` · `seguro` until #118, which is the
+  under-listing this map warns about elsewhere and which stayed harmless only while no live
+  string used the other four. Terms § 7 now uses five of the six.
+
+**The terms no longer deny; they date.** *(2026-08-15, #118.)* § 3.9's § 7 said *"YeRide does
+not provide insurance…"* and now says *"does not **currently** maintain a policy of its own"*
+alongside the driver's § 627.748(7) duty and § 627.748(8)(a)2's coverage warning. The bar above
+is unchanged and still reads *wherever it claims YeRide carries or forwards coverage* — a duty
+imposed on the driver and a denial in the present tense are neither. What changed is that the
+gate can no longer tell any of them apart, so the honest sentences ship on **eight per-line
+`copy-gate-allow` pragmas** and five dist-gate entries keyed to exact counts.
+
+**That is the arrangement the paragraph below argues against, and #118 took it knowingly.**
+§ 3.8's cash exception is expressed as `permits` precisely because a pragma in a *shipping*
+legal document leaves the dist gate holding a count that breaks on an unrelated edit and names
+the wrong cause when it does — and terms § 7 is a shipping legal document. It was not made a
+`permits` phrase because it **cannot** safely be one: withdrawal is over overlapping bytes, so
+permitting *"does not currently maintain an automobile insurance policy of its own"* would
+excuse those bytes **wherever they appear**, and every clause the fifth bound was added to stop
+could then be built on that opening. The permitted-phrase mechanism excuses a sentence that is
+safe in any context; these sentences are safe only in this one. So the fragility is real, is
+accepted, and is bounded by the counts rather than by the wording — **a § 7 edit fails on
+`main` after the merge, not on the pull request**, because the dist gate needs `npm ci` and does
+not run in `checks.yml`. Retire the whole arrangement with #48, which must rewrite § 7 anyway.
 
 Stripe's fee **can** still be described honestly — the driver pays it directly from their own
 connected account — but never with a YeRide-published amount, since YeRide does not set it.
