@@ -20,7 +20,7 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { check, contrastOf, findUsages } from "./check-contrast.mjs";
+import { check, contrastOf, findBoundaries, findUsages } from "./check-contrast.mjs";
 import { runGate } from "./copy-gate-fixture.mjs";
 
 const GATE = fileURLToPath(new URL("./check-contrast.mjs", import.meta.url));
@@ -833,6 +833,256 @@ const REAL_TOKENS = { ink: "#2A211A", paper: "#FBF8F3", "cab-yellow": "#F7B731" 
       errors.join("; "),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// 7. SC 1.4.11 — THE BOUNDARY OF A UI COMPONENT. Rules 4 and 5, wayfinder #115.
+//
+// The second list is the valuable half here, more than anywhere else in this
+// file. Rule 4 fires on an ELEMENT, not on a class, and the elements it does not
+// fire on are most of the site: every `border-t`, every `divide-y`, every card
+// outline is decoration, which SC 1.4.11 exempts by name. Widen this rule and it
+// stops being a contrast gate and becomes an instruction to redraw twenty
+// hairlines the criterion never asked about — and a gate that forces a wrong
+// design change is worse than no gate, which is this file's oldest rule.
+// ---------------------------------------------------------------------------
+{
+  // WHY THE NON-TEXT STEP IS THIS STEP. Same shape as the AA scale's controls
+  // above: the numbers in the gate header, the failure footer and CLAUDE.md are
+  // pinned here, so those documents cannot start lying quietly.
+  for (const [ground, hex, want] of [
+    ["white", "#FFFFFF", 4.24],
+    ["paper", "#FBF8F3", 4.16],
+    ["cab-yellow", "#F7B731", 3.42],
+  ]) {
+    const got = contrastOf("#2A211A", hex, 60);
+    say(got >= 3, `non-text — border-ink/60 clears 3:1 on ${ground}`, `got ${got.toFixed(2)}`);
+    say(Math.abs(got - want) < 0.01, `non-text — border-ink/60 on ${ground} is ${want}:1`, `got ${got.toFixed(2)}`);
+  }
+  const onInk = contrastOf("#FBF8F3", "#2A211A", 40);
+  say(onInk >= 3, "non-text — border-paper/40 clears 3:1 on ink", `got ${onInk.toFixed(2)}`);
+  say(Math.abs(onInk - 3.58) < 0.01, "non-text — border-paper/40 on ink is 3.58:1", `got ${onInk.toFixed(2)}`);
+}
+{
+  // THE ALPHAS THAT ACTUALLY SHIP, as the AA scale pins its own. Both bytes were
+  // read out of dist/_astro/*.css on #115's build: `#2a211a99` and `#fbf8f366`.
+  // Unlike the text steps — where /65 reaches the browser as 65.098% — these two
+  // are EXACT, 153/255 and 102/255 being 60% and 40% to the bit. Pinned anyway,
+  // because "it happens to be exact" is a fact about the chosen numbers, and the
+  // next step chosen will not necessarily be one.
+  for (const [colour, fg, bg, step, byte] of [
+    ["ink", "#2A211A", "#FFFFFF", 60, 0x99],
+    ["paper", "#FBF8F3", "#2A211A", 40, 0x66],
+  ]) {
+    const got = contrastOf(fg, bg, (byte / 255) * 100);
+    say(got >= 3, `shipped — border-${colour}/${step} clears 3:1 at its real alpha 0x${byte.toString(16)}`, `got ${got.toFixed(3)}`);
+    say(
+      Math.abs((byte / 255) * 100 - step) < 0.001,
+      `shipped — border-${colour}/${step} compiles to exactly ${step}%`,
+      `got ${((byte / 255) * 100).toFixed(4)}`,
+    );
+  }
+}
+{
+  // THE THREE DEFECTS #115 WAS FILED ON, pinned as failures. If the maths ever
+  // says these pass, the ticket's whole argument has evaporated and this says so.
+  for (const [label, fg, bg, alpha, want] of [
+    ["border-ink/20 on white (the pre-registration inputs)", "#2A211A", "#FFFFFF", 20, 1.5],
+    ["border-ink/30 on paper (the header toggle)", "#2A211A", "#FBF8F3", 30, 1.86],
+    // 2.60 rather than the 2.6289 an independent implementation may produce:
+    // paper over ink at /30 composites its green channel to EXACTLY 97.5, a
+    // rounding boundary, so the last byte — and with it the second decimal — is
+    // decided by float ordering (`v * 30/100` and `v * 0.3` disagree in the last
+    // bit). The gate's ordering is the one that ships, so it is the one pinned.
+    // The load-bearing claim is the inequality, which holds either way.
+    ["border-paper/30 on ink (the toggle and the /fees picker)", "#FBF8F3", "#2A211A", 30, 2.6],
+  ]) {
+    const got = contrastOf(fg, bg, alpha);
+    say(got < 3, `non-text — ${label} fails 3:1`, `got ${got.toFixed(2)}`);
+    say(Math.abs(got - want) < 0.01, `non-text — ${label} measures ${want}:1`, `got ${got.toFixed(2)}`);
+  }
+}
+{
+  // WHY /60 AND NOT /55, which is the cheaper answer and the one this nearly
+  // shipped. /55 is a real pass on Cab Yellow and passes by 0.02, on the ground
+  // eight of the site's routes put the header on. #76 was bitten twice by thin
+  // margins on Cab Yellow; this records that /55 was measured, not overlooked.
+  const tight = contrastOf("#2A211A", "#F7B731", 55);
+  say(tight >= 3, "non-text — /55 does technically clear 3:1 on Cab Yellow", `got ${tight.toFixed(3)}`);
+  say(tight < 3.05, "non-text — …by 0.02, which is why /60 is the step", `got ${tight.toFixed(3)}`);
+  say(contrastOf("#2A211A", "#F7B731", 50) < 3, "non-text — and /50 fails outright on Cab Yellow");
+  // Cab Yellow is the binding ground: ink/50 would pass on both other grounds,
+  // so a per-ground rule would have blessed it. This is why the step is one
+  // number rather than three.
+  say(contrastOf("#2A211A", "#FFFFFF", 50) >= 3, "non-text — ink/50 passes on white, so yellow is what binds");
+  say(contrastOf("#2A211A", "#FBF8F3", 50) >= 3, "non-text — and on paper too");
+}
+
+// --- MUST FIRE -------------------------------------------------------------
+const boundaryErrors = (body) => check(writeTree(body), REAL_BRAND, NO_BRAND).errors;
+const fires = (body, label) => {
+  const errors = boundaryErrors(body);
+  say(errors.some((e) => e.includes("SC 1.4.11")), label, errors.join("; ") || "no error raised");
+};
+const silent = (body, label) => {
+  const errors = boundaryErrors(body);
+  say(errors.length === 0, label, errors.join("; "));
+};
+
+fires(`<input class="border-ink/20 bg-white" />`, "fires — border-ink/20 on an <input>, the ticket's own case");
+fires(`<a href="/es/" class="border-ink/30">ES</a>`, "fires — border-ink/30 on the header toggle's element");
+fires(`<select class="border-paper/30 bg-ink"></select>`, "fires — border-paper/30 on a <select>");
+fires(`<textarea class="border-ink/25"></textarea>`, "fires — a <textarea> is a UI component too");
+fires(`<button class="border-paper/25">go</button>`, "fires — and a <button>");
+{
+  // THE CLOSED SET, not a threshold. `border-ink/50` measures 3.16:1 on white
+  // and 3.10:1 on paper, so a "must clear 3:1" rule would pass it — and it fails
+  // on Cab Yellow at 2.69:1, where the header actually renders. This control is
+  // what makes rule 4 a set rather than a comparison.
+  fires(`<input class="border-ink/50" />`, "fires — /50 clears 3:1 on two grounds and is still off the scale");
+}
+{
+  // An alpha the gate cannot evaluate must be REPORTED, not skipped. A
+  // digits-only pattern would drop this silently, which is the failure mode
+  // CLASS_RE's comment names for the text rule.
+  fires(`<input class="border-ink/[62%]" />`, "fires — an arbitrary alpha is seen rather than skipped");
+}
+{
+  // THE HEADER'S SHAPE, which is the only reason boundaryConsts exists: both
+  // branches of the toggle's boundary are written into a multi-line frontmatter
+  // ternary and reach the tag as an identifier. Delete boundaryConsts and the
+  // strongest 1.4.11 case on the site becomes invisible to the rule written for
+  // it — and every other control in this section still passes.
+  fires(
+    `---\nconst dark = false;\nconst toggleTone = dark\n  ? "border-paper/30 text-paper/75"\n  : "border-ink/30 text-ink/75";\n---\n<a href="/" class:list={["rounded-full border", toggleTone]}>ES</a>`,
+    "fires — a boundary written into a multi-line frontmatter ternary",
+  );
+}
+
+// --- MUST NOT FIRE ---------------------------------------------------------
+silent(`<input class="border-ink/60 bg-white" />`, "silent — border-ink/60 on an <input> is the scale");
+silent(`<select class="border-paper/40 bg-ink"></select>`, "silent — border-paper/40 on a <select> is the scale");
+{
+  // THE EXEMPTION, and the reason this section's second list is the important
+  // one. Every one of these is real markup from src/, and none of them is a UI
+  // component boundary. If rule 4 ever fires on one, it is asking for a redesign
+  // the criterion does not require.
+  for (const body of [
+    `<section class="mt-12 border-t border-ink/10 pt-10"><p>x</p></section>`,
+    `<li class="border-b border-ink/15 py-2">x</li>`,
+    `<div class="divide-y divide-paper/15"><p>x</p></div>`,
+    `<div class="rounded-2xl border border-ink/15 bg-white/60">x</div>`,
+    `<div class="h-[300px] rounded-2xl border border-ink/10 bg-ink/5"></div>`,
+    `<tr class="border-b border-ink/25"><td>x</td></tr>`,
+    `<ul class="border-l-2 border-ink/15 pl-5"><li>x</li></ul>`,
+  ]) {
+    silent(body, `silent — decoration is exempt: ${body.slice(0, 46)}…`);
+  }
+}
+{
+  // `a` must not swallow `article`, `aside` or `abbr`. The lookahead in
+  // INTERACTIVE is the whole bound; without it a decorative card element starts
+  // failing, which is the false positive this gate can least afford.
+  for (const tag of ["article", "aside", "abbr", "address"]) {
+    silent(`<${tag} class="border border-ink/10">x</${tag}>`, `silent — <${tag}> is not <a>`);
+  }
+}
+{
+  // STATE VARIANTS ARE OUT, by construction — see the gate header. The resting
+  // boundary here is correct and the hover is deliberately absurd; if the
+  // lookbehind in BORDER_RE is dropped, this fires and says so.
+  silent(
+    `<button class="border-ink/60 hover:border-ink/10 focus:border-ink/5">go</button>`,
+    "silent — hover: and focus: variants are not the resting boundary",
+  );
+  // …and the real hovers all clear 3:1 anyway, which is why enforcing them
+  // would have been padding rather than coverage. Measured, not assumed.
+  say(contrastOf("#2A211A", "#F7B731", 60) >= 3, "non-text — hover:border-ink/60 clears 3:1 even on Cab Yellow");
+  say(contrastOf("#FBF8F3", "#2A211A", 60) >= 3, "non-text — hover:border-paper/60 clears 3:1 on ink");
+}
+{
+  // Only `border-` is read. A background or a ring alpha on a component is a
+  // different question and is not smuggled in.
+  silent(`<input class="bg-ink/5 border-ink/60" />`, "silent — a bg alpha on a component is not a boundary");
+  silent(`<a href="/drivers" class="text-ink/75">Drivers</a>`, "silent — a nav link carries no boundary at all");
+}
+{
+  // Frontmatter attribution requires the REFERENCE. A const holding a border
+  // alpha that only a <div> ever names is decoration, and reading it off the
+  // frontmatter alone would fail the build on it.
+  //
+  // THE FIXTURE MUST CARRY AN INTERACTIVE ELEMENT TOO, and that is the whole
+  // control. The first draft of it had only the <div> — so the attribution loop,
+  // which runs inside the interactive-element branch, never executed at all, and
+  // mutating the reference test to `if (true)` left every control in this file
+  // green. A control that exercises a weaker case than the bound reads as
+  // coverage and is not; it is the shape #76's review found twice.
+  silent(
+    `---\nconst cardTone = "border-ink/15 bg-white/60";\n---\n<div class:list={["rounded-2xl border", cardTone]}>x</div>\n<input class="border-ink/60" />`,
+    "silent — a frontmatter const the component does not name is not its boundary",
+  );
+}
+{
+  // A DOCUMENTED MISS, asserted so it stays visible rather than becoming a
+  // silent hole. An interactive element built inside a <script> is not seen —
+  // script bodies are skipped, as they are for grounds. /fees writes its rate
+  // card client-side, so this is live rather than theoretical. Recorded as a
+  // known bound, exactly as #99 recorded the refinement it could not observe,
+  // rather than counted as coverage.
+  const errors = boundaryErrors(
+    `<div></div>\n<script>\n  el.innerHTML = \`<input class="border-ink/20" />\`;\n</script>`,
+  );
+  say(errors.length === 0, "bound — an <input> built inside a <script> is NOT seen (documented, not covered)");
+}
+
+// --- THE SCANNER -----------------------------------------------------------
+{
+  const found = findBoundaries(`<p>a</p>\n<input class="border-ink/20" />`);
+  say(found.length === 1, "scanner — one boundary found", `got ${found.length}`);
+  say(found[0]?.tag === "input", "scanner — and names the element, which is what the rule turns on", found[0]?.tag);
+  say(found[0]?.colour === "ink" && found[0]?.alpha === "20", "scanner — and reads the colour and alpha");
+}
+{
+  // Both branches of a ternary are separate boundaries — the toggle has an ink
+  // one and a paper one, and only checking the first would pass /fees' header.
+  const found = findBoundaries(
+    `---\nconst tone = x ? "border-paper/30" : "border-ink/30";\n---\n<a href="/" class:list={[tone]}>ES</a>`,
+  );
+  say(found.length === 2, "scanner — both branches of a ternary are boundaries", `got ${found.length}`);
+  say(
+    found.map((f) => f.colour).sort().join(",") === "ink,paper",
+    "scanner — one ink, one paper",
+    found.map((f) => f.text).join(","),
+  );
+}
+
+// --- END TO END ------------------------------------------------------------
+{
+  const { code, out } = run(page(`<input class="border-ink/20 bg-white" />`));
+  say(code === 1, "e2e — a component boundary below 3:1 exits 1", out.trim());
+  say(out.includes("Fixture.astro"), "e2e — and names the file", out.trim());
+  say(out.includes("border-ink/20"), "e2e — and names the class", out.trim());
+  say(out.includes("<input>"), "e2e — and names the element, so the exemption is legible", out.trim());
+}
+{
+  const { code, out } = run(
+    page(`<section class="border-t border-ink/10"><input class="border-ink/60 bg-white" /></section>`),
+  );
+  say(code === 0, "e2e — a correct component beside a decorative rule exits 0", out.trim());
+}
+{
+  // RULE 5's seam, mirroring rule 2's. The non-text scale is only safe for the
+  // pinned brand colours, and a constant cannot be moved from a fixture — so
+  // without the `brand` argument reaching this rule it is unfallible by
+  // construction, which is the defect #76's review found in the declared-ground
+  // branch. Darkening Cab Yellow toward ink is the mutation that proves it.
+  const dir = writeTree(`<p>nothing to scan</p>`);
+  const { errors } = check(dir, { ...REAL_BRAND, cabYellow: "#3A312A" }, NO_BRAND);
+  say(
+    errors.some((e) => e.includes("border-ink/60") && e.includes("cabYellow")),
+    "rule 5 — a brand restyle that breaks the non-text scale is reported",
+    errors.join("; ") || "no error raised",
+  );
 }
 
 // ---------------------------------------------------------------------------

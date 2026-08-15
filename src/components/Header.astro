@@ -46,9 +46,18 @@ const linkTone = dark
   ? "text-paper/75"
   : "text-ink/75";
 const linkHover = dark ? "hover:text-paper" : "hover:text-ink";
+// The toggle's boundary is the ONLY thing that says "control" — it is an
+// unfilled pill with no label above it — so it is governed by SC 1.4.11's 3:1
+// rather than left to taste (#115). The resting steps are the site's non-text
+// pair, `ink/60` and `paper/40`, which clear 3:1 on every ground this header
+// renders on; the ground is a runtime prop with three values, so there is no
+// single ground to resolve and the step has to be ground-independent.
+//
+// Hover then has to move OFF that step to stay visible: the light branch used
+// to hover at `/60`, which is now the resting weight, so it goes to full ink.
 const toggleTone = dark
-  ? "border-paper/30 text-paper/75 hover:border-paper/60"
-  : "border-ink/30 text-ink/75 hover:border-ink/60";
+  ? "border-paper/40 text-paper/75 hover:border-paper/60"
+  : "border-ink/60 text-ink/75 hover:border-ink";
 ---
 
 <header class={bg}>
