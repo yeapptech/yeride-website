@@ -46,15 +46,34 @@ Two things had to be established from documentation:
 — W3C, *Web Content Accessibility Guidelines (WCAG) 2.2*, SC 1.4.11 Non-text Contrast,
 <https://www.w3.org/TR/WCAG22/#non-text-contrast>
 
-The user-agent exception does **not** apply here: the boundary is drawn by a third-party
-script's shadow DOM, not by the user agent's default rendering of a native control.
+**Neither exception applies, and since the whole finding rests on that, it is argued rather
+than asserted.**
+
+*"Determined by the user agent and not modified by the author."* The exception covers a
+control the browser draws for itself — an unstyled native `<input>`, whose appearance the
+author never touched. Two things independently take this element out of it. The boundary is
+painted by **Google's script**, which is author-supplied third-party content, not by
+Chrome's default rendering; and this repo **does** modify the element's appearance, setting
+`color-scheme` and `placeholder` on it today, with `border` documented as available (A1).
+The exception exists so authors are not liable for UA chrome they cannot control; here the
+appearance is controllable — C5 demonstrates it — so the rationale does not reach. Note the
+direction of the test: the exception asks whether the appearance is *determined by the UA*,
+not whether the author happens to have styled the boundary specifically.
+
+*"Inactive components."* A disabled control is exempt. These fields are enabled and are the
+page's primary input — a rider cannot get an estimate without typing into them. The leg does
+not apply on its face.
+
+W3C's Understanding document for the criterion is the authority on both legs and was not
+consulted for this note; the reading above is from the normative text quoted here. If the
+build ticket turns on the exception, read Understanding SC 1.4.11 before relying on it.
 
 ## What this repo actually loads
 
-- `src/components/FareEstimatePage.astro:237` imports `setOptions` / `importLibrary` from
-  `@googlemaps/js-api-loader`; `package.json:29` pins `^2.0.2`, and `package-lock.json`
+- `src/components/FareEstimatePage.astro` imports `setOptions` / `importLibrary` from
+  `@googlemaps/js-api-loader`; `package.json` pins `^2.0.2`, and `package-lock.json`
   resolves 2.0.2.
-- `src/components/FareEstimatePage.astro:530` is the only `setOptions` call in `src/`. It
+- That file's sole `setOptions` call is the only one in `src/`. It
   passes `key`, `language` and `region` — **no `v`**. The loader turns each option into a
   query parameter on `https://maps.googleapis.com/maps/api/js?…` (verified in
   `node_modules/@googlemaps/js-api-loader/dist/index.cjs`), so the bootstrap request
@@ -191,8 +210,9 @@ Likewise the Places Widgets reference lists `--gmp-button-border-color`,
 `--gmp-button-border-width`, `--gmp-collage-border-radius-outer`,
 `--gmp-dialog-border-radius` etc. under `PlaceDetailsElement` /
 `PlaceDetailsCompactElement` / `PlaceSearchElement` — **not** under
-`PlaceAutocompleteElement`, whose CSS-property list is exactly the twelve names quoted in
-A1.
+`PlaceAutocompleteElement`, whose CSS-property list is exactly the eleven names quoted in
+A1 (`background-color`, `border`, `border-radius`, `color`, `color-scheme`, and the six
+font properties).
 
 The prose guide "Place Autocomplete Widget"
 (<https://developers.google.com/maps/documentation/javascript/place-autocomplete-new>) has
@@ -232,7 +252,8 @@ omission legible rather than an oversight in the search: the reference states
 gray by default", and states `color-scheme` "Defaults to `color-scheme: light dark`". It
 publishes no equivalent sentence for the border.
 
-Do not put a number for the default border in the issue unless it came from the browser.
+No number for the default border may be stated unless it came from the browser. One now
+has: see C1, which found there is no border to put a number on.
 
 ### B2. No WCAG or contrast conformance claim exists for this element
 
@@ -286,7 +307,8 @@ Yes, in three places:
 — <https://developers.google.com/maps/documentation/javascript/releases>
 
 This vindicates `dressAutocomplete`'s `element.style.colorScheme = "light"`
-(`src/components/FareEstimatePage.astro:526`) as the documented mechanism, and Google's own
+(in `dressAutocomplete`, `src/components/FareEstimatePage.astro`) as the documented
+mechanism, and Google's own
 Basic Place Autocomplete sample uses `color-scheme: light;` in exactly that way
 (<https://developers.google.com/maps/documentation/javascript/places-ui-kit/basic-autocomplete>).
 It also means whatever border is measured must be measured **in the light scheme**, since
@@ -379,16 +401,32 @@ element has fully initialised (polled for 20s). The root is closed, so **no Java
 this repo can pierce it** — neither to measure the internals nor to restyle them. Everything
 in section A's contract is therefore not merely the *documented* route but the *only* route.
 
+**This is a re-confirmation, not a discovery, and the repo said so first.**
+`dressAutocomplete`'s own doc comment in `src/components/FareEstimatePage.astro` already
+records it — "`gmp-place-autocomplete` is a CLOSED custom element — checked in the browser:
+no light-DOM children, no reachable `shadowRoot`" — and draws two further consequences this
+measurement did not have to rediscover: nothing inside can be selected, and a `<label for>`
+cannot bind to it, a custom element not being labelable. Cited rather than restated, since a
+doc that restates an asserted file drifts from it.
+
 This also means C1's values are host-level facts. What Google draws *inside* the closed root
 cannot be read at all; what can be established is that nothing it draws produces a visible
 boundary beyond the white fill, which the screenshot confirms.
 
 ### C4. `::part()` crosses the closed root, and only `input` exists
 
-Probing eighteen candidate part names with a high-visibility rule
-(`::part(X){outline:6px solid …}`), exactly **one** matched: **`input`**. The container-ish
-guesses — `input-container`, `container`, `widget`, `field`, `root`, `wrapper`, `main`,
-`box`, `textfield`, `form` — matched nothing.
+**Fifteen** candidate part names were probed under observation, in two passes with
+high-visibility rules (`::part(X){border:4px solid red; background:lime}`, then
+`::part(X){outline:6px solid <unique colour per name>}` to isolate which one matched).
+Exactly **one** matched: **`input`**.
+
+The fifteen, in full, so the negative result is attributable: `input`, `input-container`,
+`container`, `text-input`, `prediction-list`, `widget`, `field`, `search`, `root`, `icon`,
+`main`, `wrapper`, `box`, `textfield`, `form`. All fourteen but `input` matched nothing.
+
+(An earlier draft said "eighteen". A third pass did list eighteen names, but it produced no
+observation — the rules were applied and removed without a screenshot between them — so
+those extra names are not evidence and are not counted here.)
 
 This independently corroborates section A2's documented Parts list: the parts that exist are
 the ones Google publishes, and no undocumented container part is hiding behind a guessable
@@ -408,12 +446,20 @@ The measured result is exactly the repo's own non-text step from #115:
 
 | Boundary | Ratio | Clears 3:1 |
 |---|---|---|
-| `border-ink/60` on the field's white fill | **4.24:1** | yes |
-| `border-ink/60` on the `bg-paper` card | **4.16:1** | yes |
+| `border-ink/60` on the field's white fill | **4.24:1** (4.25 — see below) | yes, comfortably |
+| `border-ink/60` on the `bg-paper` card | **4.16:1** | yes, comfortably |
 
-Both figures reproduce #115's published numbers for `border-ink/60` to the second decimal,
-which is a useful cross-check on the compositing arithmetic used here. Rendered, it is
-visually indistinguishable from the pre-registration form's inputs.
+**The second decimal here is a convention, not a measurement, and the load-bearing claim
+is the inequality.** `border-ink/60` on `#FFFFFF` is **4.2443** if the composite is rounded
+to integer channels before luminance, and **4.2517** if it is carried continuously — 4.24
+against 4.25. This gate rounds (`check-contrast.mjs`, in `composite`), so quoting 4.24
+reproduces *the gate's own convention*; it is **not** an independent confirmation of #115's
+published figure, and an earlier draft of this note wrongly claimed it as one. This is
+CLAUDE.md's `border-paper/30` lesson in a second place: *the load-bearing claim is the
+inequality*. Both grounds clear 3:1 under either convention, with ~1.2 of headroom, so
+nothing here turns on the digit. (`1.06` and `4.16` are stable either way.)
+
+Rendered, it is visually indistinguishable from the pre-registration form's inputs.
 
 ### C6. What this changes about the issue
 
@@ -424,16 +470,55 @@ All three of #117's "why it is not obvious" points move:
    the host `border` override (A1) and the runtime confirms it works (C5). No shadow parts,
    no wrapper element, no coupling to Google's internal DOM — the same category of move as
    the `color-scheme: light` line already in `dressAutocomplete`.
-3. *"It is not obviously this map's problem."* This weakens. The boundary would be drawn on
-   the **host element, which is this repo's own markup** in the light DOM — not on a vendored
-   internal. That is a different class from the dist copy gate's "vendored files this repo
-   does not author", and it puts the element within plausible reach of
-   `check-contrast.mjs` rule 4 rather than outside it by construction.
+3. *"It is not obviously this map's problem."* This weakens, but **only on ownership, and
+   not on enforceability** — and an earlier draft of this note overstated it in exactly the
+   way #117 anticipated. What is true: the boundary would be drawn on the **host element,
+   which is this repo's own markup** in the light DOM, not on a vendored internal. That is a
+   different class from the dist copy gate's "vendored files this repo does not author", so
+   the *fix* is unambiguously this repo's to make.
 
-Residual risk is section A's, unchanged and worth restating: this site rides the **weekly**
-channel, which Google's own versions page says rolls to 3.66 **"in mid-August"** — i.e. now —
-"may remove deprecated features, and/or introduce backwards-incompatibilities." The
-measurement above is of 3.65.12f and should be re-taken after the roll.
+   What is **not** true is that this brings the element within reach of
+   `check-contrast.mjs` rule 4. #117 says the gate is silent here *"by construction"*, and
+   on inspection that is right three times over, not once:
+
+   - `INTERACTIVE` is `/^<[ \t]*(?:input|select|textarea|button|a)(?=[\s/>])/i` — a
+     closed list of native tags. `<gmp-place-autocomplete>` is a custom element and matches
+     none of them.
+   - The host is **constructed in a `<script>`** — `new PlaceAutocompleteElement({})` in
+     `FareEstimatePage.astro`'s loader block — and script bodies are skipped. That is the
+     gate's own **second named blind spot**, listed in its header beside this one.
+   - Rule 4 fires on a `border-(ink|paper)/α` **class** in the template (`BORDER_RE`),
+     whereas the fix here would be an `element.style` assignment or a scoped CSS rule. There
+     is no class for the gate to read.
+
+   So covering it would mean changing all three — the tag list, the script-body skip, and
+   the class-only reading — each of which is a decision with its own cost, and the second of
+   which the gate declined deliberately. **#117's "by construction" is more nearly right
+   than the earlier draft allowed.** Recorded here so whoever files the build ticket prices
+   the gate work honestly instead of inheriting "plausible reach".
+
+Residual risk is the channel roll — quoted once under "What this repo actually loads" above
+and not restated here. It bites this section specifically in one way: **the measurement above
+is of 3.65.12f and should be re-taken after the roll.**
+
+### C7. Disposition — the outcome #117 named
+
+#117 says plainly: *"Ruling it out of scope is a legitimate outcome of this ticket."* So this
+note owes a disposition rather than a shrug. **Recommendation: in scope, as a fix; out of
+scope, as gate coverage.** The two halves come apart, and #117's own framing conflates them:
+
+- **The fix is in scope.** The failure is real and large (1.06:1 against 3:1), the remedy is
+  a documented one-property override on this repo's own host element, and it reuses the exact
+  step #115 already established. The "vendored widget" argument does not survive the finding
+  that the boundary is set from the light DOM.
+- **Gate coverage is out of scope.** Per C6.3 it costs three separate changes to
+  `check-contrast.mjs`, one of which reverses a deliberate decision (skipping script bodies).
+  That is a criterion-enforcement decision of the kind #76 and #115 each filed separately
+  rather than folded in, and it should be filed separately again.
+
+This is a recommendation, not the decision — #117 is a research ticket, and the build ticket
+is where the call gets made. It is written down so the next reader inherits a position to
+argue with rather than an open question to re-derive.
 
 ---
 
@@ -444,7 +529,7 @@ measurement above is of 3.65.12f and should be re-taken after the roll.
 | `border` on the `gmp-place-autocomplete` host overrides the field's border | **Documented contract** — reference CSS Properties list + changelog 3.61.9a |
 | `border-radius`, `background-color`, `color`, the six font properties | **Documented contract** — same list |
 | `color-scheme` as a theming input, default `light dark` | **Documented contract** — reference + custom-styling page + changelog 3.61.9a |
-| `::part(input)` and the ten other named parts | **Documented contract** — reference Parts list, each announced in the changelog |
+| `::part(input)` and the nine other named parts (ten in total) | **Documented contract** — reference Parts list, each announced in the changelog |
 | `--gmp-mat-*` custom properties (incl. `--gmp-mat-color-outline-decorative`) | **Not applicable to autocomplete** — the custom-styling table's only columns are Details Compact and Details |
 | The default light-scheme border colour and width Google draws | **Undocumented.** Measured at runtime (C1): there is **no border** — `0px`, on a `#FFFFFF` fill |
 | The resulting boundary against `bg-paper` | **1.06:1** — fails SC 1.4.11's 3:1 (C2) |
@@ -456,7 +541,8 @@ The practical consequence for #117: **the fix does not require reaching into sha
 A `border` declaration on the host element is Google's documented override, so a brand-token
 border that clears 3:1 on `bg-paper` can be set from this repo's own CSS with a supported
 mechanism — the same category of move as the existing `color-scheme: light`. Whether it is
-*needed* still depends on the runtime measurement of the default, which the docs do not give.
+*needed* is not answerable from the documentation, which gives no default; **C2 answers it
+from the browser — it is needed, at 1.06:1 against a required 3:1.**
 
 ---
 
@@ -470,20 +556,22 @@ mechanism — the same category of move as the existing `color-scheme: light`. W
    single box. There is no inner border for it to double.
 
 ~~3. **Whether `::part(input)` or the host `border` is the right lever.**~~ **Answered by
-   C4** — the host `border`. `::part(input)` matches the inner text input only, inset and
-   excluding the search icon, so it draws the wrong rectangle for the component boundary.
+   C4 for the boundary** — the host `border`. `::part(input)` matches the inner text input
+   only, inset and excluding the search icon, so it draws the wrong rectangle for the
+   component boundary. **Scoped to the boundary deliberately:** this does not rule the part
+   out for other surfaces, and the two compose (the part is the inner `<input>`, the host is
+   the outer box). Item 4 below is the likely case where the part is needed anyway.
 
 4. **Focus state.** `focus-ring` is a documented part but its default appearance and
    contrast are unpublished. SC 1.4.11 covers component *states*; #115's precedent was to
    scope state variants out deliberately rather than silently. Flagged, not answered.
-5. **A Maps Platform VPAT.** Google Cloud publishes VPATs at
-   <https://cloud.google.com/security/compliance/vpat>, but no Maps JavaScript API or
-   Places UI Kit VPAT was found from Google's own pages; the page describes requesting them.
-   Not established either way — recorded as unresolved, not as "none exists".
+5. **A Maps Platform VPAT.** See B2 — none was found from Google's own pages, and that is
+   recorded as unresolved rather than as "none exists". Requesting one is the documented
+   route if the build ticket needs it.
 6. **How long the documented surface lasts.** No deprecation policy for a CSS part or CSS
-   property is published. The weekly channel rolls to 3.66 "in mid-August" 2026, explicitly
-   permitted to introduce backwards-incompatibilities. Anything built on this surface should
-   expect to be re-verified after that roll.
+   property is published, and this repo rides the weekly channel — quoted once under "What
+   this repo actually loads" above. Anything built on this surface should expect to be
+   re-verified after the 3.66 roll.
 7. **Shadow-DOM-in-shadow-DOM.** Google's Basic Autocomplete sample notes "info window
    content is inside the shadow DOM when using `<gmp-map>`" and therefore uses inline styles
    there. This site mounts the autocomplete into its own light-DOM slot, not inside
