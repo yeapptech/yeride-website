@@ -24,6 +24,13 @@ export default {
 			//
 			// Delete this once the brand package ships a token that names the family
 			// its own prescribed package declares — yeapptech/yeride-brand#191.
+			// Nothing enforces that deletion, so until it happens the built CSS
+			// carries TWO disagreeing brand stacks: this one, and `--font-brand` from
+			// the package's own `tokens.css`, which BaseLayout also imports and which
+			// still leads with plain `Nunito`. No rule reads that custom property
+			// today — `font-brand` below is the only consumer, on `<body>` — but
+			// anyone who reaches for `var(--font-brand)` gets the system font back.
+			// Use the utility, not the variable, until #191 lands.
 			fontFamily: {
 				brand: ['Nunito Variable', ...brandPreset.theme.extend.fontFamily.brand],
 			},
