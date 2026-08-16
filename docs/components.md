@@ -332,12 +332,11 @@ wrote this line every quote was for `DEFAULT_SERVICE_AREA_ID` whatever the rider
 the page had to state which area — otherwise the map underneath implies the rider's own and
 a Chicago route reads as a Chicago price. **#73 changed the premise and not the
 conclusion:** the area is now resolved from the pickup and the constant is only the
-fallback (refusal 4 below), and the label stays regardless, because the page still prices
-one area, the rider cannot tell which from a map with a route on it, and the two fallback
-states are invisible from outside. The line is rendered in the frontmatter, not from the response, because
-it must stand in every state including a failed estimate. The constant lives in
-`src/lib/serviceArea.ts` rather than `src/lib/fareEstimate.ts` so that reading it here
-does not import `src/lib/firebase.ts`, which calls `initializeApp` at module scope.
+fallback (refusal 4 below), and the label stays anyway — refusal 5 gives the reason, and
+is the only place it is written. The line is rendered in the frontmatter, not from the
+response, because it must stand in every state including a failed estimate. The constant
+lives in `src/lib/serviceArea.ts` rather than `src/lib/fareEstimate.ts` so that reading it
+here does not import `src/lib/firebase.ts`, which calls `initializeApp` at module scope.
 
 The label is **"Priced for"**, not "Service area": the latter is the site's coverage
 vocabulary (`/es/fees` labels its picker "Área de servicio", and both legal documents
@@ -455,9 +454,9 @@ in `scripts/check-dist-copy-gate.mjs`'s `ALLOWED` list, keyed to the built pages
 path, matched text and an exact count. One pragma does not mean one allowance: a pragma
 covers its own line and the line below, and §5's `/\b(seguros?|aseguranza|p[óo]liza)\b/`
 can match **twice in one sentence** — *"el número de póliza de seguro del vehículo"* is two
-words, one sentence. Nor are they all denials: several name the vehicle's insurance policy
-number as a field the app collects, and terms §7 states the driver's own duty under Fla.
-Stat. § 627.748(7).
+words, one sentence. Nor are they all denials: two of them name the vehicle's insurance
+policy number as a field the app collects, and terms §7 states the driver's own duty under
+Fla. Stat. § 627.748(7).
 
 **Do not take a count from this page — read it off a build.** The three numbers involved
 (pragmas in the source, allowances the source gate prints, entries in the dist list) have

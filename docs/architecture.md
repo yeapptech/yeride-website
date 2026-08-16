@@ -309,9 +309,13 @@ gate**, and it runs nine things in order — any one of them fails the build:
    inputs, the header language toggle and the `/fees` service-area picker. So
    typing `border-ink/20` on an `<input>` fails the build; typing it on a `<div>`
    does not. State variants (`hover:`, `focus:`) are out of scope deliberately,
-   and an interactive element built inside a `<script>` is not seen at all —
-   which is why `/fare-estimate`'s two autocomplete fields are correct but
-   ungated (#121). Like 1–5 it needs neither dependencies nor secrets.
+   and an interactive element built inside a `<script>` is not seen at all.
+   `/fare-estimate`'s two autocomplete fields are correct but ungated for
+   **three** independent reasons (#121): their tag is a custom element and so
+   is not on the list above, they are built inside a `<script>`, and their
+   classes are applied at runtime rather than written in the template — see
+   `docs/components.md` under `FareEstimatePage`. Like 1–5 it needs neither
+   dependencies nor secrets.
 7. **Env check** (`check-env.mjs`) — all six `PUBLIC_*` present, non-empty and
    printable ASCII. Astro inlines them at build time, so an empty one becomes a
    falsy literal and Rollup deletes the branch that tested it.
