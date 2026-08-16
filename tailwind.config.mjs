@@ -5,7 +5,29 @@ export default {
 	presets: [brandPreset],
 	content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
 	theme: {
-		extend: {},
+		extend: {
+			// #123: name the family the font we actually load declares.
+			//
+			// CONSUMING.md §4 prescribes `@fontsource-variable/nunito` for web, and
+			// BaseLayout imports it — but every @font-face in that package declares
+			// `'Nunito Variable'`, while the brand token's stack leads with plain
+			// `Nunito`. Nothing on the site asked for the family that was loaded, so
+			// every page rendered in the OS font: measured live, the homepage <h1>
+			// came out identical to `system-ui`, and `Nunito` measured identical to a
+			// font name that does not exist.
+			//
+			// This PREPENDS to the token rather than restating it — the array is read
+			// from the preset, so the fallback stack still has exactly one author, and
+			// CONSUMING.md's "no locally restated font stacks" holds. Plain `Nunito`
+			// stays right behind it, which is what mobile loads (§4 sends Expo to
+			// `@expo-google-fonts/nunito`) and what a locally installed copy answers to.
+			//
+			// Delete this once the brand package ships a token that names the family
+			// its own prescribed package declares — yeapptech/yeride-brand#191.
+			fontFamily: {
+				brand: ['Nunito Variable', ...brandPreset.theme.extend.fontFamily.brand],
+			},
+		},
 	},
 	plugins: [],
 }
