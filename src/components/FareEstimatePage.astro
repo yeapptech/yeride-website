@@ -520,10 +520,38 @@ if (!areaName) {
    * `color-scheme` is one of the few things that inherits *through* a shadow
    * boundary. Without it the component follows the OS into dark mode and puts
    * a black field in the middle of the paper card.
+   *
+   * The BORDER is #121, off #117's measurement. By default this element draws
+   * no boundary at all — measured `border-top-width: 0px` on a `#FFFFFF` fill,
+   * sitting on the `#FBF8F3` card, so its only cue is the fill change at
+   * 1.06:1 against SC 1.4.11's required 3:1. `border` is one of the handful of
+   * properties Google documents as overridable on the host, and the host is
+   * the right box: `::part(input)` exists, but it matches the inset text input
+   * and excludes the search icon, so it draws the wrong rectangle.
+   *
+   * Applied as CLASSES rather than the scoped rule #117 measured with, because
+   * this element is constructed here at runtime and so never receives Astro's
+   * scoping attribute — a scoped selector would not match it. The classes are
+   * the pre-registration inputs' own, which is why the two now render alike,
+   * and they keep the step in the brand scale instead of restating a token.
+   *
+   * Measured in the browser on Maps JS 3.65.12f rather than assumed: the pair
+   * composites to 4.25:1 on the field's white fill and 4.17:1 on the paper
+   * card, clearing 3:1 on both. The value is unchanged while the element is
+   * focused — Google draws its own ring INSIDE this border rather than
+   * replacing it — so the boundary clears 3:1 in both states. The appearance
+   * of that inner ring itself is a `focus-ring` part inside the closed shadow
+   * root and was NOT sampled; it is scoped out here deliberately, as #115
+   * scoped out its own state variants, rather than left silent.
+   *
+   * None of this is watched by `check-contrast.mjs`: rule 4 reads a class on a
+   * native tag in the template, and this is a custom element built inside a
+   * `<script>`. Shipping ungated is a known cost, recorded on #121.
    */
   function dressAutocomplete(element: HTMLElement, placeholder: string) {
     (element as any).placeholder = placeholder;
     element.style.colorScheme = "light";
+    element.classList.add("rounded-xl", "border", "border-ink/60");
   }
 
   async function init() {
