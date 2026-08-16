@@ -520,10 +520,53 @@ if (!areaName) {
    * `color-scheme` is one of the few things that inherits *through* a shadow
    * boundary. Without it the component follows the OS into dark mode and puts
    * a black field in the middle of the paper card.
+   *
+   * The BORDER is #121, off #117's measurement. By default this element draws
+   * no boundary at all, and that was RE-SAMPLED here rather than carried over
+   * from the note, because #121 asked for it: on 2026-08-15 the weekly channel
+   * still served Maps JS 3.65.12f — it had not yet rolled to 3.66 — and the
+   * host still computed `border-top-width: 0px` on a `#FFFFFF` fill over the
+   * `#FBF8F3` card, a 1.06:1 cue against SC 1.4.11's required 3:1. The
+   * `border` override was re-confirmed to apply on that same build. It is one
+   * of the handful of properties Google documents as overridable on the host,
+   * and the host is the right box: `::part(input)` exists, but it matches the
+   * inset text input and excludes the search icon, so it draws the wrong
+   * rectangle.
+   *
+   * Applied as CLASSES rather than the scoped rule #117 measured with, because
+   * this element is constructed here at runtime and so never receives Astro's
+   * scoping attribute — a scoped selector would not match it. They are the
+   * pre-registration inputs' own classes, which keeps the step in the brand
+   * scale instead of restating a token and is why the two now render alike.
+   * `rounded-xl` rides along for that reason rather than for contrast: drawing
+   * a boundary is what makes the corner shape visible at all, so the 3px
+   * default beside every other field's 12px is a seam this change itself
+   * opens. That the two stay alike is held BY HAND — `PreRegistrationForm`'s
+   * `inputClass` carries the same three values, gate 6 can see that one and
+   * cannot see this one, so a future move of #115's base would pass this field
+   * by in silence. Named here rather than counted as covered.
+   *
+   * Measured in the browser, both fields, EN and ES: the pair composites to
+   * 4.25:1 on the field's white fill and 4.16:1 on the paper card — 4.244 and
+   * 4.161 rounding the composited channels as the gate does, 4.252 and 4.167
+   * carrying them continuously. #117 read the second as stable across that
+   * choice; it is not, it is the one digit that moves, so the load-bearing
+   * claim is the inequality: both clear 3:1 under either convention. The value
+   * is unchanged while the element is focused — Google draws its own ring
+   * INSIDE this border rather than replacing it — so the boundary clears 3:1
+   * in both states. The appearance of that inner ring itself is a `focus-ring`
+   * part inside the closed shadow root and was NOT sampled; it is scoped out
+   * here deliberately, as #115 scoped out its own state variants, rather than
+   * left silent.
+   *
+   * None of this is watched by `check-contrast.mjs`: rule 4 reads a class on a
+   * native tag in the template, and this is a custom element built inside a
+   * `<script>`. Shipping ungated is a known cost, recorded on #121.
    */
   function dressAutocomplete(element: HTMLElement, placeholder: string) {
     (element as any).placeholder = placeholder;
     element.style.colorScheme = "light";
+    element.classList.add("rounded-xl", "border", "border-ink/60");
   }
 
   async function init() {
