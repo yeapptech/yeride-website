@@ -12,9 +12,10 @@ be checked on its own terms:
 - **Section C — the runtime measurement.** Taken in a browser against production. This is
   the half #117 said nobody had done.
 
-Read that way, the two halves corroborate each other on the one point where they overlap
-(C4 finds exactly the parts A2 documents, and no others), which is worth more than either
-half alone.
+The halves overlap in exactly one narrow place, and the overlap is worth stating precisely
+rather than generously: C4's probe found **no undocumented part** reachable by a guessable
+name. It did **not** confirm A2's list — only two of A2's ten documented parts were probed
+at all. See C4 for what the probe does and does not establish.
 
 Sources were read on 2026-08-15. Google's reference and guide pages carry a
 "Last updated 2026-08-11 UTC" stamp and are versionless URLs — they document whatever
@@ -51,14 +52,17 @@ than asserted.**
 
 *"Determined by the user agent and not modified by the author."* The exception covers a
 control the browser draws for itself — an unstyled native `<input>`, whose appearance the
-author never touched. Two things independently take this element out of it. The boundary is
-painted by **Google's script**, which is author-supplied third-party content, not by
-Chrome's default rendering; and this repo **does** modify the element's appearance, setting
-`color-scheme` and `placeholder` on it today, with `border` documented as available (A1).
-The exception exists so authors are not liable for UA chrome they cannot control; here the
-appearance is controllable — C5 demonstrates it — so the rationale does not reach. Note the
-direction of the test: the exception asks whether the appearance is *determined by the UA*,
-not whether the author happens to have styled the boundary specifically.
+author never touched. This element is out of it on the **first** clause alone: the boundary
+is painted by **Google's script**, which is author-supplied third-party content shipped by
+this site, not by Chrome's default rendering. Nothing here is UA chrome. The exception exists
+so authors are not liable for appearance they cannot control; here the appearance is
+controllable — C5 demonstrates it — so the rationale does not reach either.
+
+An earlier draft added a second reason, that this repo already modifies the element by
+setting `color-scheme` and `placeholder`. That is **dropped as unsound**: the test asks
+whether the appearance is *determined by the UA*, and having styled some other property of
+the element does not bear on it. One correct reason is worth more than two where the second
+argues against the first.
 
 *"Inactive components."* A disabled control is exempt. These fields are enabled and are the
 page's primary input — a rider cannot get an estimate without typing into them. The leg does
@@ -342,15 +346,9 @@ So: the element this site ships is the GA one. Any statement that "the autocompl
 pre-GA" is about the *other* element.
 
 **The stability guarantee, stated plainly.** There is no per-element DOM/styling stability
-promise anywhere in these docs. What exists is the channel policy:
-
-> "The weekly channel is specified with `v=weekly`. This channel is updated once per week,
-> and is the most current." … "We may introduce backwards-incompatible changes when creating
-> a new version." … "In mid-August, the weekly channel will be updated to version 3.66. At
-> that time, the new version may remove deprecated features, and/or introduce
-> backwards-incompatibilities."
-
-— <https://developers.google.com/maps/documentation/javascript/versions>
+promise anywhere in these docs. What exists is the channel policy, quoted once under "What
+this repo actually loads" above and not requoted here — the operative sentence being that
+Google "may introduce backwards-incompatible changes when creating a new version."
 
 The quarterly channel (`v=quarterly`, currently 3.64) is the documented way to buy
 predictability; this repo pins nothing and so rides weekly.
@@ -428,9 +426,26 @@ The fifteen, in full, so the negative result is attributable: `input`, `input-co
 observation — the rules were applied and removed without a screenshot between them — so
 those extra names are not evidence and are not counted here.)
 
-This independently corroborates section A2's documented Parts list: the parts that exist are
-the ones Google publishes, and no undocumented container part is hiding behind a guessable
-name. It also settles open question 3 below on the merits: `::part(input)` matches the
+**What this establishes, and what it does not.** An earlier draft claimed the probe
+"independently corroborates section A2's documented Parts list: the parts that exist are the
+ones Google publishes." **It does not, and the probe's own data says so.** Of A2's ten
+documented parts, this list touches **two**: `input`, which matched, and `prediction-list`,
+which **did not**. The other eight were never probed. So thirteen of the fifteen names carry
+no information about A2 either way.
+
+The likely reason `prediction-list` did not match is mundane — the predictions dropdown was
+closed throughout, so the element it names had not been rendered — but that was **not
+verified**, and it is recorded here as the probable explanation rather than the established
+one. Anyone re-running this should type into the field first.
+
+The supported claim is therefore the narrow one: **no undocumented container part is
+reachable by a guessable name.** Thirteen plausible container-ish guesses — `input-container`,
+`container`, `widget`, `field`, `root`, `wrapper`, `main`, `box`, `textfield`, `form`,
+`text-input`, `search`, `icon` — all matched nothing, which is a real negative result about
+the *shape of the surface*, and is the claim C6 and the summary table rest on. It is not a
+confirmation of Google's list.
+
+The probe does settle open question 3 below on the merits: `::part(input)` matches the
 **inner text input only**, inset from the component and excluding the search icon, so styling
 it draws the wrong rectangle for the component's boundary. It is the wrong lever here.
 
@@ -456,8 +471,9 @@ against 4.25. This gate rounds (`check-contrast.mjs`, in `composite`), so quotin
 reproduces *the gate's own convention*; it is **not** an independent confirmation of #115's
 published figure, and an earlier draft of this note wrongly claimed it as one. This is
 CLAUDE.md's `border-paper/30` lesson in a second place: *the load-bearing claim is the
-inequality*. Both grounds clear 3:1 under either convention, with ~1.2 of headroom, so
-nothing here turns on the digit. (`1.06` and `4.16` are stable either way.)
+inequality*. Both grounds clear 3:1 under either convention, by ~1.2 **of ratio** (4.24 − 3.0
+= 1.24; 4.16 − 3.0 = 1.16), so nothing here turns on the digit. (`1.06` and `4.16` are stable
+either way.)
 
 Rendered, it is visually indistinguishable from the pre-registration form's inputs.
 
