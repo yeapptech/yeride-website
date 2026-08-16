@@ -87,6 +87,7 @@ build ticket turns on the exception, read Understanding SC 1.4.11 before relying
   > "If you do not explicitly specify a channel or version, you will receive the weekly
   > channel by default."
   > … "Currently, the weekly channel is version 3.65."
+  > … "We may introduce backwards-incompatible changes when creating a new version."
   > … "In mid-August, the weekly channel will be updated to version 3.66. At that time,
   > the new version may remove deprecated features, and/or introduce
   > backwards-incompatibilities."
@@ -193,7 +194,10 @@ Google's own API reference *and* announced individually in the changelog as addi
 is the strongest form of contract Google gives for any of this element's surface. It is
 weaker than a versioned semver promise: nothing in Google's docs states a deprecation policy
 for a shadow part, and the channel this site loads is explicitly allowed to introduce
-backwards-incompatible changes at each quarterly roll (see the versions quote above). But
+backwards-incompatible changes whenever a new version is created — for this site, at each
+version roll of the **weekly** channel, the 3.66 update above being the next one due (see
+the versions quote there; the quarterly channel is a different channel, and this repo is not
+on it). But
 "documented and changelogged" is materially different from "found by poking at the shadow
 root", and both `border` and `::part(input)` are in the former category.
 
@@ -438,10 +442,11 @@ closed throughout, so the element it names had not been rendered — but that wa
 verified**, and it is recorded here as the probable explanation rather than the established
 one. Anyone re-running this should type into the field first.
 
-The supported claim is therefore the narrow one: **no undocumented container part is
-reachable by a guessable name.** Thirteen plausible container-ish guesses — `input-container`,
-`container`, `widget`, `field`, `root`, `wrapper`, `main`, `box`, `textfield`, `form`,
-`text-input`, `search`, `icon` — all matched nothing, which is a real negative result about
+The supported claim is therefore the narrow one: **no undocumented part is reachable by a
+guessable name.** Thirteen plausible guesses — the container-ish `input-container`,
+`container`, `widget`, `field`, `root`, `wrapper`, `main`, `box`, `form`, and the
+field-ish `textfield`, `text-input`, `search`, `icon` — all matched nothing, which is a real
+negative result about
 the *shape of the surface*, and is the claim C6 and the summary table rest on. It is not a
 confirmation of Google's list.
 
@@ -551,7 +556,7 @@ argue with rather than an open question to re-derive.
 | The resulting boundary against `bg-paper` | **1.06:1** — fails SC 1.4.11's 3:1 (C2) |
 | The shadow root's openness | **Closed** — `shadowRoot` is `null`; no JS can pierce it (C3) |
 | Any WCAG / SC 1.4.11 / contrast-ratio claim for this element | **Does not exist** in Google's docs, changelog or blog |
-| DOM/shadow-DOM stability guarantee for the element | **None per-element.** Only the channel policy, which permits backwards-incompatible changes at each quarterly roll |
+| DOM/shadow-DOM stability guarantee for the element | **None per-element.** Only the channel policy, which permits backwards-incompatible changes at each version roll of the **weekly** channel this repo rides |
 
 The practical consequence for #117: **the fix does not require reaching into shadow DOM.**
 A `border` declaration on the host element is Google's documented override, so a brand-token
