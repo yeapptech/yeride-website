@@ -93,8 +93,10 @@ Rendered by `BaseLayout`; pages do not import it directly.
 
 **Navigation items** (order is fixed — audience pages, then the two proof pages, then the
 toggle): Drivers / Maneja, Riders / Viaja, Fees / Tarifas, Fare estimate / Estimar tarifa,
-then the ES⇄EN toggle. Below `sm` the links drop and **the mark and the toggle always
-survive** — ES parity is not a progressive enhancement. There is no hamburger menu.
+then the ES⇄EN toggle. The links drop in two stages — Drivers, Riders and Fees are
+`hidden sm:inline`, Fare estimate is `hidden md:inline`, so it is the first to go — and
+**the mark and the toggle always survive** — ES parity is not a progressive enhancement.
+There is no hamburger menu.
 
 ### Footer
 
@@ -307,10 +309,32 @@ loader supplies autocomplete, the map and Directions, and the fares come from th
 Firebase callable `estimateFares` at submit time. `setOptions({ language })` is passed
 the page's language, or the ES page gets English place names and an English "18 mins".
 
-**Why it says what it is priced for** (wayfinder #62). Every quote is for
-`DEFAULT_SERVICE_AREA_ID`, whatever the rider typed, so the page states which area —
-otherwise the map underneath implies the rider's own and a Chicago route reads as a
-Chicago price. The line is rendered in the frontmatter, not from the response, because
+**The two address fields are Google's, and this repo styles them from JavaScript** (#121).
+`dressAutocomplete` mounts each `gmp-place-autocomplete` and sets three things on the host:
+the §3.5 placeholder (which doubles as the field's accessible name — a custom element is
+not labelable, so `<label for>` cannot bind to it), `colorScheme = "light"` (or the
+component follows the OS into dark mode and puts a black field on the paper card), and the
+boundary — `rounded-xl border border-ink/60`, the pre-registration inputs' own classes.
+The shadow root is **closed**, so nothing here can select inside it; the host is the only
+surface, and `border` is one of the properties Google documents as overridable on it. Do
+not reach for `::part(input)`: it matches the inset text input and excludes the search
+icon, so it draws the wrong rectangle. **Two things follow that are easy to break.**
+`check-contrast.mjs` cannot see any of this — the tag is not one it watches, the element is
+built inside a `<script>`, and the classes are added at runtime rather than written in the
+template — so the boundary is correct and ungated. And it is held to
+`PreRegistrationForm`'s `inputClass` by hand, so moving that base leaves this field behind
+in silence. Measured live at 4.25:1 on the field's own white fill and 4.16:1 on the paper
+card, against a default of no border at all. See
+`docs/research/117-gmp-place-autocomplete-contrast.md` before restyling it.
+
+**Why it says what it is priced for** (wayfinder #62, premise amended by #73). When #62
+wrote this line every quote was for `DEFAULT_SERVICE_AREA_ID` whatever the rider typed, so
+the page had to state which area — otherwise the map underneath implies the rider's own and
+a Chicago route reads as a Chicago price. **#73 changed the premise and not the
+conclusion:** the area is now resolved from the pickup and the constant is only the
+fallback (refusal 4 below), and the label stays regardless, because the page still prices
+one area, the rider cannot tell which from a map with a route on it, and the two fallback
+states are invisible from outside. The line is rendered in the frontmatter, not from the response, because
 it must stand in every state including a failed estimate. The constant lives in
 `src/lib/serviceArea.ts` rather than `src/lib/fareEstimate.ts` so that reading it here
 does not import `src/lib/firebase.ts`, which calls `initializeApp` at module scope.
@@ -326,56 +350,7 @@ helper humanises an unknown identifier ("Us Fl South Florida") so `/fees` can re
 area it has never heard of, which on this page would publish an English-derived string
 on `/es/fare-estimate`. Here a missing name is a defect, so it fails the build.
 
-### LegalDocument
-
-The whole body of `/privacy-policy`, `/terms` and their ES twins (wayfinder #44). One
-component for both documents, because they have the same shape: H1, a last-changed date,
-a lead, numbered sections of paragraphs and bullet lists, and the governing-language note
-copy-map §3.8/§3.9 fixes on both languages. No hero — these are the two pages nobody
-arrives at to be sold something, so it is a reading column on paper.
-
-**Props**
-
-| Prop | Type | Required | Notes |
-|---|---|---|---|
-| `lang` | `"en" \| "es"` | yes | Selects the language from `src/i18n/legalCopy.ts` |
-| `doc` | `"privacy" \| "terms"` | yes | Selects which of the two documents to render |
-
-Both axes are needed, so this is the one page component that takes more than `lang` — it
-still resolves its own copy from `src/i18n/`, which is the part of the contract that
-matters. Passing the resolved document object instead would make the page files reach into
-the copy module and leave the component unable to know its own language.
-
-**Usage**
-
-```astro
-<BaseLayout title="Terms of Service | YeRide" lang="en">
-  <LegalDocument lang="en" doc="terms" />
-</BaseLayout>
-```
-
-**It linkifies two patterns and nothing else.** Email addresses and `www.yeride.com/...`
-URLs in the copy become links, because "write to support@yeride.com" is the only action
-either document asks for and plain text would make it unclickable. Everything else stays
-plain, so the copy in `src/i18n/legalCopy.ts` remains strings rather than markup.
-
-**The four `copy-gate-allow` pragmas.** `legalCopy.ts` states that YeRide provides no
-insurance. Copy-map §5 gates that word on #48 and the gate matches patterns, not meaning,
-so it cannot tell that denial from a claim — hence the pragmas, which print on every build.
-When #48 lands the statements become *false* and must be rewritten, not merely un-pragma'd.
-
-Those pragmas are stripped by the build, so the same sentences are blessed a **second** time
-in `scripts/check-dist-copy-gate.mjs`'s `ALLOWED` list, keyed to the built pages (#57).
-Five entries cover the four pragmas, because §5's `/\b(seguros?|aseguranza|p[óo]liza)\b/`
-matches **twice** in *"el número de póliza de seguro del vehículo"* — two words, one
-sentence. Note that only two of the four are denials; the other two name the vehicle
-insurance policy number as a field the app collects.
-
-Both lists are self-cleaning, so editing a legal sentence that contains *insurance*,
-*seguro* or *póliza* — even to add a second one — fails the build until both are updated.
-That cost is the point: adding one is a decision.
-
-**Four refusals it enforces.** Read #38 before relaxing any of them:
+**Five refusals it enforces.** Read #38 before relaxing any of them:
 
 1. **It shows the fare and nothing else about money.** `estimateFares` used to also
    return `appCharges`/`appChargesTotal`, and `ServiceEstimate` deliberately did not
@@ -436,6 +411,63 @@ fetched value is the fallback, not the switch.
 `src/i18n/fareEstimateCopy.ts` (page copy, EN/ES), `src/i18n/feeLabels.ts`
 (`serviceAreaNames`, read in the frontmatter for the area's bilingual name; ride tier
 labels, read in the result list).
+
+### LegalDocument
+
+The whole body of `/privacy-policy`, `/terms` and their ES twins (wayfinder #44). One
+component for both documents, because they have the same shape: H1, a last-changed date,
+a lead, numbered sections of paragraphs and bullet lists, and the governing-language note
+copy-map §3.8/§3.9 fixes on both languages. No hero — these are the two pages nobody
+arrives at to be sold something, so it is a reading column on paper.
+
+**Props**
+
+| Prop | Type | Required | Notes |
+|---|---|---|---|
+| `lang` | `"en" \| "es"` | yes | Selects the language from `src/i18n/legalCopy.ts` |
+| `doc` | `"privacy" \| "terms"` | yes | Selects which of the two documents to render |
+
+Both axes are needed, so this is the one page component that takes more than `lang` — it
+still resolves its own copy from `src/i18n/`, which is the part of the contract that
+matters. Passing the resolved document object instead would make the page files reach into
+the copy module and leave the component unable to know its own language.
+
+**Usage**
+
+```astro
+<BaseLayout title="Terms of Service | YeRide" lang="en">
+  <LegalDocument lang="en" doc="terms" />
+</BaseLayout>
+```
+
+**It linkifies two patterns and nothing else.** Email addresses and `www.yeride.com/...`
+URLs in the copy become links, because "write to support@yeride.com" is the only action
+either document asks for and plain text would make it unclickable. Everything else stays
+plain, so the copy in `src/i18n/legalCopy.ts` remains strings rather than markup.
+
+**The `copy-gate-allow` pragmas.** `legalCopy.ts` states that YeRide provides no
+insurance. Copy-map §5 gates that word on #48 and the gate matches patterns, not meaning,
+so it cannot tell that denial from a claim — hence the pragmas, which print on every build.
+When #48 lands the statements become *false* and must be rewritten, not merely un-pragma'd.
+
+Those pragmas are stripped by the build, so the same sentences are blessed a **second** time
+in `scripts/check-dist-copy-gate.mjs`'s `ALLOWED` list, keyed to the built pages (#57) — by
+path, matched text and an exact count. One pragma does not mean one allowance: a pragma
+covers its own line and the line below, and §5's `/\b(seguros?|aseguranza|p[óo]liza)\b/`
+can match **twice in one sentence** — *"el número de póliza de seguro del vehículo"* is two
+words, one sentence. Nor are they all denials: several name the vehicle's insurance policy
+number as a field the app collects, and terms §7 states the driver's own duty under Fla.
+Stat. § 627.748(7).
+
+**Do not take a count from this page — read it off a build.** The three numbers involved
+(pragmas in the source, allowances the source gate prints, entries in the dist list) have
+all moved at least once, and a count written in prose is the one copy of it that cannot
+fail when it drifts: this paragraph said "four pragmas, five entries" while the source
+carried twelve. `npm run checks` prints the live set on every run. That both lists are
+self-cleaning is the real safeguard — an entry that stops matching, or matches a different
+number of times, fails the build — so editing a legal sentence containing *insurance*,
+*seguro* or *póliza*, even to add a second one, fails until both are updated. That cost is
+the point: adding one is a decision.
 
 ### NotFoundPage / RedirectPage
 
@@ -582,23 +614,23 @@ All components use Tailwind's responsive prefixes:
 
 ### Interactive Elements
 
-JavaScript is used sparingly for:
-- Mobile menu toggle
-- Form validation and submission
-- Smooth scrolling
+JavaScript is used sparingly, and **exactly five files carry a `<script>`**:
 
-Example pattern:
+| File | What its script is for |
+|---|---|
+| `PreRegistrationForm.astro` | Field validation and the POST to the register endpoint |
+| `FeeSchedule.astro` | Fetches the live fee schedule and renders the rate card |
+| `FareEstimatePage.astro` | Google Maps, autocomplete, Directions, and the `estimateFares` call |
+| `RedirectPage.astro` | The bounce to the `yeride://register` deep link |
+| `BaseLayout.astro` | `bilingual` mode's language stamp — inline, and it must stay inline |
 
-```html
-<script>
-  const button = document.getElementById('menu-toggle');
-  const menu = document.getElementById('mobile-menu');
-
-  button?.addEventListener('click', () => {
-    menu?.classList.toggle('hidden');
-  });
-</script>
-```
+There is **no mobile menu toggle and no smooth scrolling**; this section described both
+until #42's audit, along with a `#menu-toggle` / `#mobile-menu` sample for elements that
+have never existed in `src/`. `Header` has no hamburger (see its own section above), and
+nothing in `src/` sets `scroll-behavior` or calls `scrollIntoView`. If you need a pattern to
+copy, read one of the five files above rather than a sample in this document — a sample
+here is a sixth copy of something that can drift, which is exactly how the removed one
+survived.
 
 ### Color Scheme
 

@@ -8,7 +8,7 @@ This guide will help you set up the YeRide website for local development.
   `scripts/service-area.test.mjs` with `--experimental-strip-types` so it can import
   the real `src/lib/serviceArea.ts` rather than keep a second copy of the maths, and
   that flag does not exist before 22.6. On an older Node that control — the last of
-  the seven, so you get six green ticks first — dies on the flag itself:
+  the eight, so you get seven green ticks first — dies on the flag itself:
   `node: bad option: --experimental-strip-types`. CI runs **24**, where type
   stripping is the default and the flag is accepted anyway.
 - **npm** 9.x or later

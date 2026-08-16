@@ -297,7 +297,21 @@ gate**, and it runs nine things in order — any one of them fails the build:
    darker. Markup built in a `<script>` and injected into a slot cannot be
    traced statically, so in a file that paints yellow those classes must declare
    their ground with a `// contrast-ground: …` comment; an undeclared one is an
-   error. Like 1–5 it needs neither dependencies nor secrets.
+   error.
+
+   Since #115 it enforces a **second criterion**, SC 1.4.11's 3:1 for the
+   boundary of a UI component: a resting `border-ink/…` or `border-paper/…`
+   alpha carried by an `input`, `select`, `textarea`, `button` or `a` must be
+   `border-ink/60` or `border-paper/40`, both re-measured from the brand colours
+   on every run. It fires on those tags alone because everything else faded on
+   this site is a rule, a divider or a card outline — decoration, which 1.4.11
+   exempts by name. Three live elements are governed: the pre-registration
+   inputs, the header language toggle and the `/fees` service-area picker. So
+   typing `border-ink/20` on an `<input>` fails the build; typing it on a `<div>`
+   does not. State variants (`hover:`, `focus:`) are out of scope deliberately,
+   and an interactive element built inside a `<script>` is not seen at all —
+   which is why `/fare-estimate`'s two autocomplete fields are correct but
+   ungated (#121). Like 1–5 it needs neither dependencies nor secrets.
 7. **Env check** (`check-env.mjs`) — all six `PUBLIC_*` present, non-empty and
    printable ASCII. Astro inlines them at build time, so an empty one becomes a
    falsy literal and Rollup deletes the branch that tested it.
