@@ -1,8 +1,9 @@
-// /contact, /404 and /redirect copy — VERBATIM from docs/copy-map.md §3.7,
-// §3.10 and §3.11 (wayfinder #34). Do not reword, re-case, or re-punctuate.
+// /contact, /404, /redirect and /stripe-return copy — VERBATIM from
+// docs/copy-map.md §3.7, §3.10, §3.11 and §3.12 (wayfinder #34, #405). Do not reword, re-case, or re-punctuate.
 // §4's title and meta description sit on the page files, as they do everywhere.
 //
-// /404 and /redirect are ONE file each serving both languages (§3.10, §3.11):
+// /404, /redirect and /stripe-return are ONE file each serving both languages
+// (§3.10, §3.11, §3.12):
 // GitHub Pages serves a single root 404.html for every missing path, so /es/404
 // is unreachable. Both language sets therefore ship in the same page and the
 // switch happens client-side off `location.pathname` — which is why these two
@@ -84,3 +85,25 @@ export const redirectCopy = {
  * to render four characters.
  */
 export const copyright = (year: number) => `© ${year} YeRide`;
+
+/**
+ * /stripe-return — copy-map §3.12.
+ *
+ * `noApp` is the arm for a missing or non-allow-listed `?scheme=`. It asserts
+ * NO failure, deliberately: by the time this page loads the driver has already
+ * finished at Stripe, and onboarding does not depend on this bounce at all —
+ * the page only saves them dismissing the sheet by hand. Copy that apologised
+ * would invent a problem the reader does not have.
+ */
+export const stripeReturnCopy = {
+  en: {
+    body: "Returning to YeRide…",
+    fallback: "Not redirected? Open YeRide.",
+    noApp: "You can close this window and return to the YeRide app.",
+  },
+  es: {
+    body: "Volviendo a YeRide…",
+    fallback: "¿No abrió? Abre YeRide.",
+    noApp: "Puedes cerrar esta ventana y volver a la app de YeRide.",
+  },
+} satisfies Record<Lang, unknown>;

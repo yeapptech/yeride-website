@@ -21,7 +21,7 @@ tickets); the approved Variant D comp from [#33](https://github.com/yeapptech/ye
    The one exception is the legal pages (§ 3.8, § 3.9), which are formal-register
    translations by deliberate decision.
 3. **Routes are mirrored with English slugs.** `/drivers` → `/es/drivers`. Every page has an
-   `/es/` twin except `/404` and `/redirect` (§ 3.10, § 3.11).
+   `/es/` twin except `/404`, `/redirect` and `/stripe-return` (§ 3.10, § 3.11, § 3.12).
 4. **No fee amount is ever hard-coded in copy.** Amounts render only from the live fetch.
 5. **Gated copy must not appear anywhere.** See § 5.
 
@@ -946,6 +946,28 @@ Exempt from the route-parity check by name (§ 6).
 
 ---
 
+### 3.12 `/stripe-return` — single file, language switched client-side
+
+Bounces a driver back into the app after Stripe Connect onboarding. Same path-based
+switch as § 3.10 and § 3.11, English default.
+
+The target deep link is **not fixed**: the app appends `?scheme=`, because one HTTPS
+URL serves all three builds (`yeridenext-dev`, `yeridenext-stage`, `yeridenext`) and a
+static page cannot tell which app is waiting. The page **allow-lists** the three; the
+third row is what a reader sees when the parameter is missing or is anything else, and
+it must not blame them or claim a failure — onboarding itself has already finished at
+Stripe by the time this page loads.
+
+| Slot | EN | ES |
+|---|---|---|
+| Body | Returning to YeRide… | Volviendo a YeRide… |
+| Manual fallback | Not redirected? Open YeRide. | ¿No abrió? Abre YeRide. |
+| No app to open | You can close this window and return to the YeRide app. | Puedes cerrar esta ventana y volver a la app de YeRide. |
+
+Exempt from the route-parity check by name (§ 6).
+
+---
+
 ## 4. Titles and meta descriptions
 
 `<title>` and `meta description` are copy and are specified here. OG/social images, sitemap,
@@ -973,6 +995,7 @@ structured data, and analytics remain out of scope for this ticket.
 | `/es/terms` | Términos de servicio \| YeRide | Los términos que rigen tu uso de YeRide. |
 | `/404` | Page not found \| YeRide | *(none)* |
 | `/redirect` | Opening YeRide… | *(none)* |
+| `/stripe-return` | Returning to YeRide… | *(none)* |
 
 Every page carries `hreflang` alternates for its EN/ES pair plus `x-default` → the EN route.
 
@@ -1136,8 +1159,8 @@ Rider pillar 2 ("Same math every trip." / "Las mismas cuentas en cada viaje.") i
 
 ## 6. Notes for the build tickets
 
-1. **Route-parity check (#41)** skips `404` and `redirect` by name, with a comment saying they
-   are single-file by design. Every other route must have its `/es/` twin.
+1. **Route-parity check (#41)** skips `404`, `redirect` and `stripe-return` by name, with a
+   comment saying they are single-file by design. Every other route must have its `/es/` twin.
 2. **Fee-label check (#41)** fails on any charge `id` returned by `getFeeSchedule` that § 2.3
    doesn't cover — extended to **service area** ids by #47, and to **ride tier** ids by #65.
    All three are checked across every area the endpoint serves, not just the default one, and

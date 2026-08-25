@@ -1,0 +1,15 @@
+---
+// /stripe-return (yeride-mobile#405). Title per docs/copy-map.md §4.
+//
+// Bounces to the app's `{scheme}://stripe-return` deep link after Stripe
+// Connect onboarding. ONE file for both languages (§3.12), same client-side
+// switch as /404 and /redirect. Exempt from the route-parity check by name
+// (§6.1). §4 authors one title, English, and no meta description — see the
+// note in 404.astro.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import StripeReturnPage from "../components/StripeReturnPage.astro";
+---
+
+<BaseLayout title="Returning to YeRide…" bilingual>
+  <StripeReturnPage />
+</BaseLayout>

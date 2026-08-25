@@ -9,9 +9,10 @@ import { join, relative, sep } from "node:path";
 const PAGES = "src/pages";
 const PAGE_EXT = /\.(astro|md|mdx|html)$/;
 
-// Exempt by name: both are single-file by design and switch language
-// client-side (copy-map §3.10, §3.11), so neither has — or wants — an /es/ twin.
-const EXEMPT = new Set(["404", "redirect"]);
+// Exempt by name: all three are single-file by design and switch language
+// client-side (copy-map §3.10, §3.11, §3.12), so none has — or wants — an /es/
+// twin.
+const EXEMPT = new Set(["404", "redirect", "stripe-return"]);
 
 // Routes whose /es/ twin has not been built yet, each naming the ticket that
 // retires the entry. These keep the build green while the redesign lands page

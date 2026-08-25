@@ -1,0 +1,82 @@
+---
+// The body of /stripe-return (yeride-mobile#405). Copy VERBATIM from
+// copy-map §3.12. Takes no props, for the reason given in NotFoundPage.astro.
+//
+// This page is the HTTPS→deep-link bridge for Stripe Connect onboarding.
+// Stripe rejects custom schemes on `return_url` with HTTP 400, so the app
+// sends drivers here and this page bounces them back into the app; when the
+// bounce lands, `WebBrowser.openAuthSessionAsync` sees the redirect and closes
+// the in-app sheet by itself.
+//
+// 🔴 NOTHING DEPENDS ON THIS PAGE FOR CORRECTNESS. Onboarding completes at
+// Stripe before the browser ever gets here — this path 404'd for months and
+// drivers onboarded fine, dismissing the sheet by hand. That is what the
+// no-scheme arm degrades back to, and it is why no arm here apologises.
+//
+// 🔴 `?scheme=` IS UNTRUSTED INPUT. It arrives on a URL anyone can construct,
+// and it is fed to `location.href`, so it is only ever compared against the
+// allow-list below — never echoed. Interpolating it would turn this page into
+// an open redirect into an arbitrary URI scheme, on a domain App Review and
+// every driver visits.
+import { BILINGUAL_LANGS, stripeReturnCopy } from "../i18n/utilityCopy";
+---
+
+<main class="bg-paper">
+  <div class="mx-auto w-full max-w-3xl px-5 pb-24 pt-16 sm:px-6 md:pb-32 md:pt-24">
+    {
+      BILINGUAL_LANGS.map((lang) => {
+        const t = stripeReturnCopy[lang];
+        return (
+          <div data-lang={lang}>
+            <p class="text-[17px] leading-relaxed text-ink/75" data-bounce-body>
+              {t.body}
+            </p>
+            {/* Shown only when there is no app to bounce to. Hidden by
+                default so the common path never flashes it. */}
+            <p class="hidden text-[17px] leading-relaxed text-ink/75" data-no-app>
+              {t.noApp}
+            </p>
+            {/* Hidden until the bounce has had time to fail, as on /redirect.
+                Its href is set from the allow-listed scheme, never rendered. */}
+            <a
+              href="#"
+              data-manual-link
+              class="mt-4 hidden text-[15px] font-semibold underline underline-offset-4 hover:no-underline"
+            >
+              {t.fallback}
+            </a>
+          </div>
+        );
+      })
+    }
+  </div>
+</main>
+
+<script>
+  // The three app builds. A scheme outside this list is treated exactly like
+  // no scheme at all — see the allow-list note in the front matter.
+  const ALLOWED = ["yeridenext", "yeridenext-stage", "yeridenext-dev"];
+
+  const scheme = new URLSearchParams(window.location.search).get("scheme");
+  const show = (sel: string) =>
+    document
+      .querySelectorAll(sel)
+      .forEach((el) => el.classList.remove("hidden"));
+  const hide = (sel: string) =>
+    document
+      .querySelectorAll(sel)
+      .forEach((el) => el.classList.add("hidden"));
+
+  if (scheme !== null && ALLOWED.includes(scheme)) {
+    const target = `${scheme}://stripe-return`;
+    document
+      .querySelectorAll("[data-manual-link]")
+      .forEach((link) => link.setAttribute("href", target));
+    window.location.href = target;
+
+    setTimeout(() => show("[data-manual-link]"), 2000);
+  } else {
+    hide("[data-bounce-body]");
+    show("[data-no-app]");
+  }
+</script>
