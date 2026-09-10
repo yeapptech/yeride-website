@@ -68,7 +68,7 @@ const GOVERNING_ES = "En caso de conflicto, prevalece la versión en inglés.";
 export const privacyCopy: Record<Lang, LegalDoc> = {
   en: {
     h1: "Privacy Policy",
-    updated: "Last updated: 2 August 2026",
+    updated: "Last updated: 10 September 2026",
     lead:
       "This policy covers www.yeride.com and the YeRide app for Android and iOS. " +
       "YeRide is operated by YeAPP TECH LLC, a Florida limited liability company. " +
@@ -211,8 +211,8 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "two exceptions, and neither is about you: short-lived technical records " +
             "used to rate-limit our own service are purged daily, and the location " +
             "log the app keeps on your device rolls off after 14 days. If you want " +
-            "your data gone, ask us — that is the whole mechanism, and it is " +
-            "described next.",
+            "your data gone, delete your account in the app or ask us — both routes " +
+            "are described next.",
         ],
       },
       {
@@ -224,13 +224,26 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "correct anything that is wrong, or",
             "delete your account and your personal data.",
           ],
-          "Deletion today is by email, and we will confirm when it is done. When we " +
-            "delete an account we remove your login, your profile, your stored " +
-            "location and your rider payment record at Stripe, and we strip your " +
-            "name and contact details from your trip records. Completed trips " +
-            "themselves stay: both sides of a ride hold a financial record of it, " +
-            "and the tax and accounting obligations on it outlast the account. A " +
-            "driver's Stripe payout account stays for the same reason.",
+          "You can also delete your account yourself, from inside the app: " +
+            "Profile, then Delete Account. That takes effect immediately. If you " +
+            "have already uninstalled the app, write to us instead and we will " +
+            "do it for you. Either route is set out step by step at " +
+            "www.yeride.com/delete-account, together with the full list of what " +
+            "is removed and what is kept.",
+          "When an account is deleted we remove your login, your profile and " +
+            "your stored locations, and we strip your name and contact details " +
+            "from your trip records, where you then appear as \u201CDeleted " +
+            "User\u201D. Saved cards are removed from the app and we ask our " +
+            "payment processor to delete its own record of you; that part is a " +
+            "request we make rather than something we carry out ourselves.",
+          "Completed trips themselves stay: both sides of a ride hold a " +
+            "financial record of it, and the tax and accounting obligations on " +
+            "it outlast the account. A driver's payout account with our payment " +
+            "processor stays for the same reason. Some other records are kept " +
+            "alongside them \u2014 among them the messages you sent and the name " +
+            "you sent them under, safety reports, and an internal ID that links " +
+            "you to your trips, which is why what remains is pseudonymous rather " +
+            "than anonymous. The deletion page linked above lists all of them.",
           "One thing to know, because we would rather say it than let you assume " +
             "otherwise: the event log attached to a trip — the running account of " +
             "what happened during it — can still contain a name that was written " +
@@ -281,7 +294,7 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
 
   es: {
     h1: "Política de privacidad",
-    updated: "Última actualización: 2 de agosto de 2026",
+    updated: "Última actualización: 10 de septiembre de 2026",
     lead:
       "Esta política cubre www.yeride.com y la aplicación YeRide para Android y " +
       "iOS. YeRide es operada por YeAPP TECH LLC, una sociedad de responsabilidad " +
@@ -426,8 +439,8 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "corta vida que usamos para limitar el ritmo de peticiones a nuestro " +
             "servicio, que se purgan a diario, y el registro de ubicaciones que la " +
             "aplicación guarda en su dispositivo, que se descarta a los 14 días. Si " +
-            "usted quiere que sus datos desaparezcan, pídanoslo: ese es todo el " +
-            "mecanismo, y se describe a continuación.",
+            "usted quiere que sus datos desaparezcan, elimine su cuenta en la " +
+            "aplicación o pídanoslo: ambas vías se describen a continuación.",
         ],
       },
       {
@@ -439,15 +452,30 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "corrijamos lo que esté equivocado, o",
             "eliminemos su cuenta y sus datos personales.",
           ],
-          "Hoy la eliminación se solicita por correo electrónico, y le confirmaremos " +
-            "cuando esté hecha. Al eliminar una cuenta borramos su acceso, su " +
-            "perfil, su ubicación guardada y su registro de pago como pasajero en " +
-            "Stripe, y retiramos su nombre y sus datos de contacto de sus registros " +
-            "de viaje. Los viajes completados en sí permanecen: ambas partes de un " +
-            "viaje tienen un registro financiero de él, y las obligaciones " +
-            "tributarias y contables que recaen sobre ese registro duran más que la " +
-            "cuenta. La cuenta de pagos en Stripe de un conductor permanece por la " +
-            "misma razón.",
+          "Tambi\u00E9n puede eliminar su cuenta usted mismo, desde la propia " +
+            "aplicaci\u00F3n: Perfil y luego Eliminar cuenta. Surte efecto de " +
+            "inmediato. Si ya desinstal\u00F3 la aplicaci\u00F3n, escr\u00EDbanos " +
+            "y lo hacemos por usted. Ambas v\u00EDas est\u00E1n explicadas paso a " +
+            "paso en www.yeride.com/es/delete-account, junto con la lista " +
+            "completa de lo que se borra y lo que se conserva.",
+          "Al eliminar una cuenta borramos su acceso, su perfil y sus " +
+            "ubicaciones guardadas, y retiramos su nombre y sus datos de " +
+            "contacto de sus registros de viaje, donde usted pasa a aparecer " +
+            "como \u201CDeleted User\u201D. Las tarjetas guardadas se eliminan de " +
+            "la aplicaci\u00F3n y pedimos a nuestro procesador de pagos que " +
+            "borre su propio registro de usted; esa parte es una solicitud que " +
+            "hacemos, no algo que ejecutemos nosotros.",
+          "Los viajes completados en s\u00ED permanecen: ambas partes de un " +
+            "viaje tienen un registro financiero de \u00E9l, y las obligaciones " +
+            "tributarias y contables que recaen sobre ese registro duran " +
+            "m\u00E1s que la cuenta. La cuenta de pagos de un conductor con " +
+            "nuestro procesador permanece por la misma raz\u00F3n. Junto a ellos " +
+            "se conservan otros registros \u2014 entre ellos los mensajes que " +
+            "usted envi\u00F3 y el nombre con el que los envi\u00F3, los " +
+            "reportes de seguridad y un identificador interno que lo vincula " +
+            "con sus viajes, que es la raz\u00F3n por la que lo que queda es " +
+            "seud\u00F3nimo y no an\u00F3nimo. La p\u00E1gina de eliminaci\u00F3n " +
+            "enlazada arriba los enumera todos.",
           "Conviene que sepa una cosa, porque preferimos decirla a dejar que usted " +
             "suponga lo contrario: la bitácora de eventos de un viaje —el relato de " +
             "lo que fue ocurriendo durante él— puede seguir conteniendo un nombre " +
