@@ -966,6 +966,52 @@ Stripe by the time this page loads.
 
 Exempt from the route-parity check by name (§ 6).
 
+### 3.13 `/delete-account` and `/es/delete-account`
+
+**New page**, added for [yeapptech/yeride-mobile#240](https://github.com/yeapptech/yeride-mobile/issues/240).
+Play's account-deletion requirements are **conjunctive**: an app that allows account creation
+must offer an in-app deletion path **and** a web link where deletion can be requested, because
+someone who has already uninstalled cannot reach the in-app one. The URL is a required field of
+the Play Data safety form, so yeride-mobile#125 is blocked until it resolves publicly. Apple
+does **not** require it — 5.1.1(v) is satisfied by the in-app path.
+
+**Not specified string-by-string here**, for §3.8's reason: it is a legal-review task rather
+than a copy-map entry. The body lives in `src/i18n/legalCopy.ts` as `deletionCopy`.
+
+🔴 **The retain/delete split is transcribed from `docs/LAUNCH_PLAN.md` §5.1 in
+`yeapptech/yeride-mobile`, which is its doc of record — not re-derived here, and not
+paraphrased from memory.** It changed three times in five days (#252, #253, #478). This page
+must not promise more than the app delivers, nor less than the app admits.
+
+Three constraints bind the wording, all recorded on yeride-mobile#240 and #478:
+
+- 🔴 **The block-list line claims a RECORD, never ongoing protection.** A returning user
+  registers under a fresh uid, so a retained entry never blocks anyone again. The app pins this
+  with a `BLOCK_PROMISES_PROTECTION` regex set in `DeleteAccountModal.test.tsx`; a web page has
+  no such guard, so it is on the author.
+- 🔴 **The record is pseudonymous, not anonymous.** The UID is kept as a join key by explicit
+  §5.1 design, which is why it earns its own clause — "you appear as Deleted User" on its own
+  reads as anonymisation.
+- 🔴 **Saved cards: the page says removal from the app and that deletion is *requested* at the
+  payment processor.** Stripe customer deletion is best-effort and non-recovering. It must not
+  say saved payment methods are permanently deleted — that is the exact claim yeride-mobile#478
+  removed from the app.
+
+⚠️ Adding a retained category is cheap; removing one is a filing change, not a copy tweak.
+
+Two strings are fixed now, and appear on **both** language versions:
+
+| Slot | EN | ES |
+|---|---|---|
+| H1 | Delete your YeRide account | Elimine su cuenta de YeRide |
+| Governing-language note | The English version governs in the event of any conflict. | En caso de conflicto, prevalece la versión en inglés. |
+
+Register is **formal**, matching §3.8 and §3.9 — the ES version addresses the reader as *usted*.
+
+The sentinel **"Deleted User"** is quoted exactly, in both languages: it is
+`DELETED_FIRST_NAME` + `DELETED_LAST_NAME` in `yeride-functions` and is not translated, because
+it is the literal string a reader will see on a trip record.
+
 ---
 
 ## 4. Titles and meta descriptions
@@ -993,6 +1039,8 @@ structured data, and analytics remain out of scope for this ticket.
 | `/es/privacy-policy` | Política de privacidad \| YeRide | Cómo YeRide recopila, usa y protege tus datos personales. |
 | `/terms` | Terms of Service \| YeRide | The terms that govern your use of YeRide. |
 | `/es/terms` | Términos de servicio \| YeRide | Los términos que rigen tu uso de YeRide. |
+| `/delete-account` | Delete your account \| YeRide | How to delete your YeRide account and its data — in the app, or by asking us. |
+| `/es/delete-account` | Eliminar su cuenta \| YeRide | Cómo eliminar su cuenta de YeRide y sus datos — en la aplicación o pidiéndonoslo. |
 | `/404` | Page not found \| YeRide | *(none)* |
 | `/redirect` | Opening YeRide… | *(none)* |
 | `/stripe-return` | Returning to YeRide… | *(none)* |

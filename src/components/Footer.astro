@@ -19,6 +19,7 @@ const t = {
     contact: "Contact",
     privacy: "Privacy Policy",
     terms: "Terms",
+    deleteAccount: "Delete account",
     place: "Built in South Florida.",
     entity: "YeRide is built by YeAPP TECH LLC, a Florida software company.",
     xAria: "YeRide on X",
@@ -28,6 +29,7 @@ const t = {
     contact: "Contacto",
     privacy: "Privacidad",
     terms: "Términos",
+    deleteAccount: "Eliminar cuenta",
     place: "Hecho en el Sur de la Florida.",
     entity:
       "YeRide es un producto de YeAPP TECH LLC, una empresa de software de la Florida.",
@@ -53,6 +55,9 @@ const esPrefix = lang === "es" ? "/es" : "";
           >{t.privacy}</a
         >
         <a href={`${esPrefix}/terms`} class="hover:text-ink">{t.terms}</a>
+        <a href={`${esPrefix}/delete-account`} class="hover:text-ink"
+          >{t.deleteAccount}</a
+        >
       </nav>
       <a
         href="https://twitter.com/yeride_app"

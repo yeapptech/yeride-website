@@ -1,0 +1,16 @@
+---
+// /es/delete-account — the ES twin. Routes are mirrored with English slugs
+// (copy-map §0.3), so the slug stays `delete-account` rather than becoming
+// `eliminar-cuenta`. Register is formal *usted*, matching the other two legal
+// documents — a deliberate exception to §0.2.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import LegalDocument from "../../components/LegalDocument.astro";
+---
+
+<BaseLayout
+  title="Eliminar su cuenta | YeRide"
+  description="Cómo eliminar su cuenta de YeRide y sus datos — en la aplicación o pidiéndonoslo."
+  lang="es"
+>
+  <LegalDocument lang="es" doc="deletion" />
+</BaseLayout>
