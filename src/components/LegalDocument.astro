@@ -1,8 +1,9 @@
 ---
-// The renderer for /privacy-policy and /terms and their ES twins (wayfinder
-// #44). One component for both documents: they have the same shape — H1, a
+// The renderer for /privacy-policy, /terms and /delete-account and their ES
+// twins (wayfinder #44; /delete-account added by yeapptech/yeride-mobile#240).
+// One component for all three documents: they have the same shape — H1, a
 // last-changed date, a lead, numbered sections of paragraphs and lists, and the
-// governing-language note that copy-map §3.8/§3.9 fixes on both languages.
+// governing-language note that copy-map §3.8/§3.9/§3.13 fixes on both languages.
 //
 // Takes `lang` and WHICH document, then resolves its own copy from src/i18n —
 // the contract docs/components.md sets for page components ("takes `lang`
@@ -10,18 +11,19 @@
 // resolved `LegalDoc` as a prop, which made the page files reach into the copy
 // module and left the component unable to know its own language.
 //
-// No hero. These are the two pages on the site nobody arrives at to be sold
+// No hero. These are the pages on the site nobody arrives at to be sold
 // something: a reading column on paper, at a size meant to be read rather than
 // skimmed past.
-import { privacyCopy, termsCopy } from "../i18n/legalCopy";
+import { privacyCopy, termsCopy, deletionCopy } from "../i18n/legalCopy";
 import type { Lang } from "../i18n/feesCopy";
 
 export interface Props {
   lang: Lang;
-  doc: "privacy" | "terms";
+  doc: "privacy" | "terms" | "deletion";
 }
 const { lang, doc } = Astro.props;
-const t = (doc === "privacy" ? privacyCopy : termsCopy)[lang];
+const DOCS = { privacy: privacyCopy, terms: termsCopy, deletion: deletionCopy };
+const t = DOCS[doc][lang];
 
 // Both documents tell the reader to write to us, and one points at the fee
 // schedule. Plain text would make the only action either page asks for

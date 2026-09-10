@@ -1,0 +1,27 @@
+---
+// /delete-account — the web account-deletion request page
+// (yeapptech/yeride-mobile#240).
+//
+// Play's account deletion requirements are CONJUNCTIVE: an app that allows
+// account creation must offer an in-app deletion path AND a web link where
+// deletion can be requested, because someone who has already uninstalled
+// cannot reach the in-app one. This URL is a required field of the Play Data
+// safety form, so yeride-mobile#125 is blocked until it resolves publicly.
+//
+// Apple does NOT require this — 5.1.1(v) is satisfied by the in-app path,
+// which already ships.
+//
+// The slug is deliberately literal rather than clever: Play asks for a link
+// whose deletion pathway is "prominently featured and easily discoverable",
+// and a reviewer scanning a store listing should be able to tell what it is
+// from the URL alone.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LegalDocument from "../components/LegalDocument.astro";
+---
+
+<BaseLayout
+  title="Delete your account | YeRide"
+  description="How to delete your YeRide account and its data — in the app, or by asking us."
+>
+  <LegalDocument lang="en" doc="deletion" />
+</BaseLayout>

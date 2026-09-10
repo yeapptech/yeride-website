@@ -829,3 +829,286 @@ export const termsCopy: Record<Lang, LegalDoc> = {
     governing: GOVERNING_ES,
   },
 };
+
+/**
+ * /delete-account and /es/delete-account — the web account-deletion request
+ * page (yeapptech/yeride-mobile#240).
+ *
+ * WHY IT EXISTS, and why the in-app path is not enough: Play's account
+ * deletion requirements are CONJUNCTIVE. An app that allows account creation
+ * must provide an in-app deletion path AND a web link where deletion can be
+ * requested, because a user who has already uninstalled cannot reach the
+ * in-app one. The URL is a required field of the Play Data safety form, so
+ * yeride-mobile#125 cannot be completed without this page existing.
+ *
+ * It does NOT have to be a self-serve form, and deliberately is not: the
+ * request channel is support@yeride.com, matching the intake the rest of the
+ * site already publishes.
+ *
+ * ── The retention list is a legal claim, not copy ──────────────────────
+ *
+ * 🔴 The retain/delete split below is TRANSCRIBED from the doc of record —
+ * `docs/LAUNCH_PLAN.md` §5.1 in yeapptech/yeride-mobile — and must not be
+ * re-derived here or paraphrased from memory. It changed three times in five
+ * days (#252, then #253, then #478). A page promising erasure of everything
+ * would be false; so would one that under-states what survives.
+ *
+ * The in-app notice enumerates SEVEN retained categories after #253 Q1 = A
+ * (ratified 2026-09-06). This page carries the same set, in the same terms.
+ * Two constraints bind the wording specifically, and both are recorded on
+ * yeride-mobile#240:
+ *
+ *   1. 🔴 The block-list line must claim a RECORD, never ongoing protection.
+ *      A returning user registers under a fresh uid, so a retained entry
+ *      never blocks anyone again. The app pins this with a
+ *      BLOCK_PROMISES_PROTECTION regex set in DeleteAccountModal.test.tsx;
+ *      a web page has no such guard, so it is on the author.
+ *   2. 🔴 The record is PSEUDONYMOUS, not anonymous. The UID is kept as a
+ *      join key by explicit §5.1 design, which is why it earns its own
+ *      clause — "you appear as Deleted User" alone reads as anonymisation.
+ *
+ * ⚠️ The saved-card sentence is #478's, decided 2026-09-10 and merged as
+ * yeride-mobile#485. Stripe customer deletion is BEST-EFFORT and
+ * non-recovering, so the page says cards are removed from the app and
+ * deletion is REQUESTED at the payment processor. It must not say saved
+ * payment methods are permanently deleted — that is the exact claim #478
+ * removed from the app.
+ *
+ * ⚠️ Adding a category is cheap; removing one is a filing change, not a copy
+ * tweak. Do not narrow this page ahead of the deploy that makes the
+ * narrowing true (the events push-token scrub is yeride-functions#137).
+ *
+ * ── The sentinel is quoted exactly ─────────────────────────────────────
+ *
+ * "Deleted User" — capital U, DELETED_FIRST_NAME + DELETED_LAST_NAME in
+ * yeride-functions. §5.1 records that the lower-case spelling appearing
+ * elsewhere was a typo.
+ *
+ * ── Register ───────────────────────────────────────────────────────────
+ *
+ * Formal, matching the other two legal documents: the ES version addresses
+ * the reader as *usted* throughout.
+ */
+export const deletionCopy: Record<Lang, LegalDoc> = {
+  en: {
+    h1: "Delete your YeRide account",
+    updated: "Last updated: 10 September 2026",
+    lead:
+      "You can delete your YeRide account and its associated data at any time. " +
+      "The fastest way is from inside the YeRide app. If you have already " +
+      "uninstalled it, or you would rather we did it for you, write to us and " +
+      "we will handle the request.",
+    sections: [
+      {
+        heading: "1. Delete it yourself, in the app",
+        blocks: [
+          "This takes effect immediately and needs nothing from us:",
+          [
+            "Open the YeRide app and sign in.",
+            "Go to Profile.",
+            "Scroll to the bottom and choose Delete Account.",
+            "Confirm with your password. Your account is deleted right away.",
+          ],
+          "You cannot delete your account while a ride is in progress. Finish " +
+            "or cancel the ride first, then try again.",
+        ],
+      },
+      {
+        heading: "2. Ask us to delete it",
+        blocks: [
+          "If you no longer have the app installed, email support@yeride.com " +
+            "from the address on your YeRide account and ask us to delete it. " +
+            "Say that you want your account deleted so we can tell it apart " +
+            "from other support mail.",
+          "We may ask you to confirm one or two details before we act, so that " +
+            "nobody can close somebody else's account by writing to us. Once " +
+            "confirmed, we delete it for you and reply to tell you it is done.",
+        ],
+      },
+      {
+        heading: "3. What is deleted",
+        blocks: [
+          "Deleting your account removes, straight away and with no grace period:",
+          [
+            "Your sign-in credentials — you can no longer log in.",
+            "Your profile: name, email address, phone number and profile photo.",
+            "Your saved locations.",
+            "Your device's push-notification registration.",
+            "For drivers: your vehicles and their photos.",
+          ],
+          "Saved cards are removed from the app and deletion is requested at " +
+            "the payment processor. We ask; the processor carries it out on its " +
+            "own terms, so we describe what we do rather than promising an " +
+            "outcome we do not control.",
+        ],
+      },
+      {
+        heading: "4. What is kept, and why",
+        blocks: [
+          "Some records survive account deletion. We keep them because a trip " +
+            "involves two people and is a financial and safety record for both " +
+            "of you — one person leaving cannot erase the other's copy of what " +
+            "happened. This is the full list:",
+          [
+            "Your trip history is kept. On those trips you appear as " +
+              "“Deleted User” rather than by name.",
+            "Chat messages you sent are kept, along with the name you sent " +
+              "them under.",
+            "Technical records attached to those trips: payment references and " +
+              "your device's notification token.",
+            "An internal ID that links you to those records. It is not your " +
+              "name, but it is not nothing either — it is what ties the trips " +
+              "together.",
+            "Your name can also remain in a trip's activity log, which is the " +
+              "record of what happened on that trip.",
+            "Safety reports are kept — both ones you sent and ones about " +
+              "you, including the reason chosen, what you wrote and the message " +
+              "text they quote.",
+            "If someone blocked you, their block list keeps a record of it. " +
+              "That is their record of a past decision; it does not follow you " +
+              "and it does not stop you signing up again.",
+          ],
+          "Drivers: your payout account with our payment processor is kept, and " +
+            "the vehicle details on your trips — including the licence " +
+            "plate — stay on those trip records.",
+          "Because of the internal ID above, what remains is pseudonymous " +
+            "rather than anonymous: it no longer carries your name, but it is " +
+            "still a linked set of records.",
+        ],
+      },
+      {
+        heading: "5. How long it takes",
+        blocks: [
+          "Deleting from inside the app is immediate. There is no waiting " +
+            "period and no way to undo it, so be sure before you confirm.",
+          "A request by email takes as long as it takes us to confirm who you " +
+            "are, and we aim to reply within a few days.",
+        ],
+      },
+      {
+        heading: "6. Questions",
+        blocks: [
+          "Write to support@yeride.com. If you want to know what we hold about " +
+            "you before deciding, ask — our privacy policy at " +
+            "www.yeride.com/privacy-policy sets out the rest.",
+        ],
+      },
+    ],
+    governing: GOVERNING_EN,
+  },
+  es: {
+    h1: "Elimine su cuenta de YeRide",
+    updated: "Última actualización: 10 de septiembre de 2026",
+    lead:
+      "Usted puede eliminar su cuenta de YeRide y los datos asociados cuando " +
+      "quiera. La forma más rápida es desde la propia aplicación " +
+      "de YeRide. Si ya la desinstaló, o prefiere que lo hagamos nosotros, " +
+      "escríbanos y nos encargamos de la solicitud.",
+    sections: [
+      {
+        heading: "1. Eliminarla usted mismo, en la aplicación",
+        blocks: [
+          "Surte efecto de inmediato y no requiere nada de nuestra parte:",
+          [
+            "Abra la aplicación de YeRide e inicie sesión.",
+            "Vaya a Perfil.",
+            "Baje hasta el final y elija Eliminar cuenta.",
+            "Confirme con su contraseña. La cuenta se elimina en el acto.",
+          ],
+          "No es posible eliminar la cuenta mientras hay un viaje en curso. " +
+            "Termine o cancele el viaje y vuelva a intentarlo.",
+        ],
+      },
+      {
+        heading: "2. Pedirnos que la eliminemos",
+        blocks: [
+          "Si ya no tiene la aplicación instalada, escriba a " +
+            "support@yeride.com desde el correo de su cuenta de YeRide y " +
+            "pídanos que la eliminemos. Indique que desea eliminar su " +
+            "cuenta, para distinguir su mensaje del resto del correo de soporte.",
+          "Es posible que le pidamos confirmar uno o dos datos antes de actuar, " +
+            "para que nadie pueda cerrar la cuenta de otra persona " +
+            "escribiéndonos. Una vez confirmado, la eliminamos y le " +
+            "respondemos para avisarle.",
+        ],
+      },
+      {
+        heading: "3. Qué se elimina",
+        blocks: [
+          "Al eliminar su cuenta se borra, de inmediato y sin período de " +
+            "gracia:",
+          [
+            "Sus credenciales de acceso: ya no podrá iniciar sesión.",
+            "Su perfil: nombre, correo electrónico, teléfono y foto.",
+            "Sus ubicaciones guardadas.",
+            "El registro de notificaciones de su dispositivo.",
+            "Para conductores: sus vehículos y sus fotos.",
+          ],
+          "Las tarjetas guardadas se eliminan de la aplicación y se " +
+            "solicita su eliminación al procesador de pagos. Nosotros lo " +
+            "solicitamos; el procesador lo ejecuta según sus propias " +
+            "condiciones, así que describimos lo que hacemos en lugar de " +
+            "prometer un resultado que no controlamos.",
+        ],
+      },
+      {
+        heading: "4. Qué se conserva, y por qué",
+        blocks: [
+          "Algunos registros sobreviven a la eliminación de la cuenta. Los " +
+            "conservamos porque un viaje involucra a dos personas y es un " +
+            "registro financiero y de seguridad para ambas: que una se vaya no " +
+            "puede borrar la copia que la otra tiene de lo ocurrido. Esta es la " +
+            "lista completa:",
+          [
+            "Su historial de viajes se conserva. En esos viajes usted aparece " +
+              "como “Deleted User” y no con su nombre.",
+            "Los mensajes de chat que envió se conservan, junto con el " +
+              "nombre con el que los envió.",
+            "Registros técnicos asociados a esos viajes: referencias de " +
+              "pago y el token de notificaciones de su dispositivo.",
+            "Un identificador interno que lo vincula con esos registros. No es " +
+              "su nombre, pero tampoco es nada: es lo que mantiene unidos los " +
+              "viajes.",
+            "Su nombre también puede permanecer en el registro de " +
+              "actividad de un viaje, que es la constancia de lo que " +
+              "ocurrió en ese viaje.",
+            "Los reportes de seguridad se conservan — tanto los que usted " +
+              "envió como los que hablan de usted, incluido el motivo " +
+              "elegido, lo que usted escribió y el texto del mensaje que " +
+              "citan.",
+            "Si alguien lo bloqueó, su lista de bloqueados conserva una " +
+              "constancia de ello. Es la constancia de una decisión pasada " +
+              "de esa persona; no lo sigue a usted ni le impide registrarse de " +
+              "nuevo.",
+          ],
+          "Conductores: su cuenta de pagos con nuestro procesador se conserva, " +
+            "y los datos del vehículo en sus viajes — incluida la " +
+            "placa — permanecen en esos registros de viaje.",
+          "Por el identificador interno anterior, lo que queda es " +
+            "seudónimo y no anónimo: ya no lleva su nombre, pero " +
+            "sigue siendo un conjunto de registros vinculados.",
+        ],
+      },
+      {
+        heading: "5. Cuánto tarda",
+        blocks: [
+          "Eliminarla desde la aplicación es inmediato. No hay período " +
+            "de espera ni forma de deshacerlo, así que asegúrese " +
+            "antes de confirmar.",
+          "Una solicitud por correo tarda lo que tardemos en confirmar su " +
+            "identidad, y procuramos responder en unos pocos días.",
+        ],
+      },
+      {
+        heading: "6. Preguntas",
+        blocks: [
+          "Escriba a support@yeride.com. Si antes de decidir quiere saber " +
+            "qué datos tenemos sobre usted, pídalo — nuestra " +
+            "política de privacidad en www.yeride.com/es/privacy-policy " +
+            "explica el resto.",
+        ],
+      },
+    ],
+    governing: GOVERNING_ES,
+  },
+};
