@@ -119,7 +119,11 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
           [
             "Your account — your name, email address, phone number, password and, " +
               "if you add one, a profile photo. We also record whether your email " +
-              "address has been verified.",
+              "address has been verified. We also give your account its own " +
+              "identifier — a string of letters and numbers that is how our systems " +
+              "refer to you. It is attached to your trips, your messages and " +
+              "anything you report, and it stays on those records after your name " +
+              "is removed from them.",
             "Your location — the app collects your device's precise location from " +
               "the moment you sign in until you sign out. This applies whether you " +
               "are a rider or a driver and whether or not a trip is running, and the " +
@@ -239,7 +243,8 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
           "Completed trips themselves stay: both sides of a ride hold a " +
             "financial record of it, and the tax and accounting obligations on " +
             "it outlast the account. A driver's payout account with our payment " +
-            "processor stays for the same reason. Some other records are kept " +
+            "processor stays for the same reason — as a record of what was " +
+            "already paid, not as a way to pay them again. Some other records are kept " +
             "alongside them \u2014 among them the messages you sent and the name " +
             "you sent them under, safety reports, and an internal ID that links " +
             "you to your trips, which is why what remains is pseudonymous rather " +
@@ -335,7 +340,12 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
           [
             "Su cuenta: su nombre, su correo electrónico, su número de teléfono, su " +
               "contraseña y, si usted la agrega, una foto de perfil. También " +
-              "registramos si su correo electrónico ha sido verificado.",
+              "registramos si su correo electrónico ha sido verificado. Además, " +
+              "asignamos a su cuenta un identificador propio: una cadena de letras " +
+              "y números con la que nuestros sistemas se refieren a usted. Queda " +
+              "asociado a sus viajes, a sus mensajes y a lo que usted reporte, y " +
+              "permanece en esos registros después de que su nombre se elimine de " +
+              "ellos.",
             "Su ubicación: la aplicación recopila la ubicación precisa de su " +
               "dispositivo desde que usted inicia sesión hasta que la cierra. Esto " +
               "ocurre tanto si usted es pasajero como conductor, haya o no un viaje " +
@@ -469,7 +479,9 @@ export const privacyCopy: Record<Lang, LegalDoc> = {
             "viaje tienen un registro financiero de \u00E9l, y las obligaciones " +
             "tributarias y contables que recaen sobre ese registro duran " +
             "m\u00E1s que la cuenta. La cuenta de pagos de un conductor con " +
-            "nuestro procesador permanece por la misma raz\u00F3n. Junto a ellos " +
+            "nuestro procesador permanece por la misma raz\u00F3n: como registro " +
+            "de lo que ya se le pag\u00F3, no como una v\u00EDa para volver a " +
+            "pagarle. Junto a ellos " +
             "se conservan otros registros \u2014 entre ellos los mensajes que " +
             "usted envi\u00F3 y el nombre con el que los envi\u00F3, los " +
             "reportes de seguridad y un identificador interno que lo vincula " +
@@ -998,7 +1010,11 @@ export const deletionCopy: Record<Lang, LegalDoc> = {
           ],
           "Drivers: your payout account with our payment processor is kept, and " +
             "the vehicle details on your trips — including the licence " +
-            "plate — stay on those trip records.",
+            "plate — stay on those trip records. That account is kept as a " +
+            "record of what you were already paid, not as a way to pay you " +
+            "again: once your account is gone we can no longer put money " +
+            "through it, so a fare that had not gone through by then will not " +
+            "be collected, and a rider cannot tip you for an earlier ride.",
           "Because of the internal ID above, what remains is pseudonymous " +
             "rather than anonymous: it no longer carries your name, but it is " +
             "still a linked set of records.",
@@ -1111,7 +1127,12 @@ export const deletionCopy: Record<Lang, LegalDoc> = {
           ],
           "Conductores: su cuenta de pagos con nuestro procesador se conserva, " +
             "y los datos del vehículo en sus viajes — incluida la " +
-            "placa — permanecen en esos registros de viaje.",
+            "placa — permanecen en esos registros de viaje. Esa cuenta se " +
+            "conserva como registro de lo que ya se le pagó, no como una vía " +
+            "para volver a pagarle: una vez eliminada su cuenta ya no podemos " +
+            "mover dinero a través de ella, de modo que una tarifa que para " +
+            "entonces no se hubiera cobrado no se cobrará, y un pasajero no " +
+            "podrá darle propina por un viaje anterior.",
           "Por el identificador interno anterior, lo que queda es " +
             "seudónimo y no anónimo: ya no lleva su nombre, pero " +
             "sigue siendo un conjunto de registros vinculados.",
