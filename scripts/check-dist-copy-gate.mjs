@@ -22,7 +22,7 @@
 //
 // It does not replace the first gate. The source gate fails at the point of
 // authorship with a file and a line number, runs on every PR without a build or
-// a private registry, and owns the per-line allowlist. Keep both.
+// an install, and owns the per-line allowlist. Keep both.
 //
 // ---------------------------------------------------------------------------
 // WHAT COUNTS AS "SHIPPED": the bytes, not the pixels.

@@ -85,9 +85,8 @@ Read it there. What is worth writing down here is what the steps are *for*.
   network, so it cannot live inside `npm run build`. It fails the deploy on a
   charge, area or ride tier id the site cannot name, and skips loudly rather
   than passing quietly when the endpoint is unreachable.
-- **Install dependencies** — `npm ci` with `NPM_TOKEN` in the environment. The
-  committed `.npmrc` routes `@yeapptech/*` through GitHub Packages, so without
-  that secret the install fails before anything is built.
+- **Install dependencies** — `npm ci`. Every dependency, `@yeapptech/yeride-brand`
+  included, comes from the public npm registry, so the step needs no secret.
 - **Build Astro site** — `npm run build`, which is the whole gate chain
   (CLAUDE.md lists it). This is where a renamed or deleted secret becomes a red
   deploy rather than a live site with a dead pre-registration form.
