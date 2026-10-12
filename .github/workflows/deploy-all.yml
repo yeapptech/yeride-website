@@ -46,10 +46,8 @@ jobs:
         run: node scripts/check-fee-labels.mjs
 
       - name: Install dependencies
-        # NPM_TOKEN: org read-only classic PAT with read:packages — the
-        # committed .npmrc routes @yeapptech/* through GitHub Packages
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # @yeapptech/yeride-brand is on the public npm registry since 1.1.0;
+        # no .npmrc and no NPM_TOKEN.
         run: npm ci
 
       - name: Build Astro site

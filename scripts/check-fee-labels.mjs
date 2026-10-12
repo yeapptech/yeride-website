@@ -50,7 +50,7 @@ const TIMEOUT_MS = 10_000;
 //   - It cannot import Vite. This script runs in deploy-all.yml BEFORE `npm ci`
 //     so that label drift fails the deploy before two minutes go on a registry
 //     install. Running it after the install would make a network-only check
-//     wait on the private registry, and a registry outage would then block a
+//     wait on the registry, and a registry outage would then block a
 //     check that never needed one.
 //   - No CI path reaches it while the secret has a value. deploy-all.yml and
 //     fee-label-drift.yml both hand PUBLIC_FEE_SCHEDULE_URL to this step in its

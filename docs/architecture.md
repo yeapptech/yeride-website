@@ -222,9 +222,10 @@ export default {
 }
 ```
 
-`@yeapptech/yeride-brand` is a **private package** on GitHub Packages. Installing
-needs the committed `.npmrc` plus an `NPM_TOKEN` (a classic PAT with
-`read:packages`); CI reads it from an Actions secret.
+`@yeapptech/yeride-brand` is on the **public npm registry** (since 1.1.0; the
+repository itself stays private). Installing needs no `.npmrc` and no token. It
+is pinned exactly: a visible brand change is a chosen upgrade, not a lockfile
+surprise (the brand repo's `CONSUMING.md` §6).
 
 ## Data Flow
 
@@ -324,7 +325,7 @@ gate**, and it runs nine things in order — any one of them fails the build:
    after `astro build`. This is the layer that measures the actual promise.
 
 Items 1–6 are dependency-free and run on every PR (`checks.yml`); 7–9 need
-`npm ci` against the private registry and run on `main` (`deploy-all.yml`).
+`npm ci` and run on `main` (`deploy-all.yml`).
 
 A tenth gate, **`check-fee-labels.mjs`**, runs *outside* the build because it
 needs the network: it asks the live `getFeeSchedule` whether the site can name
